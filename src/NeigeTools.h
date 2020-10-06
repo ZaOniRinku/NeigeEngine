@@ -1,5 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include <iostream>
 #include <string>
 
 #define NEIGE_VK_CHECK(f) \
@@ -14,13 +15,18 @@
 #define NEIGE_WARNING(m) \
 	do { \
 		std::cerr << m << std::endl; \
-	} while(0) \
+	} while(0)
 
 #define NEIGE_ERROR(m) \
 	do { \
 		std::cerr << m << std::endl; \
 		exit(2); \
-	} while(0) \
+	} while(0)
+
+#define NEIGE_INFO(m) \
+	do { \
+		std::cout << m << std::endl; \
+	} while(0)
 
 #ifndef NDEBUG
 #define NEIGE_ASSERT(c, m) \

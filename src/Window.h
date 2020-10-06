@@ -1,4 +1,5 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
 #include "../external/glfw/include/GLFW/glfw3.h"
 #include "NeigeTools.h"
 #include <vector>
@@ -15,4 +16,5 @@ struct Window {
 	void init();
 	void destroy();
 	std::vector<const char*> instanceExtensions();
+	void createSurface(VkInstance* instance, VkSurfaceKHR* surface);
 };

@@ -21,3 +21,7 @@ std::vector<const char*> Window::instanceExtensions() {
 
 	return instanceExtensions;
 }
+
+void Window::createSurface(VkInstance* instance, VkSurfaceKHR* surface) {
+	NEIGE_VK_CHECK(glfwCreateWindowSurface(*instance, window, nullptr, surface));
+}
