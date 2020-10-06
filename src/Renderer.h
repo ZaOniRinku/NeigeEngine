@@ -58,6 +58,7 @@ struct Renderer {
 	
 	// Debug messenger
 	void createDebugMessenger();
+	void destroyDebugMessenger();
 
 	// Physical device choice
 	bool physicalDeviceSuitable(VkPhysicalDevice physicalDevice);

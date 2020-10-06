@@ -17,4 +17,6 @@ struct Window {
 	void destroy();
 	std::vector<const char*> instanceExtensions();
 	void createSurface(VkInstance* instance, VkSurfaceKHR* surface);
+	bool windowGotClosed();
+	void pollEvents();
 };

@@ -93,6 +93,9 @@ void Renderer::init() {
 }
 
 void Renderer::destroy() {
+	if (NEIGE_DEBUG) {
+		destroyDebugMessenger();
+	}
 	vkDestroyInstance(instance, nullptr);
 }
 
@@ -112,6 +115,11 @@ void Renderer::createDebugMessenger() {
 
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	NEIGE_VK_CHECK(func(instance, &debugMessengerCreateInfo, nullptr, &debugMessenger));
+}
+
+void Renderer::destroyDebugMessenger() {
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	func(instance, debugMessenger, nullptr);
 }
 
 bool Renderer::physicalDeviceSuitable(VkPhysicalDevice physicalDevice) {

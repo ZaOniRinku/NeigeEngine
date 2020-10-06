@@ -25,3 +25,11 @@ std::vector<const char*> Window::instanceExtensions() {
 void Window::createSurface(VkInstance* instance, VkSurfaceKHR* surface) {
 	NEIGE_VK_CHECK(glfwCreateWindowSurface(*instance, window, nullptr, surface));
 }
+
+bool Window::windowGotClosed() {
+	return glfwWindowShouldClose(window);
+}
+
+void Window::pollEvents() {
+	glfwPollEvents();
+}

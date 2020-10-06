@@ -8,4 +8,7 @@ int main(void) {
 	Renderer r;
 	r.window = w;
 	r.init();
+	while (!w.windowGotClosed()) {
+		w.pollEvents();
+	}
 }
