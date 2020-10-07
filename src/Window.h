@@ -4,11 +4,6 @@
 #include "NeigeTools.h"
 #include <vector>
 
-struct WindowExtent {
-	int width;
-	int height;
-};
-
 struct Window {
 	// Callback when window get resized
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -21,8 +16,9 @@ struct Window {
 
 	void init();
 	void destroy();
+	WindowExtent getExtent();
 	std::vector<const char*> instanceExtensions();
-	void createSurface(VkInstance* instance, VkSurfaceKHR* surface);
+	void createSurface(VkInstance instance, VkSurfaceKHR* surface);
 	bool windowGotResized();
 	bool windowGotClosed();
 	void pollEvents();

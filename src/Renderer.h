@@ -1,22 +1,12 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "NeigeTools.h"
+#include "MemoryAllocator.h"
+#include "PhysicalDevice.h"
 #include "Window.h"
 #include <iostream>
 #include <vector>
-#include <optional>
-#include <set>
 #include <string>
-
-// Layers
-const std::vector<const char*> layers = {
-	"VK_LAYER_KHRONOS_validation"
-};
-
-// Extensions
-const std::vector<const char*> extensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
 
 // Debug messenger callback
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -27,31 +17,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 	return VK_FALSE;
 }
 
-// Queue families
-struct QueueFamiliesIndices {
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> computeFamily;
-	std::optional<uint32_t> presentFamily;
-
-	bool isComplete() {
-		return graphicsFamily.has_value() && computeFamily.has_value() && presentFamily.has_value();
-	}
-};
-
-// Swapchain support
-struct SwapchainSupport {
-	VkSurfaceCapabilitiesKHR capabilities;
-	std::vector<VkSurfaceFormatKHR> formats;
-	std::vector<VkPresentModeKHR> presentMode;
-};
-
 struct Renderer {
 	Window window;
-	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
+	MemoryAllocator memoryAllocator;
+	Queues queues;
+	VkInstance instance;
 	VkSurfaceKHR surface;
-	VkPhysicalDevice physicalDevice;
+	PhysicalDevice physicalDevice;
 	VkDevice logicalDevice;
+	VkSwapchainKHR swapchain;
 
 	void init();
 	void destroy();
@@ -59,10 +34,4 @@ struct Renderer {
 	// Debug messenger
 	void createDebugMessenger();
 	void destroyDebugMessenger();
-
-	// Physical device choice
-	bool physicalDeviceSuitable(VkPhysicalDevice physicalDevice);
-	QueueFamiliesIndices physicalDeviceFindQueueFamilies(VkPhysicalDevice physicalDevice);
-	bool physicalDeviceExtensionSupport(VkPhysicalDevice physicalDevice);
-	SwapchainSupport physicalDeviceSwapchainSupport(VkPhysicalDevice physicalDevice);
 };

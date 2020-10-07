@@ -31,6 +31,6 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(SOURCES src/Renderer.cpp src/Window.cpp)
-SET(HEADERS src/NeigeTools.h src/Renderer.h src/Window.h)
+SET(HEADERS src/MemoryAllocator.h src/NeigeTools.h src/PhysicalDevice.h src/Renderer.h src/Window.h)
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES} ${HEADERS})

@@ -44,9 +44,9 @@ void Renderer::init() {
 	} else {
 		instanceCreateInfo.enabledLayerCount = 0;
 	}
-	auto extensions = window.instanceExtensions();
-	instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-	instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
+	auto instanceExtensions = window.instanceExtensions();
+	instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
+	instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
 	NEIGE_VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
 
 	// Debug messenger
@@ -55,22 +55,26 @@ void Renderer::init() {
 	}
 	
 	// Surface
-	window.createSurface(&instance, &surface);
+	window.createSurface(instance, &surface);
 
 	// Pick physical device
-	VkPhysicalDevice preferredDevice = VK_NULL_HANDLE;
+	PhysicalDevice preferredDevice = { VK_NULL_HANDLE };
 	VkPhysicalDeviceType preferredDeviceType = VK_PHYSICAL_DEVICE_TYPE_OTHER;
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 	if (deviceCount == 0) {
 		NEIGE_ERROR("Unable to find any GPU supporting Vulkan.");
 	}
-	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-	for (const auto& device : devices) {
-		if (physicalDeviceSuitable(device)) {
+	std::vector<VkPhysicalDevice> enumerateDevices(deviceCount);
+	vkEnumeratePhysicalDevices(instance, &deviceCount, enumerateDevices.data());
+	std::vector<PhysicalDevice> devices;
+	for (const VkPhysicalDevice device : enumerateDevices) {
+		devices.push_back({ device });
+	}
+	for (PhysicalDevice device : devices) {
+		if (device.isSuitable(surface)) {
 			VkPhysicalDeviceProperties physicalDeviceProperties;
-			vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+			vkGetPhysicalDeviceProperties(device.device, &physicalDeviceProperties);
 			if (physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
 				// GPU
 				preferredDevice = device;
@@ -86,17 +90,101 @@ void Renderer::init() {
 		}
 	}
 	physicalDevice = preferredDevice;
-	NEIGE_ASSERT(physicalDevice != VK_NULL_HANDLE, "Unable to find a suitable GPU.");
-	VkPhysicalDeviceProperties properties;
-	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+	NEIGE_ASSERT(physicalDevice.device != VK_NULL_HANDLE, "Unable to find a suitable GPU.");
+	VkPhysicalDeviceProperties properties = physicalDevice.getProperties();
 	NEIGE_INFO(properties.deviceName);
+
+	// Queue family indices
+	QueueFamilyIndices queueFamilyIndices = physicalDevice.findQueueFamilies(surface);
+	std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(),
+	queueFamilyIndices.computeFamily.value(),
+	queueFamilyIndices.presentFamily.value() };
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	float queuePriority = 1.0f;
+	for (uint32_t queueFamily : uniqueQueueFamilies) {
+		VkDeviceQueueCreateInfo deviceQueueCreateInfo = {};
+		deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		deviceQueueCreateInfo.pNext = nullptr;
+		deviceQueueCreateInfo.flags = 0;
+		deviceQueueCreateInfo.queueFamilyIndex = queueFamily;
+		deviceQueueCreateInfo.queueCount = 1;
+		deviceQueueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(deviceQueueCreateInfo);
+	}
+
+	// Physical device features
+	VkPhysicalDeviceFeatures physicalDeviceFeatures = {};
+	physicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
+	physicalDeviceFeatures.sampleRateShading = VK_TRUE;
+
+	// Logical device
+	VkDeviceCreateInfo deviceCreateInfo = {};
+	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo.pNext = nullptr;
+	deviceCreateInfo.flags = 0;
+	deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+	if (NEIGE_DEBUG) {
+		deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
+		deviceCreateInfo.ppEnabledLayerNames = layers.data();
+	} else {
+		deviceCreateInfo.enabledLayerCount = 0;
+	}
+	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+	deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+	deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
+	NEIGE_VK_CHECK(vkCreateDevice(physicalDevice.device, &deviceCreateInfo, nullptr, &logicalDevice));
+
+	// Queues
+	vkGetDeviceQueue(logicalDevice, queueFamilyIndices.graphicsFamily.value(), 0, &queues.graphicsQueue);
+	vkGetDeviceQueue(logicalDevice, queueFamilyIndices.computeFamily.value(), 0, &queues.computeQueue);
+	vkGetDeviceQueue(logicalDevice, queueFamilyIndices.presentFamily.value(), 0, &queues.presentQueue);
+
+	// Swapchain
+	SwapchainSupport swapchainSupport = physicalDevice.swapchainSupport(surface);
+	VkExtent2D extent = swapchainSupport.extent(window.getExtent());
+	VkSurfaceFormatKHR surfaceFormat = swapchainSupport.surfaceFormat();
+	VkPresentModeKHR presentMode = swapchainSupport.presentMode();
+	uint32_t minImageCount = swapchainSupport.capabilities.minImageCount + 1;
+	if (swapchainSupport.capabilities.maxImageCount > 0 && minImageCount > swapchainSupport.capabilities.maxImageCount) {
+		minImageCount = swapchainSupport.capabilities.maxImageCount;
+	}
+	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapchainCreateInfo.pNext = nullptr;
+	swapchainCreateInfo.flags = 0;
+	swapchainCreateInfo.surface = surface;
+	swapchainCreateInfo.minImageCount = minImageCount;
+	swapchainCreateInfo.imageFormat = surfaceFormat.format;
+	swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
+	swapchainCreateInfo.imageExtent = extent;
+	swapchainCreateInfo.imageArrayLayers = 1;
+	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	if (queueFamilyIndices.graphicsFamily.value() != queueFamilyIndices.presentFamily.value()) {
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		swapchainCreateInfo.queueFamilyIndexCount = 2;
+		std::array<uint32_t, 2> swapchainQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
+		swapchainCreateInfo.pQueueFamilyIndices = swapchainQueueFamilies.data();
+	} else {
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		swapchainCreateInfo.queueFamilyIndexCount = 0;
+		swapchainCreateInfo.pQueueFamilyIndices = nullptr;
+	}
+	swapchainCreateInfo.preTransform = swapchainSupport.capabilities.currentTransform;
+	swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	swapchainCreateInfo.presentMode = presentMode;
+	swapchainCreateInfo.clipped = VK_TRUE;
+	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+	NEIGE_VK_CHECK(vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &swapchain));
 }
 
 void Renderer::destroy() {
+	memoryAllocator.free(logicalDevice);
 	if (NEIGE_DEBUG) {
 		destroyDebugMessenger();
 	}
 	vkDestroySurfaceKHR(instance, surface, nullptr);
+	vkDestroyDevice(logicalDevice, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
 
@@ -121,76 +209,4 @@ void Renderer::createDebugMessenger() {
 void Renderer::destroyDebugMessenger() {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	func(instance, debugMessenger, nullptr);
-}
-
-bool Renderer::physicalDeviceSuitable(VkPhysicalDevice physicalDevice) {
-	VkPhysicalDeviceFeatures physicalDeviceFeatures;
-	vkGetPhysicalDeviceFeatures(physicalDevice, &physicalDeviceFeatures);
-	if (physicalDeviceFindQueueFamilies(physicalDevice).isComplete()) {
-		if (physicalDeviceExtensionSupport(physicalDevice)) {
-			SwapchainSupport swapchainSupport = physicalDeviceSwapchainSupport(physicalDevice);
-			return !swapchainSupport.formats.empty() && !swapchainSupport.presentMode.empty() && physicalDeviceFeatures.samplerAnisotropy;
-		}
-	}
-	return false;
-}
-
-QueueFamiliesIndices Renderer::physicalDeviceFindQueueFamilies(VkPhysicalDevice physicalDevice) {
-	QueueFamiliesIndices queueFamiliesIndices;
-	uint32_t queueFamilyCount;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
-	int queueIndex = 0;
-	for (const auto& queueFamily : queueFamilyProperties) {
-		if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-			queueFamiliesIndices.graphicsFamily = queueIndex;
-		}
-		if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-			queueFamiliesIndices.computeFamily = queueIndex;
-		}
-		VkBool32 presentSupport;
-		vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueIndex, surface, &presentSupport);
-		if (queueFamily.queueCount > 0 && presentSupport) {
-			queueFamiliesIndices.presentFamily = queueIndex;
-		}
-		if (queueFamiliesIndices.isComplete()) {
-			break;
-		}
-		queueIndex++;
-	}
-
-	return queueFamiliesIndices;
-}
-
-bool Renderer::physicalDeviceExtensionSupport(VkPhysicalDevice physicalDevice) {
-	uint32_t extensionCount;
-	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
-	std::vector<VkExtensionProperties> extensionProperties(extensionCount);
-	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensionProperties.data());
-	std::set<std::string> requiredExtensions(extensions.begin(), extensions.end());
-	for (const auto& extension : extensionProperties) {
-		requiredExtensions.erase(extension.extensionName);
-	}
-
-	return requiredExtensions.empty();
-}
-
-SwapchainSupport Renderer::physicalDeviceSwapchainSupport(VkPhysicalDevice physicalDevice) {
-	SwapchainSupport swapchainSupport;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &swapchainSupport.capabilities);
-	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-	if (formatCount != 0) {
-		swapchainSupport.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, swapchainSupport.formats.data());
-	}
-	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-	if (presentModeCount != 0) {
-		swapchainSupport.presentMode.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, swapchainSupport.presentMode.data());
-	}
-
-	return swapchainSupport;
 }
