@@ -1,7 +1,7 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
-#include "../external/glfw/include/GLFW/glfw3.h"
-#include "NeigeTools.h"
+#include "../../external/glfw/include/GLFW/glfw3.h"
+#include "../utils/NeigeTools.h"
 #include <vector>
 
 struct Window {

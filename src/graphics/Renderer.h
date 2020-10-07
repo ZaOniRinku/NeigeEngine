@@ -1,9 +1,9 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
-#include "NeigeTools.h"
-#include "MemoryAllocator.h"
+#include "../utils/NeigeTools.h"
+#include "../utils/MemoryAllocator.h"
+#include "../window/Window.h"
 #include "PhysicalDevice.h"
-#include "Window.h"
 #include <iostream>
 #include <vector>
 #include <string>

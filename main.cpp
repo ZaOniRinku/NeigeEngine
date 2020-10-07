@@ -1,4 +1,4 @@
-#include "src/Renderer.h"
+#include "src/graphics/Renderer.h"
 
 int main(void) {
 	Window w;

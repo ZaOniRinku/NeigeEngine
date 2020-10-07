@@ -43,6 +43,7 @@ void Renderer::init() {
 		instanceCreateInfo.ppEnabledLayerNames = layers.data();
 	} else {
 		instanceCreateInfo.enabledLayerCount = 0;
+		instanceCreateInfo.ppEnabledLayerNames = nullptr;
 	}
 	auto instanceExtensions = window.instanceExtensions();
 	instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
@@ -129,6 +130,7 @@ void Renderer::init() {
 		deviceCreateInfo.ppEnabledLayerNames = layers.data();
 	} else {
 		deviceCreateInfo.enabledLayerCount = 0;
+		deviceCreateInfo.ppEnabledLayerNames = nullptr;
 	}
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
