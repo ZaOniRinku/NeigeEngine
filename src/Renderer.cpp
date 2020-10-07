@@ -162,7 +162,7 @@ void Renderer::init() {
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	if (queueFamilyIndices.graphicsFamily.value() != queueFamilyIndices.presentFamily.value()) {
 		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		swapchainCreateInfo.queueFamilyIndexCount = 0;
+		swapchainCreateInfo.queueFamilyIndexCount = 2;
 		std::array<uint32_t, 2> swapchainQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
 		swapchainCreateInfo.pQueueFamilyIndices = swapchainQueueFamilies.data();
 	} else {
