@@ -14,6 +14,11 @@
 		} \
 	} while (0)
 
+#define NEIGE_VK_VALIDATION_ERROR(m) \
+	do { \
+		std::cerr << "\033[1m\033[31mVALIDATION LAYER : \033[39m\033[0m" << m << std::endl; \
+	} while(0)
+
 #define NEIGE_WARNING(m) \
 	do { \
 		std::cerr << "\033[1m\033[33mNEIGE WARNING : \033[39m\033[0m" << m << std::endl; \
