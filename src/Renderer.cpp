@@ -96,6 +96,7 @@ void Renderer::destroy() {
 	if (NEIGE_DEBUG) {
 		destroyDebugMessenger();
 	}
+	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
 }
 

@@ -7,32 +7,32 @@
 	do { \
 		VkResult check = f; \
 		if (check) { \
-			std::cerr << "A Vulkan error has happened in file " << __FILE__ << " at line " << __LINE__ << "." << std::endl; \
+			std::cerr << "\033[1m\033[31mVULKAN ERROR : \033[39m\033[0m A Vulkan error has happened in file " << __FILE__ << " at line " << __LINE__ << "." << std::endl; \
 			exit(1); \
 		} \
 	} while (0)
 
 #define NEIGE_WARNING(m) \
 	do { \
-		std::cerr << m << std::endl; \
+		std::cerr << "\033[1m\033[33mNEIGE WARNING : \033[39m\033[0m" << m << std::endl; \
 	} while(0)
 
 #define NEIGE_ERROR(m) \
 	do { \
-		std::cerr << m << std::endl; \
+		std::cerr << "\033[1m\033[31mNEIGE ERROR : \033[39m\033[0m" << m << std::endl; \
 		exit(2); \
 	} while(0)
 
 #define NEIGE_INFO(m) \
 	do { \
-		std::cout << m << std::endl; \
+		std::cout << "\033[1m\033[36mNEIGE INFO : \033[39m\033[0m" << m << std::endl; \
 	} while(0)
 
 #ifndef NDEBUG
 #define NEIGE_ASSERT(c, m) \
 		do { \
 			if (!c) { \
-				std::cerr << m << std::endl; \
+				std::cerr << "\033[1m\033[35mNEIGE ASSERT : \033[39m\033[0m" << m << std::endl; \
 				exit(3); \
 			} \
 		} while(0)

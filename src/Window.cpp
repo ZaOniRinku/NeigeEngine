@@ -4,6 +4,8 @@ void Window::init() {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	window = glfwCreateWindow(extent.width, extent.height, "", nullptr, nullptr);
+	glfwSetWindowUserPointer(window, this);
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
 void Window::destroy() {
@@ -24,6 +26,11 @@ std::vector<const char*> Window::instanceExtensions() {
 
 void Window::createSurface(VkInstance* instance, VkSurfaceKHR* surface) {
 	NEIGE_VK_CHECK(glfwCreateWindowSurface(*instance, window, nullptr, surface));
+}
+
+bool Window::windowGotResized() {
+	glfwGetFramebufferSize(window, &extent.width, &extent.height);
+	return true;
 }
 
 bool Window::windowGotClosed() {
