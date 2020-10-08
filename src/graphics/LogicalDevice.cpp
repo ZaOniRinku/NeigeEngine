@@ -43,25 +43,6 @@ void LogicalDevice::init(const PhysicalDevice* physicalDevice) {
 	deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
 	NEIGE_VK_CHECK(vkCreateDevice(physicalDevice->device, &deviceCreateInfo, nullptr, &device));
 
-	VkDeviceCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pNext = nullptr;
-	createInfo.flags = 0;
-	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-	if (NEIGE_DEBUG) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
-		createInfo.ppEnabledLayerNames = layers.data();
-	}
-	else {
-		createInfo.enabledLayerCount = 0;
-		createInfo.ppEnabledLayerNames = nullptr;
-	}
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-	createInfo.ppEnabledExtensionNames = extensions.data();
-	createInfo.pEnabledFeatures = &physicalDeviceFeatures;
-	NEIGE_VK_CHECK(vkCreateDevice(physicalDevice->device, &deviceCreateInfo, nullptr, &device));
-
 	// Queues
 	vkGetDeviceQueue(device, physicalDevice->queueFamilyIndices.graphicsFamily.value(), 0, &queues.graphicsQueue);
 	vkGetDeviceQueue(device, physicalDevice->queueFamilyIndices.computeFamily.value(), 0, &queues.computeQueue);
