@@ -1,10 +1,11 @@
 #include "LogicalDevice.h"
+#include "../utils/RendererResources.h"
 
-void LogicalDevice::init(const PhysicalDevice* physicalDevice) {
+void LogicalDevice::init() {
 	// Queue family indices
-	std::set<uint32_t> uniqueQueueFamilies = { physicalDevice->queueFamilyIndices.graphicsFamily.value(),
-	physicalDevice->queueFamilyIndices.computeFamily.value(),
-	physicalDevice->queueFamilyIndices.presentFamily.value() };
+	std::set<uint32_t> uniqueQueueFamilies = { physicalDevice.queueFamilyIndices.graphicsFamily.value(),
+	physicalDevice.queueFamilyIndices.computeFamily.value(),
+	physicalDevice.queueFamilyIndices.presentFamily.value() };
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	float queuePriority = 1.0f;
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -41,12 +42,12 @@ void LogicalDevice::init(const PhysicalDevice* physicalDevice) {
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
 	deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
-	NEIGE_VK_CHECK(vkCreateDevice(physicalDevice->device, &deviceCreateInfo, nullptr, &device));
+	NEIGE_VK_CHECK(vkCreateDevice(physicalDevice.device, &deviceCreateInfo, nullptr, &device));
 
 	// Queues
-	vkGetDeviceQueue(device, physicalDevice->queueFamilyIndices.graphicsFamily.value(), 0, &queues.graphicsQueue);
-	vkGetDeviceQueue(device, physicalDevice->queueFamilyIndices.computeFamily.value(), 0, &queues.computeQueue);
-	vkGetDeviceQueue(device, physicalDevice->queueFamilyIndices.presentFamily.value(), 0, &queues.presentQueue);
+	vkGetDeviceQueue(device, physicalDevice.queueFamilyIndices.graphicsFamily.value(), 0, &queues.graphicsQueue);
+	vkGetDeviceQueue(device, physicalDevice.queueFamilyIndices.computeFamily.value(), 0, &queues.computeQueue);
+	vkGetDeviceQueue(device, physicalDevice.queueFamilyIndices.presentFamily.value(), 0, &queues.presentQueue);
 }
 
 void LogicalDevice::destroy() {

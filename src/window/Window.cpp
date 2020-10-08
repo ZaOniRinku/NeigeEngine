@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "../utils/RendererResources.h"
 
 void Window::init() {
 	glfwInit();
@@ -34,8 +35,8 @@ std::vector<const char*> Window::instanceExtensions() {
 	return instanceExtensions;
 }
 
-void Window::createSurface(const Instance* instance) {
-	NEIGE_VK_CHECK(glfwCreateWindowSurface(instance->instance, window, nullptr, &surface.surface));
+void Window::createSurface() {
+	NEIGE_VK_CHECK(glfwCreateWindowSurface(instance.instance, window, nullptr, &surface.surface));
 }
 
 bool Window::windowGotResized() {

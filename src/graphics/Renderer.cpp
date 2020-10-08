@@ -1,11 +1,18 @@
 #include "Renderer.h"
+#include "../utils/RendererResources.h"
+
+Instance instance;
+LogicalDevice logicalDevice;
+PhysicalDevice physicalDevice;
+Swapchain swapchain;
+MemoryAllocator memoryAllocator;
 
 void Renderer::init() {
 	// Instance
-	instance.init(VK_MAKE_VERSION(0, 0, 1), window.instanceExtensions());
+	instance.init(VK_MAKE_VERSION(0, 0, 1), window->instanceExtensions());
 	
 	// Surface
-	window.createSurface(&instance);
+	window->createSurface();
 
 	// Pick physical device
 	PhysicalDevice preferredDevice;
@@ -24,7 +31,7 @@ void Renderer::init() {
 		devices.push_back(physicalDevice);
 	}
 	for (PhysicalDevice device : devices) {
-		if (device.isSuitable(window.surface)) {
+		if (device.isSuitable(&window->surface)) {
 			if (device.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
 				// GPU
 				preferredDevice = device;
@@ -51,16 +58,16 @@ void Renderer::init() {
 	NEIGE_INFO(physicalDevice.properties.deviceName);
 
 	// Logical device
-	logicalDevice.init(&physicalDevice);
+	logicalDevice.init();
 
 	// Swapchain
-	swapchain.init(&physicalDevice, &logicalDevice, &window);
+	swapchain.init(window);
 }
 
 void Renderer::destroy() {
-	memoryAllocator.free(&logicalDevice);
-	window.surface.destroy(&instance);
-	swapchain.destroy(&logicalDevice);
+	memoryAllocator.destroy();
+	window->surface.destroy();
+	swapchain.destroy();
 	logicalDevice.destroy();
 	instance.destroy();
 }

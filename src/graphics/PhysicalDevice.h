@@ -1,6 +1,6 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
-#include "../utils/NeigeTools.h"
+#include "vulkan/vulkan.hpp"
+#include "../utils/NeigeDefines.h"
 #include "../utils/NeigeStructs.h"
 #include "../window/Surface.h"
 #include <set>
@@ -14,9 +14,9 @@ struct PhysicalDevice {
 	QueueFamilyIndices queueFamilyIndices;
 	VkSampleCountFlagBits maxUsableSampleCount;
 
-	bool isSuitable(Surface surface);
+	bool isSuitable(const Surface* surface);
 	void findQueueFamilies(VkSurfaceKHR surface);
 	bool extensionSupport();
 	void getMaxUsableSampleCount();
-	SwapchainSupport swapchainSupport(VkSurfaceKHR surface) const;
+	SwapchainSupport swapchainSupport(VkSurfaceKHR surface);
 };

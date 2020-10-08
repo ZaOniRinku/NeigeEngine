@@ -1,6 +1,6 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
-#include "NeigeTools.h"
+#include "vulkan/vulkan.hpp"
+#include "NeigeDefines.h"
 #include <optional>
 
 // Layers

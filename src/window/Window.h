@@ -1,10 +1,9 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
 #include "../../external/glfw/include/GLFW/glfw3.h"
-#include "../utils/NeigeTools.h"
+#include "../utils/NeigeDefines.h"
 #include "../utils/NeigeStructs.h"
 #include "Surface.h"
-#include "../graphics/Instance.h"
 #include <vector>
 
 struct Window {
@@ -22,7 +21,7 @@ struct Window {
 	void destroy();
 	void updateExtent();
 	std::vector<const char*> instanceExtensions();
-	void createSurface(const Instance* instance);
+	void createSurface();
 	bool windowGotResized();
 	bool windowGotClosed();
 	void pollEvents();

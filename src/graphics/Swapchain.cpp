@@ -1,7 +1,8 @@
 #include "Swapchain.h"
+#include "../utils/RendererResources.h"
 
-void Swapchain::init(const PhysicalDevice* physicalDevice, const LogicalDevice* logicalDevice, const Window* window) {
-	swapchainSupport = physicalDevice->swapchainSupport(window->surface.surface);
+void Swapchain::init(const Window* window) {
+	swapchainSupport = physicalDevice.swapchainSupport(window->surface.surface);
 	extent = swapchainSupport.extent(window->extent);
 	surfaceFormat = swapchainSupport.surfaceFormat();
 	presentMode = swapchainSupport.presentMode();
@@ -20,10 +21,10 @@ void Swapchain::init(const PhysicalDevice* physicalDevice, const LogicalDevice* 
 	swapchainCreateInfo.imageExtent = extent;
 	swapchainCreateInfo.imageArrayLayers = 1;
 	swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	if (physicalDevice->queueFamilyIndices.graphicsFamily.value() != physicalDevice->queueFamilyIndices.presentFamily.value()) {
+	if (physicalDevice.queueFamilyIndices.graphicsFamily.value() != physicalDevice.queueFamilyIndices.presentFamily.value()) {
 		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		swapchainCreateInfo.queueFamilyIndexCount = 2;
-		std::array<uint32_t, 2> swapchainQueueFamilies = { physicalDevice->queueFamilyIndices.graphicsFamily.value(), physicalDevice->queueFamilyIndices.presentFamily.value() };
+		std::array<uint32_t, 2> swapchainQueueFamilies = { physicalDevice.queueFamilyIndices.graphicsFamily.value(), physicalDevice.queueFamilyIndices.presentFamily.value() };
 		swapchainCreateInfo.pQueueFamilyIndices = swapchainQueueFamilies.data();
 	}
 	else {
@@ -36,9 +37,14 @@ void Swapchain::init(const PhysicalDevice* physicalDevice, const LogicalDevice* 
 	swapchainCreateInfo.presentMode = presentMode;
 	swapchainCreateInfo.clipped = VK_TRUE;
 	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-	NEIGE_VK_CHECK(vkCreateSwapchainKHR(logicalDevice->device, &swapchainCreateInfo, nullptr, &swapchain));
+	NEIGE_VK_CHECK(vkCreateSwapchainKHR(logicalDevice.device, &swapchainCreateInfo, nullptr, &swapchain));
+	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, nullptr));
+	NEIGE_INFO("Swapchain size : " + std::to_string(imageNumber));
+	images.resize(imageNumber);
+	imageViews.resize(imageNumber);
+	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, images.data()));
 }
 
-void Swapchain::destroy(const LogicalDevice* logicalDevice) {
-	vkDestroySwapchainKHR(logicalDevice->device, swapchain, nullptr);
+void Swapchain::destroy() {
+	vkDestroySwapchainKHR(logicalDevice.device, swapchain, nullptr);
 }

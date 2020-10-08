@@ -1,14 +1,14 @@
 #include "PhysicalDevice.h"
 
-bool PhysicalDevice::isSuitable(Surface surface) {
+bool PhysicalDevice::isSuitable(const Surface* surface) {
 	vkGetPhysicalDeviceProperties(device, &properties);
 	vkGetPhysicalDeviceFeatures(device, &features);
 	vkGetPhysicalDeviceMemoryProperties(device, &memoryProperties);
-	findQueueFamilies(surface.surface);
+	findQueueFamilies(surface->surface);
 	getMaxUsableSampleCount();
 	if (queueFamilyIndices.isComplete()) {
 		if (extensionSupport()) {
-			SwapchainSupport deviceSwapchainSupport = swapchainSupport(surface.surface);
+			SwapchainSupport deviceSwapchainSupport = swapchainSupport(surface->surface);
 			return !deviceSwapchainSupport.formats.empty() && !deviceSwapchainSupport.presentModes.empty() && features.samplerAnisotropy && features.sampleRateShading;
 		}
 	}
@@ -64,7 +64,7 @@ void PhysicalDevice::getMaxUsableSampleCount() {
 	else maxUsableSampleCount = VK_SAMPLE_COUNT_1_BIT;
 }
 
-SwapchainSupport PhysicalDevice::swapchainSupport(VkSurfaceKHR surface) const {
+SwapchainSupport PhysicalDevice::swapchainSupport(VkSurfaceKHR surface){
 	SwapchainSupport swapchainSupport;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &swapchainSupport.capabilities);
 	uint32_t formatCount;

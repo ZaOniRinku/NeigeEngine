@@ -1,13 +1,11 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
+#include "../utils/ImageTools.h"
 #include "../utils/NeigeDefines.h"
 #include "../utils/NeigeStructs.h"
-#include <set>
 
-struct LogicalDevice {
-	VkDevice device;
-	Queues queues;
-
-	void init();
-	void destroy();
+struct Image {
+	VkImage image;
+	VkImageView imageView;
+	VkSampler imageSampler;
 };
