@@ -5,8 +5,8 @@
 #include "../graphics/Swapchain.h"
 #include "../utils/MemoryAllocator.h"
 
-extern Instance instance;
-extern LogicalDevice logicalDevice;
-extern PhysicalDevice physicalDevice;
-extern Swapchain swapchain;
-extern MemoryAllocator memoryAllocator;
+inline Instance instance;
+inline LogicalDevice logicalDevice;
+inline PhysicalDevice physicalDevice;
+inline Swapchain swapchain;
+inline MemoryAllocator memoryAllocator;

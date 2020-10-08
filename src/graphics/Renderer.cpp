@@ -1,11 +1,4 @@
 #include "Renderer.h"
-#include "../utils/RendererResources.h"
-
-Instance instance;
-LogicalDevice logicalDevice;
-PhysicalDevice physicalDevice;
-Swapchain swapchain;
-MemoryAllocator memoryAllocator;
 
 void Renderer::init() {
 	// Instance
