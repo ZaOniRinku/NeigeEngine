@@ -2,6 +2,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include "../../external/glfw/include/GLFW/glfw3.h"
 #include "../utils/NeigeTools.h"
+#include "../utils/NeigeStructs.h"
+#include "Surface.h"
+#include "../graphics/Instance.h"
 #include <vector>
 
 struct Window {
@@ -12,13 +15,14 @@ struct Window {
 	}
 
 	GLFWwindow* window;
-	WindowExtent extent = {};
+	Surface surface;
+	VkExtent2D extent;
 
 	void init();
 	void destroy();
-	WindowExtent getExtent();
+	void updateExtent();
 	std::vector<const char*> instanceExtensions();
-	void createSurface(VkInstance instance, VkSurfaceKHR* surface);
+	void createSurface(const Instance* instance);
 	bool windowGotResized();
 	bool windowGotClosed();
 	void pollEvents();

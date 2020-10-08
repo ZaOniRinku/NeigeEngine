@@ -1,6 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "NeigeTools.h"
+#include "../graphics/LogicalDevice.h"
+#include "../graphics/PhysicalDevice.h"
 #include <vector>
 #include <iostream>
 #include <algorithm>
@@ -98,9 +100,9 @@ struct Chunk {
 };
 
 struct MemoryAllocator {
-	VkDeviceSize allocate(VkDevice device, VkPhysicalDevice physicalDevice, VkBuffer* bufferToAllocate, VkMemoryPropertyFlags flags) {
+	VkDeviceSize allocate(LogicalDevice* logicalDevice, PhysicalDevice* physicalDevice, VkBuffer* bufferToAllocate, VkMemoryPropertyFlags flags) {
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(device, *bufferToAllocate, &memRequirements);
+		vkGetBufferMemoryRequirements(logicalDevice->device, *bufferToAllocate, &memRequirements);
 		int32_t properties = findProperties(physicalDevice, memRequirements.memoryTypeBits, flags);
 
 		// Look for the first block with enough space
@@ -110,33 +112,33 @@ struct MemoryAllocator {
 				offset = chunk.allocate(memRequirements);
 
 				if (offset != -1) {
-					vkBindBufferMemory(device, *bufferToAllocate, chunk.memory, offset);
+					vkBindBufferMemory(logicalDevice->device, *bufferToAllocate, chunk.memory, offset);
 					return 1;
 				}
 			}
 		}
 
 		// No block has been found, create a new chunk
-		Chunk newChunk = Chunk(device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
+		Chunk newChunk = Chunk(logicalDevice->device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
 
 		// Add to this chunk
 		VkDeviceSize offset;
 		offset = newChunk.allocate(memRequirements);
 
 		if (offset == -1) {
-			NEIGE_ERROR("Failed to allocate memory (buffer).");
+			NEIGE_ERROR("Unable to allocate memory (buffer).");
 		}
 
-		vkBindBufferMemory(device, *bufferToAllocate, newChunk.memory, offset);
+		vkBindBufferMemory(logicalDevice->device, *bufferToAllocate, newChunk.memory, offset);
 
 		chunks.push_back(newChunk);
 
 		return 1;
 	}
 
-	VkDeviceSize allocate(VkDevice device, VkPhysicalDevice physicalDevice, VkImage* imageToAllocate, VkMemoryPropertyFlags flags) {
+	VkDeviceSize allocate(LogicalDevice* logicalDevice, PhysicalDevice* physicalDevice, VkImage* imageToAllocate, VkMemoryPropertyFlags flags) {
 		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(device, *imageToAllocate, &memRequirements);
+		vkGetImageMemoryRequirements(logicalDevice->device, *imageToAllocate, &memRequirements);
 		int32_t properties = findProperties(physicalDevice, memRequirements.memoryTypeBits, flags);
 
 		// Look for the first block with enough space
@@ -146,53 +148,51 @@ struct MemoryAllocator {
 				offset = chunk.allocate(memRequirements);
 
 				if (offset != -1) {
-					vkBindImageMemory(device, *imageToAllocate, chunk.memory, offset);
+					vkBindImageMemory(logicalDevice->device, *imageToAllocate, chunk.memory, offset);
 					return 1;
 				}
 			}
 		}
 
 		// No block has been found, create a new chunk
-		Chunk newChunk = Chunk(device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
+		Chunk newChunk = Chunk(logicalDevice->device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
 
 		// Add to this chunk
 		VkDeviceSize offset;
 		offset = newChunk.allocate(memRequirements);
 
 		if (offset == -1) {
-			NEIGE_ERROR("Failed to allocate memory (image).");
+			NEIGE_ERROR("Unable to allocate memory (image).");
 		}
 
-		vkBindImageMemory(device, *imageToAllocate, newChunk.memory, offset);
+		vkBindImageMemory(logicalDevice->device, *imageToAllocate, newChunk.memory, offset);
 
 		chunks.push_back(newChunk);
 
 		return 1;
 	}
 
-	void free(VkDevice device) {
+	void free(LogicalDevice* logicalDevice) {
 		for (Chunk chunk : chunks) {
 			chunk.freeBlocks();
-			vkFreeMemory(device, chunk.memory, nullptr);
+			vkFreeMemory(logicalDevice->device, chunk.memory, nullptr);
 		}
 	}
 
-	int32_t findProperties(VkPhysicalDevice physicalDevice, uint32_t memoryTypeBitsRequirement, VkMemoryPropertyFlags requiredProperties) {
-		VkPhysicalDeviceMemoryProperties memoryProperties;
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
-		const uint32_t memoryCount = memoryProperties.memoryTypeCount;
+	int32_t findProperties(PhysicalDevice* physicalDevice, uint32_t memoryTypeBitsRequirement, VkMemoryPropertyFlags requiredProperties) {
+		const uint32_t memoryCount = physicalDevice->memoryProperties.memoryTypeCount;
 		for (uint32_t memoryIndex = 0; memoryIndex < memoryCount; memoryIndex++) {
 			const uint32_t memoryTypeBits = (1 << memoryIndex);
 			const bool isRequiredMemoryType = memoryTypeBitsRequirement & memoryTypeBits;
 
-			const VkMemoryPropertyFlags properties = memoryProperties.memoryTypes[memoryIndex].propertyFlags;
+			const VkMemoryPropertyFlags properties = physicalDevice->memoryProperties.memoryTypes[memoryIndex].propertyFlags;
 			const bool hasRequiredProperties = (properties & requiredProperties) == requiredProperties;
 
 			if (isRequiredMemoryType && hasRequiredProperties) {
 				return static_cast<int32_t>(memoryIndex);
 			}
 		}
-		NEIGE_ERROR("Failed to find suitable memory type.");
+		NEIGE_ERROR("Unable to find suitable memory type.");
 	}
 	
 	std::vector<Chunk> chunks;

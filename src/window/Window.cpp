@@ -13,10 +13,14 @@ void Window::destroy() {
 	glfwTerminate();
 }
 
-WindowExtent Window::getExtent() {
-	WindowExtent extent;
-	glfwGetFramebufferSize(window, &extent.width, &extent.height);
-	return extent;
+void Window::updateExtent() {
+	int width;
+	int height;
+	glfwGetFramebufferSize(window, &width, &height);
+	extent = {
+		static_cast<uint32_t>(width),
+		static_cast<uint32_t>(height)
+	};
 }
 
 std::vector<const char*> Window::instanceExtensions() {
@@ -30,12 +34,12 @@ std::vector<const char*> Window::instanceExtensions() {
 	return instanceExtensions;
 }
 
-void Window::createSurface(VkInstance instance, VkSurfaceKHR* surface) {
-	NEIGE_VK_CHECK(glfwCreateWindowSurface(instance, window, nullptr, surface));
+void Window::createSurface(const Instance* instance) {
+	NEIGE_VK_CHECK(glfwCreateWindowSurface(instance->instance, window, nullptr, &surface.surface));
 }
 
 bool Window::windowGotResized() {
-	glfwGetFramebufferSize(window, &extent.width, &extent.height);
+	updateExtent();
 	return true;
 }
 

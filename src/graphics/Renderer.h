@@ -1,37 +1,25 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "../utils/NeigeTools.h"
+#include "../utils/NeigeStructs.h"
 #include "../utils/MemoryAllocator.h"
 #include "../window/Window.h"
+#include "Instance.h"
+#include "LogicalDevice.h"
 #include "PhysicalDevice.h"
+#include "Swapchain.h"
 #include <iostream>
 #include <vector>
 #include <string>
 
-// Debug messenger callback
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData) {
-	NEIGE_VK_VALIDATION_ERROR(pCallbackData->pMessage);
-
-	return VK_FALSE;
-}
-
 struct Renderer {
 	Window window;
-	VkDebugUtilsMessengerEXT debugMessenger;
 	MemoryAllocator memoryAllocator;
-	Queues queues;
-	VkInstance instance;
-	VkSurfaceKHR surface;
+	Instance instance;
 	PhysicalDevice physicalDevice;
-	VkDevice logicalDevice;
-	VkSwapchainKHR swapchain;
+	LogicalDevice logicalDevice;
+	Swapchain swapchain;
 
 	void init();
 	void destroy();
-	
-	// Debug messenger
-	void createDebugMessenger();
-	void destroyDebugMessenger();
 };
