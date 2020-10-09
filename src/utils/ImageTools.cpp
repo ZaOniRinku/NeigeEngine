@@ -1,12 +1,12 @@
 #include "ImageTools.h"
 
 void ImageTools::createImage(VkImage image,
-	VkImageType type,
+	VkImageType imageType,
 	uint32_t arrayLayers,
 	uint32_t width,
 	uint32_t height,
 	uint32_t mipLevels,
-	VkSampleCountFlagBits samples,
+	VkSampleCountFlagBits msaaSamples,
 	VkFormat format,
 	VkImageTiling tiling,
 	VkImageUsageFlags usage,
@@ -15,14 +15,14 @@ void ImageTools::createImage(VkImage image,
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageCreateInfo.pNext = nullptr;
 	imageCreateInfo.flags = arrayLayers == 6 ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
-	imageCreateInfo.imageType = type;
+	imageCreateInfo.imageType = imageType;
 	imageCreateInfo.format = format;
 	imageCreateInfo.extent.width = width;
 	imageCreateInfo.extent.height = height;
 	imageCreateInfo.extent.depth = 1;
 	imageCreateInfo.mipLevels = mipLevels;
 	imageCreateInfo.arrayLayers = arrayLayers;
-	imageCreateInfo.samples = samples;
+	imageCreateInfo.samples = msaaSamples;
 	imageCreateInfo.tiling = tiling;
 	imageCreateInfo.usage = usage;
 	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

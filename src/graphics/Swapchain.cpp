@@ -1,4 +1,5 @@
 #include "Swapchain.h"
+#include "../utils/ImageTools.h"
 #include "../utils/RendererResources.h"
 
 void Swapchain::init(const Window* window) {
@@ -43,8 +44,15 @@ void Swapchain::init(const Window* window) {
 	images.resize(imageNumber);
 	imageViews.resize(imageNumber);
 	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, images.data()));
+	for (uint32_t i = 0; i < imageNumber; i++) {
+		ImageTools::createImageView(imageViews[i], images[i], 1, 1, VK_IMAGE_VIEW_TYPE_2D, surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+	}
 }
 
 void Swapchain::destroy() {
+	for (uint32_t i = 0; i < imageNumber; i++) {
+		vkDestroyImageView(logicalDevice.device, imageViews[i], nullptr);
+		vkDestroyImage(logicalDevice.device, images[i], nullptr);
+	}
 	vkDestroySwapchainKHR(logicalDevice.device, swapchain, nullptr);
 }

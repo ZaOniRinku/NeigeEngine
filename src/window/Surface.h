@@ -2,7 +2,7 @@
 #include "vulkan/vulkan.hpp"
 
 struct Surface {
-	VkSurfaceKHR surface;
+	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 	void destroy();
 };

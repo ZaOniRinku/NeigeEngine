@@ -5,7 +5,7 @@
 #include <set>
 
 struct LogicalDevice {
-	VkDevice device;
+	VkDevice device = VK_NULL_HANDLE;
 	Queues queues;
 
 	void init();
