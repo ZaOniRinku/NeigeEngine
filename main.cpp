@@ -1,15 +1,14 @@
-#include "src/graphics/Renderer.h"
-#include "src/window/Window.h"
+#include "src/Game.h"
 
 int main(void) {
 	Window w;
 	w.extent.width = 1280;
 	w.extent.height = 720;
-	w.init();
 	Renderer r;
-	r.window = &w;
-	r.init();
-	while (!w.windowGotClosed()) {
-		w.pollEvents();
-	}
+	Game g;
+	g.window = &w;
+	g.renderer = &r;
+	g.init();
+	g.update();
+	g.destroy();
 }

@@ -16,9 +16,9 @@ void Image::init(VkImageType imageType,
 	VkImageAspectFlags imageViewAspectFlags,
 	VkSamplerAddressMode imageViewAddressMode,
 	VkMemoryPropertyFlags imageMemoryProperties) {
-	ImageTools::createImage(image, imageType, arrayLayers, imageWidth, imageHeight, mipLevels, msaaSamples, format, imageTiling, imageUsage, imageMemoryProperties);
-	ImageTools::createImageView(imageView, image, arrayLayers, mipLevels, imageViewType, format, imageViewAspectFlags);
-	ImageTools::createImageSampler(imageSampler, mipLevels, filter, imageViewAddressMode);
+	ImageTools::createImage(&image, imageType, arrayLayers, imageWidth, imageHeight, mipLevels, msaaSamples, format, imageTiling, imageUsage, imageMemoryProperties);
+	ImageTools::createImageView(&imageView, image, arrayLayers, mipLevels, imageViewType, format, imageViewAspectFlags);
+	ImageTools::createImageSampler(&imageSampler, mipLevels, filter, imageViewAddressMode);
 }
 
 void Image::destroy() {

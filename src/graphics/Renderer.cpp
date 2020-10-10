@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "../utils/RendererResources.h"
 
 void Renderer::init() {
 	// Instance
@@ -57,10 +58,15 @@ void Renderer::init() {
 	swapchain.init(window);
 }
 
+void Renderer::update() {
+	
+}
+
 void Renderer::destroy() {
+	vkDeviceWaitIdle(logicalDevice.device);
 	memoryAllocator.destroy();
-	window->surface.destroy();
 	swapchain.destroy();
+	window->surface.destroy();
 	logicalDevice.destroy();
 	instance.destroy();
 }

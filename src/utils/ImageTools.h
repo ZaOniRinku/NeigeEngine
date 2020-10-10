@@ -5,7 +5,7 @@
 #include "RendererResources.h"
 
 struct ImageTools {
-	static void createImage(VkImage image,
+	static void createImage(VkImage* image,
 		VkImageType imageType,
 		uint32_t arrayLayers,
 		uint32_t width,
@@ -16,14 +16,14 @@ struct ImageTools {
 		VkImageTiling tiling,
 		VkImageUsageFlags usage,
 		VkMemoryPropertyFlags memoryProperties);
-	static void createImageView(VkImageView imageView,
+	static void createImageView(VkImageView* imageView,
 		VkImage image,
 		uint32_t arrayLayers,
 		uint32_t mipLevels,
 		VkImageViewType viewType,
 		VkFormat format,
 		VkImageAspectFlags aspectFlags);
-	static void createImageSampler(VkSampler sampler,
+	static void createImageSampler(VkSampler* sampler,
 		uint32_t mipLevels,
 		VkFilter filter,
 		VkSamplerAddressMode addressMode);

@@ -1,6 +1,6 @@
 #include "ImageTools.h"
 
-void ImageTools::createImage(VkImage image,
+void ImageTools::createImage(VkImage* image,
 	VkImageType imageType,
 	uint32_t arrayLayers,
 	uint32_t width,
@@ -27,11 +27,11 @@ void ImageTools::createImage(VkImage image,
 	imageCreateInfo.usage = usage;
 	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	NEIGE_VK_CHECK(vkCreateImage(logicalDevice.device, &imageCreateInfo, nullptr, &image));
+	NEIGE_VK_CHECK(vkCreateImage(logicalDevice.device, &imageCreateInfo, nullptr, image));
 	memoryAllocator.allocate(image, memoryProperties);
 }
 
-void ImageTools::createImageView(VkImageView imageView,
+void ImageTools::createImageView(VkImageView* imageView,
 	VkImage image,
 	uint32_t arrayLayers,
 	uint32_t mipLevels,
@@ -54,10 +54,10 @@ void ImageTools::createImageView(VkImageView imageView,
 	imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
 	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 	imageViewCreateInfo.subresourceRange.layerCount = arrayLayers;
-	NEIGE_VK_CHECK(vkCreateImageView(logicalDevice.device, &imageViewCreateInfo, nullptr, &imageView));
+	NEIGE_VK_CHECK(vkCreateImageView(logicalDevice.device, &imageViewCreateInfo, nullptr, imageView));
 }
 
-void ImageTools::createImageSampler(VkSampler sampler,
+void ImageTools::createImageSampler(VkSampler* sampler,
 	uint32_t mipLevels,
 	VkFilter filter,
 	VkSamplerAddressMode addressMode) {
@@ -80,5 +80,5 @@ void ImageTools::createImageSampler(VkSampler sampler,
 	samplerCreateInfo.maxLod = static_cast<float>(mipLevels);
 	samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 	samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-	NEIGE_VK_CHECK(vkCreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, &sampler));
+	NEIGE_VK_CHECK(vkCreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, sampler));
 }

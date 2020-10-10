@@ -1,14 +1,14 @@
 #include "MemoryAllocator.h"
 #include "RendererResources.h"
 
-Chunk::Chunk(VkDevice device, int32_t memoryType, VkDeviceSize size) {
+Chunk::Chunk(int32_t memoryType, VkDeviceSize size) {
 	type = memoryType;
 
 	VkMemoryAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = size;
 	allocInfo.memoryTypeIndex = memoryType;
-	NEIGE_VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &memory));
+	NEIGE_VK_CHECK(vkAllocateMemory(logicalDevice.device, &allocInfo, nullptr, &memory));
 
 	Block* block = new Block();
 	block->offset = 0;
@@ -83,9 +83,9 @@ void MemoryAllocator::destroy() {
 	}
 }
 
-VkDeviceSize MemoryAllocator::allocate(VkBuffer bufferToAllocate, VkMemoryPropertyFlags flags) {
+VkDeviceSize MemoryAllocator::allocate(VkBuffer* bufferToAllocate, VkMemoryPropertyFlags flags) {
 	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(logicalDevice.device, bufferToAllocate, &memRequirements);
+	vkGetBufferMemoryRequirements(logicalDevice.device, *bufferToAllocate, &memRequirements);
 	int32_t properties = findProperties(memRequirements.memoryTypeBits, flags);
 
 	// Look for the first block with enough space
@@ -95,14 +95,14 @@ VkDeviceSize MemoryAllocator::allocate(VkBuffer bufferToAllocate, VkMemoryProper
 			offset = chunk.allocate(memRequirements);
 
 			if (offset != -1) {
-				vkBindBufferMemory(logicalDevice.device, bufferToAllocate, chunk.memory, offset);
+				vkBindBufferMemory(logicalDevice.device, *bufferToAllocate, chunk.memory, offset);
 				return 1;
 			}
 		}
 	}
 
 	// No block has been found, create a new chunk
-	Chunk newChunk = Chunk(logicalDevice.device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
+	Chunk newChunk = Chunk(properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
 
 	// Add to this chunk
 	VkDeviceSize offset;
@@ -112,16 +112,16 @@ VkDeviceSize MemoryAllocator::allocate(VkBuffer bufferToAllocate, VkMemoryProper
 		NEIGE_ERROR("Unable to allocate memory (buffer).");
 	}
 
-	vkBindBufferMemory(logicalDevice.device, bufferToAllocate, newChunk.memory, offset);
+	vkBindBufferMemory(logicalDevice.device, *bufferToAllocate, newChunk.memory, offset);
 
 	chunks.push_back(newChunk);
 
 	return 1;
 }
 
-VkDeviceSize MemoryAllocator::allocate(VkImage imageToAllocate, VkMemoryPropertyFlags flags) {
+VkDeviceSize MemoryAllocator::allocate(VkImage* imageToAllocate, VkMemoryPropertyFlags flags) {
 	VkMemoryRequirements memRequirements;
-	vkGetImageMemoryRequirements(logicalDevice.device, imageToAllocate, &memRequirements);
+	vkGetImageMemoryRequirements(logicalDevice.device, *imageToAllocate, &memRequirements);
 	int32_t properties = findProperties(memRequirements.memoryTypeBits, flags);
 
 	// Look for the first block with enough space
@@ -131,14 +131,14 @@ VkDeviceSize MemoryAllocator::allocate(VkImage imageToAllocate, VkMemoryProperty
 			offset = chunk.allocate(memRequirements);
 
 			if (offset != -1) {
-				vkBindImageMemory(logicalDevice.device, imageToAllocate, chunk.memory, offset);
+				vkBindImageMemory(logicalDevice.device, *imageToAllocate, chunk.memory, offset);
 				return 1;
 			}
 		}
 	}
 
 	// No block has been found, create a new chunk
-	Chunk newChunk = Chunk(logicalDevice.device, properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
+	Chunk newChunk = Chunk(properties, std::max((VkDeviceSize)CHUNK_SIZE, memRequirements.size));
 
 	// Add to this chunk
 	VkDeviceSize offset;
@@ -148,7 +148,7 @@ VkDeviceSize MemoryAllocator::allocate(VkImage imageToAllocate, VkMemoryProperty
 		NEIGE_ERROR("Unable to allocate memory (image).");
 	}
 
-	vkBindImageMemory(logicalDevice.device, imageToAllocate, newChunk.memory, offset);
+	vkBindImageMemory(logicalDevice.device, *imageToAllocate, newChunk.memory, offset);
 
 	chunks.push_back(newChunk);
 
