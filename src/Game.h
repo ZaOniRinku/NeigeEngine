@@ -4,10 +4,8 @@
 
 struct Game {
 	Window* window;
-	Renderer* renderer;
+	Renderer renderer;
 
-	void init();
-	void update();
-	void destroy();
+	void launch();
 };
 

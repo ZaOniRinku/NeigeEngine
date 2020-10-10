@@ -1,20 +1,16 @@
 #include "Game.h"
 
-void Game::init() {
+void Game::launch() {
 	window->init();
-	renderer->window = window;
-	renderer->init();
-}
+	renderer.window = window;
+	renderer.init();
 
-void Game::update() {
 	while (!window->windowGotClosed()) {
 		window->pollEvents();
 
-		renderer->update();
+		renderer.update();
 	}
-}
 
-void Game::destroy() {
-	renderer->destroy();
+	renderer.destroy();
 	window->destroy();
 }

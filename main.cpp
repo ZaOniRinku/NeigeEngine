@@ -2,13 +2,9 @@
 
 int main(void) {
 	Window w;
-	w.extent.width = 1280;
-	w.extent.height = 720;
-	Renderer r;
+	w.extent.width = 1920;
+	w.extent.height = 1080;
 	Game g;
 	g.window = &w;
-	g.renderer = &r;
-	g.init();
-	g.update();
-	g.destroy();
+	g.launch();
 }
