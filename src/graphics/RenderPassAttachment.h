@@ -9,7 +9,7 @@ enum AttachmentType {
 
 struct RenderPassAttachment {
 	AttachmentType type;
-	VkAttachmentDescription attachmentDescription = {};
+	VkAttachmentDescription description = {};
 
 	RenderPassAttachment(AttachmentType attachmentType,
 		VkFormat format,

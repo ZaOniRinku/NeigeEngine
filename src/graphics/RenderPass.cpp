@@ -3,18 +3,23 @@
 
 void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 	for (size_t i = 0; i < attachments.size(); i++) {
-		attachmentDescriptions.push_back(attachments[i].attachmentDescription);
+		attachmentDescriptions.push_back(attachments[i].description);
 		VkAttachmentReference reference = {};
 		reference.attachment = attachmentCount++;
+		VkClearValue clearValue = {};
 		switch (attachments[i].type) {
 		case COLOR:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			colorAttachmentReferences.push_back(reference);
+			clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			clearValues.push_back(clearValue);
 			break;
 		case DEPTH:
 			reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			otherAttachmentReferences.push_back(reference);
 			depthIndex = static_cast<int>(i);
+			clearValue.depthStencil = { 1.0f, 0 };
+			clearValues.push_back(clearValue);
 			break;
 		case SWAPCHAIN:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -53,4 +58,21 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 
 void RenderPass::destroy() {
 	vkDestroyRenderPass(logicalDevice.device, renderPass, nullptr);
+}
+
+void RenderPass::begin(CommandBuffer* commandBuffer, VkFramebuffer framebuffer, VkExtent2D extent) {
+	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.pNext = nullptr;
+	renderPassBeginInfo.renderPass = renderPass;
+	renderPassBeginInfo.framebuffer = framebuffer;
+	renderPassBeginInfo.renderArea.offset = { 0, 0 };
+	renderPassBeginInfo.renderArea.extent = extent;
+	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassBeginInfo.pClearValues = clearValues.data();
+	vkCmdBeginRenderPass(commandBuffer->commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void RenderPass::end(CommandBuffer* commandBuffer) {
+	vkCmdEndRenderPass(commandBuffer->commandBuffer);
 }
