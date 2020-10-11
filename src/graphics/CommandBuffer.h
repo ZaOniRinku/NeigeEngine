@@ -9,5 +9,6 @@ struct CommandBuffer {
 	void init(CommandPool* commandPool);
 	void begin();
 	void end();
+	void endAndSubmit();
 };
 
