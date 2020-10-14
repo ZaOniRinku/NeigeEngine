@@ -16,15 +16,13 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 			break;
 		case DEPTH:
 			reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			otherAttachmentReferences.push_back(reference);
-			depthIndex = static_cast<int>(i);
+			depthAttachmentReference = reference;
 			clearValue.depthStencil = { 1.0f, 0 };
 			clearValues.push_back(clearValue);
 			break;
 		case SWAPCHAIN:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			otherAttachmentReferences.push_back(reference);
-			swapchainIndex = static_cast<int>(i);
+			swapchainAttachmentReference = reference;
 			break;
 		}
 	}
@@ -33,8 +31,8 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpassDescription.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentReferences.size());
 	subpassDescription.pColorAttachments = colorAttachmentReferences.data();
-	subpassDescription.pResolveAttachments = &otherAttachmentReferences[swapchainIndex];
-	subpassDescription.pDepthStencilAttachment = &otherAttachmentReferences[depthIndex];
+	subpassDescription.pResolveAttachments = &swapchainAttachmentReference;
+	subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
 	// TODO: manage multi subpass dependencies
 	VkSubpassDependency subpassDepedency = {};
 	subpassDepedency.srcSubpass = VK_SUBPASS_EXTERNAL;
