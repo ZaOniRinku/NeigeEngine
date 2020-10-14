@@ -1,29 +1,31 @@
 #include "FileTools.h"
 
-std::vector<char> FileTools::readAscii(const std::string& filePath) {
+std::string FileTools::readAscii(const std::string& filePath) {
     std::ifstream file(filePath, std::ios::in | std::ios::ate);
     if (!file.is_open()) {
         NEIGE_ERROR("File \"" + filePath + "\" could not be opened (ASCII).");
     }
-    size_t size = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(size);
     file.seekg(0);
-    file.read(buffer.data(), size);
-    file.close();
-    return buffer;
+    std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    return fileContent;
 }
 
-std::vector<char> FileTools::readBinary(const std::string& filePath) {
+std::string FileTools::readBinary(const std::string& filePath) {
     std::ifstream file(filePath, std::ios::in | std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
         NEIGE_ERROR("File \"" + filePath + "\" could not be opened (Binary).");
     }
-    size_t size = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(size);
     file.seekg(0);
-    file.read(buffer.data(), size);
-    file.close();
-    return buffer;
+    std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    return fileContent;
+}
+
+std::string FileTools::filename(const std::string& filePath) {
+    std::size_t slashPosition = filePath.find_last_of('/');
+    if (slashPosition == std::string::npos) {
+        return filePath;
+    }
+    return filePath.substr(slashPosition + 1);
 }
 
 std::string FileTools::extension(const std::string& filePath) {

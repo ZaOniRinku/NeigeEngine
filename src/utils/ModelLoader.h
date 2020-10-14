@@ -4,7 +4,7 @@
 #include "FileTools.h"
 
 struct ModelLoader {
-	static void load(std::string filePath);
-	static void loadglTF(std::string filePath);
+	static void load(const std::string& filePath);
+	static void loadglTF(const std::string& filePath);
 };
 

@@ -2,29 +2,29 @@
 #define CGLTF_IMPLEMENTATION
 #include "../../external/cgltf/cgltf.h"
 
-void ModelLoader::load(std::string filePath) {
+void ModelLoader::load(const std::string& filePath) {
 	std::string extension = FileTools::extension(filePath);
 	if (extension == "gltf" || extension == "glb") {
 		loadglTF(filePath);
 	}
 	else {
-		NEIGE_ERROR("." + filePath + " model extension not supported.");
+		NEIGE_ERROR("\"." + extension + "\" model extension not supported.");
 	}
 }
 
-void ModelLoader::loadglTF(std::string filePath) {
+void ModelLoader::loadglTF(const std::string& filePath) {
 	cgltf_options options = {};
 	cgltf_data* data = NULL;
 	cgltf_result result = cgltf_parse_file(&options, filePath.c_str(), &data);
 	if (result == cgltf_result_success) {
-		result = cgltf_load_buffers(&options, data, filePath.c_str());
-		if (result == cgltf_result_success) {
-			for (size_t i = 0; i < data->buffers_count; i++) {
-				std::cout << data->buffers[i].size << std::endl;
+		for (int i = 0; i < data->nodes_count; i++) {
+			if (data->nodes[i].mesh != NULL) {
+				for (int j = 0; j < data->nodes[i].mesh->primitives_count; j++) {
+					for (int k = 0; k < data->nodes[i].mesh->primitives[j].attributes_count; k++) {
+						std::cout << data->nodes[i].mesh->primitives[j].attributes[k].name << std::endl;
+					}
+				}
 			}
-		}
-		else {
-			NEIGE_ERROR("Error with buffer loading for file \"" + filePath + "\".");
 		}
 		cgltf_free(data);
 	}

@@ -83,7 +83,7 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 	NEIGE_VK_CHECK(vkCreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, sampler));
 }
 
-void ImageTools::loadImage(std::string filePath,
+void ImageTools::loadImage(const std::string& filePath,
 	VkImage* imageDestination,
 	VkFormat format) {
 	Buffer buffer;

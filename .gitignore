@@ -359,7 +359,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+build/
 cmake/
+CMakeFiles/
+Debug/
+x64/
 models/
 textures/
 *.bin
@@ -367,4 +371,6 @@ textures/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+CMakeCache.txt
 compile.bat
+shaders/

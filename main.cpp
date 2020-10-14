@@ -1,9 +1,9 @@
 #include "src/Game.h"
-#include "src/utils/ImageTools.h"
-#include "src/utils/ModelLoader.h"
+#include "src/graphics/Shader.h"
 
 int main(void) {
-	// ModelLoader::load("../gltfmodels/2CylinderEngine.gltf");
+	Shader s;
+	s.init("../shaders/dummy_shader.vert");
 	Window w;
 	w.extent.width = 480;
 	w.extent.height = 360;

@@ -29,7 +29,7 @@ struct ImageTools {
 		uint32_t mipLevels,
 		VkFilter filter,
 		VkSamplerAddressMode addressMode);
-	static void loadImage(std::string filePath,
+	static void loadImage(const std::string& filePath,
 		VkImage* imageDestination,
 		VkFormat format);
 	static void transitionLayout(VkImage image,

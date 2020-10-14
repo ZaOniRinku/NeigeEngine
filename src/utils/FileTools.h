@@ -5,7 +5,8 @@
 #include <string>
 
 struct FileTools {
-	static std::vector<char> readAscii(const std::string& filePath);
-	static std::vector<char> readBinary(const std::string& filePath);
+	static std::string readAscii(const std::string& filePath);
+	static std::string readBinary(const std::string& filePath);
+	static std::string filename(const std::string& filePath);
 	static std::string extension(const std::string& filePath);
 };
