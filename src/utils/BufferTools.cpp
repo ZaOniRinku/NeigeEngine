@@ -13,6 +13,7 @@ void BufferTools::createBuffer(VkBuffer* buffer,
 	bufferCreateInfo.usage = usage;
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	NEIGE_VK_CHECK(vkCreateBuffer(logicalDevice.device, &bufferCreateInfo, nullptr, buffer));
+
 	memoryAllocator.allocate(buffer, memoryProperties);
 }
 
@@ -29,6 +30,7 @@ void BufferTools::createStagingBuffer(VkBuffer& buffer,
 	bufferCreateInfo.usage = usage;
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	NEIGE_VK_CHECK(vkCreateBuffer(logicalDevice.device, &bufferCreateInfo, nullptr, &buffer));
+
 	VkMemoryRequirements memoryRequirements;
 	vkGetBufferMemoryRequirements(logicalDevice.device, buffer, &memoryRequirements);
 	VkMemoryAllocateInfo memoryAllocateInfo = {};
@@ -37,6 +39,7 @@ void BufferTools::createStagingBuffer(VkBuffer& buffer,
 	memoryAllocateInfo.allocationSize = memoryRequirements.size;
 	memoryAllocateInfo.memoryTypeIndex = memoryAllocator.findProperties(memoryRequirements.memoryTypeBits, memoryProperties);
 	NEIGE_VK_CHECK(vkAllocateMemory(logicalDevice.device, &memoryAllocateInfo, nullptr, &deviceMemory));
+
 	vkBindBufferMemory(logicalDevice.device, buffer, deviceMemory, 0);
 }
 

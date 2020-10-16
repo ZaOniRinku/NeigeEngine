@@ -11,6 +11,7 @@ void Swapchain::init(const Window* window) {
 	if (swapchainSupport.capabilities.maxImageCount > 0 && minImageCount > swapchainSupport.capabilities.maxImageCount) {
 		minImageCount = swapchainSupport.capabilities.maxImageCount;
 	}
+
 	VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
 	swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchainCreateInfo.pNext = nullptr;
@@ -39,6 +40,7 @@ void Swapchain::init(const Window* window) {
 	swapchainCreateInfo.clipped = VK_TRUE;
 	swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 	NEIGE_VK_CHECK(vkCreateSwapchainKHR(logicalDevice.device, &swapchainCreateInfo, nullptr, &swapchain));
+
 	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, nullptr));
 	NEIGE_INFO("Swapchain size : " + std::to_string(imageNumber));
 	images.resize(imageNumber);

@@ -28,6 +28,7 @@ void ImageTools::createImage(VkImage* image,
 	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	NEIGE_VK_CHECK(vkCreateImage(logicalDevice.device, &imageCreateInfo, nullptr, image));
+
 	memoryAllocator.allocate(image, memoryProperties);
 }
 
@@ -120,6 +121,7 @@ void ImageTools::transitionLayout(VkImage image,
 	CommandBuffer commandBuffer;
 	commandBuffer.init(&commandPool);
 	commandBuffer.begin();
+
 	VkImageMemoryBarrier imageMemoryBarrier = {};
 	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	imageMemoryBarrier.pNext = nullptr;
@@ -171,6 +173,7 @@ void ImageTools::transitionLayout(VkImage image,
 		NEIGE_ERROR("Unsupported image layout transition.");
 	}
 	vkCmdPipelineBarrier(commandBuffer.commandBuffer, srcPipelineStageFlags, dstPipelineStageFlags, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
 	commandBuffer.endAndSubmit();
 	commandPool.destroy();
 }
@@ -190,6 +193,7 @@ void ImageTools::generateMipmaps(VkImage image,
 	CommandBuffer commandBuffer;
 	commandBuffer.init(&commandPool);
 	commandBuffer.begin();
+
 	VkImageMemoryBarrier imageMemoryBarrier = {};
 	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	imageMemoryBarrier.pNext = nullptr;
@@ -237,6 +241,7 @@ void ImageTools::generateMipmaps(VkImage image,
 	imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	vkCmdPipelineBarrier(commandBuffer.commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
 	commandBuffer.endAndSubmit();
 	commandPool.destroy();
 }

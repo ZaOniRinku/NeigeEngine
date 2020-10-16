@@ -1,7 +1,7 @@
 #include "RenderPass.h"
 #include "../utils/RendererResources.h"
 
-void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
+void RenderPass::init(std::vector<RenderPassAttachment> attachments, std::vector<SubpassDependency> subpassDependencies) {
 	for (size_t i = 0; i < attachments.size(); i++) {
 		attachmentDescriptions.push_back(attachments[i].description);
 		VkAttachmentReference reference = {};
@@ -26,6 +26,7 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 			break;
 		}
 	}
+
 	VkSubpassDescription subpassDescription = {};
 	subpassDescription.flags = 0;
 	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -33,14 +34,20 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 	subpassDescription.pColorAttachments = colorAttachmentReferences.data();
 	subpassDescription.pResolveAttachments = &swapchainAttachmentReference;
 	subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
-	// TODO: manage multi subpass dependencies
-	VkSubpassDependency subpassDepedency = {};
-	subpassDepedency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	subpassDepedency.dstSubpass = 0;
-	subpassDepedency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	subpassDepedency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	subpassDepedency.srcAccessMask = 0;
-	subpassDepedency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	std::vector<VkSubpassDependency> dependencies;
+	for (size_t i = 0; i < subpassDependencies.size(); i++) {
+		VkSubpassDependency subpassDepedency = {};
+		subpassDepedency.srcSubpass = i == 0 ? VK_SUBPASS_EXTERNAL : 0;
+		subpassDepedency.dstSubpass = i == 0 ? 0 : VK_SUBPASS_EXTERNAL;
+		subpassDepedency.srcStageMask = subpassDependencies[i].srcStageMask;
+		subpassDepedency.dstStageMask = subpassDependencies[i].dstStageMask;
+		subpassDepedency.srcAccessMask = subpassDependencies[i].srcAccessMask;
+		subpassDepedency.dstAccessMask = subpassDependencies[i].dstAccessMask;
+		subpassDepedency.dependencyFlags = subpassDependencies[i].dependencyFlags;
+		dependencies.push_back(subpassDepedency);
+	}
+
 	VkRenderPassCreateInfo renderPassCreateInfo = {};
 	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassCreateInfo.pNext = nullptr;
@@ -49,8 +56,8 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments) {
 	renderPassCreateInfo.pAttachments = attachmentDescriptions.data();
 	renderPassCreateInfo.subpassCount = 1;
 	renderPassCreateInfo.pSubpasses = &subpassDescription;
-	renderPassCreateInfo.dependencyCount = 1;
-	renderPassCreateInfo.pDependencies = &subpassDepedency;
+	renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+	renderPassCreateInfo.pDependencies = dependencies.data();
 	NEIGE_VK_CHECK(vkCreateRenderPass(logicalDevice.device, &renderPassCreateInfo, nullptr, &renderPass));
 }
 

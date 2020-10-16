@@ -75,3 +75,12 @@ struct SwapchainSupport {
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 };
+
+// Subpass dependency
+struct SubpassDependency {
+	VkPipelineStageFlags srcStageMask;
+	VkPipelineStageFlags dstStageMask;
+	VkAccessFlags srcAccessMask;
+	VkAccessFlags dstAccessMask;
+	VkDependencyFlags dependencyFlags;
+};

@@ -31,7 +31,15 @@ void Shader::init(const std::string& filePath) {
 		glslang::InitializeProcess();
 		glslInitialized = true;
 	}
-	compile(filePath);
+	std::vector<uint32_t> spvCode = compile(filePath);
+
+	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
+	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shaderModuleCreateInfo.pNext = nullptr;
+	shaderModuleCreateInfo.flags = 0;
+	shaderModuleCreateInfo.codeSize = spvCode.size() * sizeof(uint32_t);
+	shaderModuleCreateInfo.pCode = spvCode.data();
+	NEIGE_VK_CHECK(vkCreateShaderModule(logicalDevice.device, &shaderModuleCreateInfo, nullptr, &module));
 }
 
 void Shader::destroy() {
@@ -43,6 +51,7 @@ std::vector<uint32_t> Shader::compile(const std::string& filePath) {
 	std::string code = FileTools::readAscii(filePath);
 	const char* codeString = code.c_str();
 	EShLanguage shaderType = shaderTypeToGlslangShaderType();
+
 	glslang::TShader shader(shaderType);
 	shader.setStrings(&codeString, 1);
 	int clientInputSemanticsVersion = 120;

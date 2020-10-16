@@ -374,3 +374,4 @@ textures/
 CMakeCache.txt
 compile.bat
 shaders/
+*.pub

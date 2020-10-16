@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "../utils/RendererResources.h"
+#include "Shader.h"
 
 void Renderer::init() {
 	// Instance
