@@ -10,3 +10,6 @@
 [submodule "external/glslang"]
 	path = external/glslang
 	url = https://github.com/KhronosGroup/glslang
+[submodule "external/spirv-reflect"]
+	path = external/spirv-reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect

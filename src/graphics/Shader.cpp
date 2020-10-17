@@ -1,8 +1,6 @@
 #include "Shader.h"
 #include "../utils/RendererResources.h"
 
-class glslang::TShader;
-
 void Shader::init(const std::string& filePath) {
 	file = filePath;
 	std::string extension = FileTools::extension(filePath);
@@ -31,6 +29,8 @@ void Shader::init(const std::string& filePath) {
 		glslang::InitializeProcess();
 		glslInitialized = true;
 	}
+
+	// Compilation to SPIR-V
 	std::vector<uint32_t> spvCode = compile(filePath);
 
 	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
@@ -40,6 +40,9 @@ void Shader::init(const std::string& filePath) {
 	shaderModuleCreateInfo.codeSize = spvCode.size() * sizeof(uint32_t);
 	shaderModuleCreateInfo.pCode = spvCode.data();
 	NEIGE_VK_CHECK(vkCreateShaderModule(logicalDevice.device, &shaderModuleCreateInfo, nullptr, &module));
+
+	// Reflection from SPIR-V
+	reflect(filePath, spvCode);
 }
 
 void Shader::destroy() {
@@ -93,6 +96,14 @@ std::vector<uint32_t> Shader::compile(const std::string& filePath) {
 	glslang::GlslangToSpv(*program.getIntermediate(shaderType), spvCode, &buildLogger, &spvOptions);
 	
 	return spvCode;
+}
+
+void Shader::reflect(const std::string& filePath, const std::vector<uint32_t> spvCode) {
+	SpvReflectShaderModule spvShaderModule;
+	SpvReflectResult result = spvReflectCreateShaderModule(spvCode.size() * sizeof(uint32_t), spvCode.data(), &spvShaderModule);
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + filePath + "\" shader reflection failed.");
+
+	spvReflectDestroyShaderModule(&spvShaderModule);
 }
 
 EShLanguage Shader::shaderTypeToGlslangShaderType() {

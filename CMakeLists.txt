@@ -8,6 +8,7 @@ SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 include_directories(external/cgltf)
 include_directories(external/stb)
+include_directories(external/spirv-reflect)
 
 add_subdirectory(external/glfw)
 link_libraries(glfw)
@@ -45,7 +46,9 @@ SET(UTILS_SOURCES src/utils/BufferTools.cpp src/utils/FileTools.cpp src/utils/Im
 SET(UTILS_HEADERS src/utils/BufferTools.h src/utils/FileTools.h src/utils/ImageTools.h src/utils/MemoryAllocator.h src/utils/ModelLoader.h src/utils/NeigeDefines.h src/utils/NeigeStructs.h src/utils/PhysicalDevicePicker.h src/utils/RendererResources.h)
 SET(WINDOW_SOURCES src/window/Surface.cpp src/window/Window.cpp)
 SET(WINDOW_HEADERS src/window/Surface.h src/window/Window.h)
-SET(SOURCES ${GAME_SOURCES} ${GRAPHICS_SOURCES} ${WINDOW_SOURCES} ${UTILS_SOURCES})
+SET(EXTERNAL_SOURCES external/spirv-reflect/spirv_reflect.c)
+
+SET(SOURCES ${GAME_SOURCES} ${GRAPHICS_SOURCES} ${WINDOW_SOURCES} ${UTILS_SOURCES} ${EXTERNAL_SOURCES})
 SET(HEADERS ${GAME_HEADERS} ${GRAPHICS_HEADERS} ${WINDOW_HEADERS} ${UTILS_HEADERS})
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES} ${HEADERS})

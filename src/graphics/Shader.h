@@ -5,6 +5,7 @@
 #include "../../external/glslang/glslang/Include/ShHandle.h"
 #include "../../external/glslang/SPIRV/GlslangToSpv.h"
 #include "../../external/glslang/StandAlone/DirStackFileIncluder.h"
+#include "../../external/spirv-reflect/spirv_reflect.h"
 #include <string>
 #include <vector>
 
@@ -25,5 +26,6 @@ struct Shader{
 	void init(const std::string& filePath);
 	void destroy();
 	std::vector<uint32_t> compile(const std::string& filePath);
+	void reflect(const std::string& filePath, const std::vector<uint32_t> spvCode);
 	EShLanguage shaderTypeToGlslangShaderType();
 };
