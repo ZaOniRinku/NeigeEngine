@@ -7,8 +7,9 @@ SET(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 include_directories(external/cgltf)
-include_directories(external/stb)
+include_directories(external/glm)
 include_directories(external/spirv-reflect)
+include_directories(external/stb)
 
 add_subdirectory(external/glfw)
 link_libraries(glfw)

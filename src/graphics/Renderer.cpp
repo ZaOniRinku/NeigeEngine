@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "../utils/RendererResources.h"
+#include "GraphicsPipeline.h"
 
 void Renderer::init() {
 	// Instance
@@ -23,7 +24,7 @@ void Renderer::update() {
 }
 
 void Renderer::destroy() {
-	vkDeviceWaitIdle(logicalDevice.device);
+	NEIGE_VK_CHECK(vkDeviceWaitIdle(logicalDevice.device));
 	memoryAllocator.destroy();
 	swapchain.destroy();
 	window->surface.destroy();

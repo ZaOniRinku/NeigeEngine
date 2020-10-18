@@ -31,7 +31,7 @@ void Shader::init(const std::string& filePath) {
 	}
 
 	// Compilation to SPIR-V
-	std::vector<uint32_t> spvCode = compile(filePath);
+	compile();
 
 	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
 	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -42,16 +42,16 @@ void Shader::init(const std::string& filePath) {
 	NEIGE_VK_CHECK(vkCreateShaderModule(logicalDevice.device, &shaderModuleCreateInfo, nullptr, &module));
 
 	// Reflection from SPIR-V
-	reflect(filePath, spvCode);
+	reflect();
 }
 
 void Shader::destroy() {
 	vkDestroyShaderModule(logicalDevice.device, module, nullptr);
 }
 
-std::vector<uint32_t> Shader::compile(const std::string& filePath) {
+void Shader::compile() {
 	const TBuiltInResource DefaultTBuiltInResource = {};
-	std::string code = FileTools::readAscii(filePath);
+	std::string code = FileTools::readAscii(file);
 	const char* codeString = code.c_str();
 	EShLanguage shaderType = shaderTypeToGlslangShaderType();
 
@@ -69,39 +69,88 @@ std::vector<uint32_t> Shader::compile(const std::string& filePath) {
 
 	// Preprocess
 	DirStackFileIncluder includer;
-	includer.pushExternalLocalDirectory(filePath);
+	includer.pushExternalLocalDirectory(file);
 	std::string preprocess;
 	if (!shader.preprocess(&resource, defaultVersion, ENoProfile, false, false, messages, &preprocess, includer)) {
-		NEIGE_ERROR("\"" + filePath + "\" shader preprocessing failed.\n" + "\"" + filePath + "\" error:" + shader.getInfoLog() + "\n" + "\"" + filePath + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
 	}
 
 	// Parse
 	const char* preprocessString = preprocess.c_str();
 	shader.setStrings(&preprocessString, 1);
 	if (!shader.parse(&resource, defaultVersion, false, messages)) {
-		NEIGE_ERROR("\"" + filePath + "\" shader parcing failed.\n" + "\"" + filePath + "\" error:" + shader.getInfoLog() + "\n" + "\"" + filePath + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader parcing failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
 	}
 
 	// Link
 	glslang::TProgram program;
 	program.addShader(&shader);
 	if (!program.link(messages)) {
-		NEIGE_ERROR("\"" + filePath + "\" shader linking failed.\n" + "\"" + filePath + "\" error:" + shader.getInfoLog() + "\n" + "\"" + filePath + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader linking failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
 	}
 
 	// Compile
-	std::vector<uint32_t> spvCode;
 	spv::SpvBuildLogger buildLogger;
 	glslang::SpvOptions spvOptions;
 	glslang::GlslangToSpv(*program.getIntermediate(shaderType), spvCode, &buildLogger, &spvOptions);
-	
-	return spvCode;
 }
 
-void Shader::reflect(const std::string& filePath, const std::vector<uint32_t> spvCode) {
+void Shader::reflect() {
 	SpvReflectShaderModule spvShaderModule;
 	SpvReflectResult result = spvReflectCreateShaderModule(spvCode.size() * sizeof(uint32_t), spvCode.data(), &spvShaderModule);
-	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + filePath + "\" shader reflection failed.");
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" shader reflection failed.");
+
+	uint32_t descriptorSetCount;
+	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetCount, nullptr);
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count descriptors sets.");
+	std::vector<SpvReflectDescriptorSet*> descriptorSets(descriptorSetCount);
+	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetCount, descriptorSets.data());
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find descriptors sets.");
+
+	// Bindings
+	std::vector<std::vector<VkDescriptorSetLayoutBinding>> layoutBindings;
+	layoutBindings.resize(descriptorSetCount);
+	for (uint32_t i = 0; i < descriptorSetCount; i++) {
+		const SpvReflectDescriptorSet& reflectSet = *descriptorSets[i];
+		for (uint32_t j = 0; j < reflectSet.binding_count; j++) {
+			const SpvReflectDescriptorBinding& reflectBinding = *reflectSet.bindings[j];
+			VkDescriptorSetLayoutBinding binding = {};
+			binding.binding = reflectBinding.binding;
+			binding.descriptorType = static_cast<VkDescriptorType>(reflectBinding.descriptor_type);
+			binding.descriptorCount = 1;
+			for (uint32_t k = 0; k < reflectBinding.array.dims_count; k++) {
+				binding.descriptorCount *= reflectBinding.array.dims[k];
+			}
+			binding.stageFlags = shaderTypeToVkShaderFlagBits();
+			binding.pImmutableSamplers = nullptr;
+			layoutBindings[i].push_back(binding);
+		}
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+		descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorSetLayoutCreateInfo.pNext = nullptr;
+		descriptorSetLayoutCreateInfo.flags = 0;
+		descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings[i].size());
+		descriptorSetLayoutCreateInfo.pBindings = layoutBindings[i].data();
+		VkDescriptorSetLayout descriptorSetLayout;
+		NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+		descriptorSetLayouts.push_back(descriptorSetLayout);
+	}
+	
+	// Push constants
+	uint32_t pushConstantCount;
+	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantCount, nullptr);
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count push constants.");
+	std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantCount);
+	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantCount, pushConstants.data());
+	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find push constants.");
+	
+	for (uint32_t i = 0; i < pushConstantCount; i++) {
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.offset = pushConstants[i]->offset;
+		pushConstantRange.size = pushConstants[i]->size;
+		pushConstantRange.stageFlags = shaderTypeToVkShaderFlagBits();
+		pushConstantRanges.push_back(pushConstantRange);
+	}
 
 	spvReflectDestroyShaderModule(&spvShaderModule);
 }
@@ -128,5 +177,30 @@ EShLanguage Shader::shaderTypeToGlslangShaderType() {
 		break;
 	default:
 		NEIGE_ERROR("Error converting shader type to glslang shader type.");
+	}
+}
+
+VkShaderStageFlagBits Shader::shaderTypeToVkShaderFlagBits() {
+	switch (type) {
+	case VERTEX:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+		break;
+	case FRAGMENT:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+		break;
+	case TESSELATION_CONTROL:
+		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+		break;
+	case TESSELATION_EVALUATION:
+		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+		break;
+	case GEOMETRY:
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+		break;
+	case COMPUTE:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+		break;
+	default:
+		NEIGE_ERROR("Error converting shader type to Vulkan shader flag bits.");
 	}
 }

@@ -35,6 +35,6 @@ void CommandBuffer::endAndSubmit() {
 	submitInfo.pCommandBuffers = &commandBuffer;
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
-	vkQueueSubmit(logicalDevice.queues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(logicalDevice.queues.graphicsQueue);
+	NEIGE_VK_CHECK(vkQueueSubmit(logicalDevice.queues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE));
+	NEIGE_VK_CHECK(vkQueueWaitIdle(logicalDevice.queues.graphicsQueue));
 }

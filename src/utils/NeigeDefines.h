@@ -35,23 +35,19 @@
 		std::cout << "\033[1m\033[36mNEIGE INFO : \033[39m\033[0m" << m << std::endl; \
 	} while(0)
 #else
-#define NEIGE_INFO(m) \
-	do { \
-	} while(0)
+#define NEIGE_INFO(m)
 #endif
 
 #ifndef NDEBUG
 #define NEIGE_ASSERT(c, m) \
 		do { \
-			if (!c) { \
+			if (!(c)) { \
 				std::cerr << "\033[1m\033[35mNEIGE ASSERT : \033[39m\033[0m" << m << std::endl; \
 				exit(3); \
 			} \
 		} while(0)
 #else
-#define NEIGE_ASSERT(c, m) \
-		do { \
-		} while(0)
+#define NEIGE_ASSERT(c, m)
 #endif
 
 #ifndef NDEBUG

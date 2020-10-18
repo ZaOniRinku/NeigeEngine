@@ -18,14 +18,19 @@ enum SHADER_TYPE {
 	COMPUTE
 };
 
-struct Shader{
+struct Shader {
 	VkShaderModule module;
 	std::string file;
-	SHADER_TYPE type;
+	enum SHADER_TYPE type;
+	std::vector<uint32_t> spvCode;
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+	std::vector<VkPushConstantRange> pushConstantRanges;
 	bool glslInitialized = false;
+
 	void init(const std::string& filePath);
 	void destroy();
-	std::vector<uint32_t> compile(const std::string& filePath);
-	void reflect(const std::string& filePath, const std::vector<uint32_t> spvCode);
+	void compile();
+	void reflect();
 	EShLanguage shaderTypeToGlslangShaderType();
+	VkShaderStageFlagBits shaderTypeToVkShaderFlagBits();
 };
