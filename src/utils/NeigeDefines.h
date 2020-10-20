@@ -51,6 +51,15 @@
 #endif
 
 #ifndef NDEBUG
+#define NEIGE_SHADER_ERROR(m) \
+		do { \
+			std::cerr << "\033[1m\033[94mSHADER ERROR : \033[39m\033[0m" << m << std::endl; \
+		} while(0)
+#else
+#define NEIGE_SHADER_ERROR(m)
+#endif
+
+#ifndef NDEBUG
 const bool NEIGE_DEBUG = true;
 #else
 const bool NEIGE_DEBUG = false;

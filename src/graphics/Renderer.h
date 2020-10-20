@@ -4,15 +4,20 @@
 #include "../utils/NeigeStructs.h"
 #include "../utils/ImageTools.h"
 #include "../utils/PhysicalDevicePicker.h"
+#include "CommandBuffer.h"
+#include "CommandPool.h"
 #include "Fence.h"
 #include "Framebuffer.h"
 #include "GraphicsPipeline.h"
 #include "Image.h"
+#include "RenderPass.h"
 #include "Semaphore.h"
+#include "Shader.h"
 #include "../window/Window.h"
 #include <iostream>
 #include <vector>
 #include <string>
+#include <map>
 
 #define MAX_FRAMES_IN_FLIGHT 3
 
@@ -35,6 +40,8 @@ struct Renderer {
 
 	uint32_t swapchainSize;
 	uint32_t currentFrame = 0;
+
+	bool pressed = false;
 
 	void init();
 	void update();

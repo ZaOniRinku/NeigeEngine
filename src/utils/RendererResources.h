@@ -2,6 +2,7 @@
 #include "../graphics/Instance.h"
 #include "../graphics/LogicalDevice.h"
 #include "../graphics/PhysicalDevice.h"
+#include "../graphics/Shader.h"
 #include "../graphics/Swapchain.h"
 #include "../utils/MemoryAllocator.h"
 
@@ -10,3 +11,4 @@ inline LogicalDevice logicalDevice;
 inline PhysicalDevice physicalDevice;
 inline Swapchain swapchain;
 inline MemoryAllocator memoryAllocator;
+inline std::unordered_map<std::string, Shader> shaders;

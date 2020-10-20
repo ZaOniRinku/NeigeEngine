@@ -19,7 +19,7 @@ enum SHADER_TYPE {
 };
 
 struct Shader {
-	VkShaderModule module;
+	VkShaderModule module = VK_NULL_HANDLE;
 	std::string file;
 	enum SHADER_TYPE type;
 	std::vector<uint32_t> spvCode;
@@ -30,8 +30,9 @@ struct Shader {
 
 	void init(const std::string& filePath);
 	void destroy();
-	void compile();
+	bool compile();
 	void reflect();
+	void reload();
 	EShLanguage shaderTypeToGlslangShaderType();
 	VkShaderStageFlagBits shaderTypeToVkShaderFlagBits();
 };

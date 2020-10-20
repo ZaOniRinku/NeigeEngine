@@ -5,15 +5,24 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
 
-	if (vertexShader) {
-		NEIGE_ASSERT(vertexShader->type == VERTEX, "Vertex shader in pipeline is not a vertex shader.");
+	if (vertexShaderPath != "") {
+		Shader shader;
+		std::unordered_map<std::string, Shader>::const_iterator mapSearch = shaders.find(vertexShaderPath);
+		if (mapSearch == shaders.end()) {
+			shader.init(vertexShaderPath);
+			shaders.emplace(vertexShaderPath, shader);
+		}
+		else {
+			shader = shaders[vertexShaderPath];
+		}
+		NEIGE_ASSERT(shader.type == VERTEX, "Vertex shader in pipeline is not a vertex shader.");
 
 		VkPipelineShaderStageCreateInfo vertexShaderCreateInfo = {};
 		vertexShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertexShaderCreateInfo.pNext = nullptr;
 		vertexShaderCreateInfo.flags = 0;
-		vertexShaderCreateInfo.stage = vertexShader->shaderTypeToVkShaderFlagBits();
-		vertexShaderCreateInfo.module = vertexShader->module;
+		vertexShaderCreateInfo.stage = shader.shaderTypeToVkShaderFlagBits();
+		vertexShaderCreateInfo.module = shader.module;
 		vertexShaderCreateInfo.pName = "main";
 		vertexShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(vertexShaderCreateInfo);
@@ -27,81 +36,117 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), vertexShader->descriptorSetLayouts.begin(), vertexShader->descriptorSetLayouts.end());
-		pushConstantRanges.insert(pushConstantRanges.end(), vertexShader->pushConstantRanges.begin(), vertexShader->pushConstantRanges.end());
-		uniqueDescriptorTypes.insert(vertexShader->uniqueDescriptorTypes.begin(), vertexShader->uniqueDescriptorTypes.end());
+		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
-	if (fragmentShader) {
-		NEIGE_ASSERT(fragmentShader->type == FRAGMENT, "Fragment shader in pipeline is not a fragment shader.");
+	if (fragmentShaderPath != "") {
+		Shader shader;
+		std::unordered_map<std::string, Shader>::const_iterator mapSearch = shaders.find(fragmentShaderPath);
+		if (mapSearch == shaders.end()) {
+			shader.init(fragmentShaderPath);
+			shaders.emplace(fragmentShaderPath, shader);
+		}
+		else {
+			shader = shaders[fragmentShaderPath];
+		}
+		NEIGE_ASSERT(shader.type == FRAGMENT, "Fragment shader in pipeline is not a fragment shader.");
 
 		VkPipelineShaderStageCreateInfo fragmentShaderCreateInfo = {};
 		fragmentShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		fragmentShaderCreateInfo.pNext = nullptr;
 		fragmentShaderCreateInfo.flags = 0;
-		fragmentShaderCreateInfo.stage = fragmentShader->shaderTypeToVkShaderFlagBits();
-		fragmentShaderCreateInfo.module = fragmentShader->module;
+		fragmentShaderCreateInfo.stage = shader.shaderTypeToVkShaderFlagBits();
+		fragmentShaderCreateInfo.module = shader.module;
 		fragmentShaderCreateInfo.pName = "main";
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), fragmentShader->descriptorSetLayouts.begin(), fragmentShader->descriptorSetLayouts.end());
-		pushConstantRanges.insert(pushConstantRanges.end(), fragmentShader->pushConstantRanges.begin(), fragmentShader->pushConstantRanges.end());
-		uniqueDescriptorTypes.insert(fragmentShader->uniqueDescriptorTypes.begin(), fragmentShader->uniqueDescriptorTypes.end());
+		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
-	if (tesselationControlShader) {
-		NEIGE_ASSERT(tesselationControlShader->type == TESSELATION_CONTROL, "Tesselation control shader in pipeline is not a tesselation control shader.");
+	if (tesselationControlShaderPath != "") {
+		Shader shader;
+		std::unordered_map<std::string, Shader>::const_iterator mapSearch = shaders.find(tesselationControlShaderPath);
+		if (mapSearch == shaders.end()) {
+			shader.init(tesselationControlShaderPath);
+			shaders.emplace(tesselationControlShaderPath, shader);
+		}
+		else {
+			shader = shaders[tesselationControlShaderPath];
+		}
+		NEIGE_ASSERT(shader.type == TESSELATION_CONTROL, "Tesselation control shader in pipeline is not a tesselation control shader.");
 
 		VkPipelineShaderStageCreateInfo tesselationControlShaderCreateInfo = {};
 		tesselationControlShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		tesselationControlShaderCreateInfo.pNext = nullptr;
 		tesselationControlShaderCreateInfo.flags = 0;
-		tesselationControlShaderCreateInfo.stage = tesselationControlShader->shaderTypeToVkShaderFlagBits();
-		tesselationControlShaderCreateInfo.module = tesselationControlShader->module;
+		tesselationControlShaderCreateInfo.stage = shader.shaderTypeToVkShaderFlagBits();
+		tesselationControlShaderCreateInfo.module = shader.module;
 		tesselationControlShaderCreateInfo.pName = "main";
 		tesselationControlShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationControlShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), tesselationControlShader->descriptorSetLayouts.begin(), tesselationControlShader->descriptorSetLayouts.end());
-		pushConstantRanges.insert(pushConstantRanges.end(), tesselationControlShader->pushConstantRanges.begin(), tesselationControlShader->pushConstantRanges.end());
-		uniqueDescriptorTypes.insert(tesselationControlShader->uniqueDescriptorTypes.begin(), tesselationControlShader->uniqueDescriptorTypes.end());
+		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
-	if (tesselationEvaluationShader) {
-		NEIGE_ASSERT(tesselationEvaluationShader->type == TESSELATION_EVALUATION, "Tesselation evaluation shader in pipeline is not a tesselation evaluation shader.");
+	if (tesselationEvaluationShaderPath != "") {
+		Shader shader;
+		std::unordered_map<std::string, Shader>::const_iterator mapSearch = shaders.find(tesselationEvaluationShaderPath);
+		if (mapSearch == shaders.end()) {
+			shader.init(tesselationEvaluationShaderPath);
+			shaders.emplace(tesselationEvaluationShaderPath, shader);
+		}
+		else {
+			shader = shaders[tesselationEvaluationShaderPath];
+		}
+		NEIGE_ASSERT(shader.type == TESSELATION_EVALUATION, "Tesselation evaluation shader in pipeline is not a tesselation evaluation shader.");
 
 		VkPipelineShaderStageCreateInfo tesselationEvaluationShaderCreateInfo = {};
 		tesselationEvaluationShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		tesselationEvaluationShaderCreateInfo.pNext = nullptr;
 		tesselationEvaluationShaderCreateInfo.flags = 0;
-		tesselationEvaluationShaderCreateInfo.stage = tesselationEvaluationShader->shaderTypeToVkShaderFlagBits();
-		tesselationEvaluationShaderCreateInfo.module = tesselationEvaluationShader->module;
+		tesselationEvaluationShaderCreateInfo.stage = shader.shaderTypeToVkShaderFlagBits();
+		tesselationEvaluationShaderCreateInfo.module = shader.module;
 		tesselationEvaluationShaderCreateInfo.pName = "main";
 		tesselationEvaluationShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationEvaluationShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), tesselationEvaluationShader->descriptorSetLayouts.begin(), tesselationEvaluationShader->descriptorSetLayouts.end());
-		pushConstantRanges.insert(pushConstantRanges.end(), tesselationEvaluationShader->pushConstantRanges.begin(), tesselationEvaluationShader->pushConstantRanges.end());
-		uniqueDescriptorTypes.insert(tesselationEvaluationShader->uniqueDescriptorTypes.begin(), tesselationEvaluationShader->uniqueDescriptorTypes.end());
+		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
-	if (geometryShader) {
-		NEIGE_ASSERT(geometryShader->type == GEOMETRY, "Geometry shader in pipeline is not a geometry shader.");
+	if (geometryShaderPath != "") {
+		Shader shader;
+		std::unordered_map<std::string, Shader>::const_iterator mapSearch = shaders.find(geometryShaderPath);
+		if (mapSearch == shaders.end()) {
+			shader.init(geometryShaderPath);
+			shaders.emplace(geometryShaderPath, shader);
+		}
+		else {
+			shader = shaders[geometryShaderPath];
+		}
+		NEIGE_ASSERT(shader.type == GEOMETRY, "Geometry shader in pipeline is not a geometry shader.");
 
 		VkPipelineShaderStageCreateInfo geometryShaderCreateInfo = {};
 		geometryShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		geometryShaderCreateInfo.pNext = nullptr;
 		geometryShaderCreateInfo.flags = 0;
-		geometryShaderCreateInfo.stage = geometryShader->shaderTypeToVkShaderFlagBits();
-		geometryShaderCreateInfo.module = geometryShader->module;
+		geometryShaderCreateInfo.stage = shader.shaderTypeToVkShaderFlagBits();
+		geometryShaderCreateInfo.module = shader.module;
 		geometryShaderCreateInfo.pName = "main";
 		geometryShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(geometryShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), geometryShader->descriptorSetLayouts.begin(), geometryShader->descriptorSetLayouts.end());
-		pushConstantRanges.insert(pushConstantRanges.end(), geometryShader->pushConstantRanges.begin(), geometryShader->pushConstantRanges.end());
-		uniqueDescriptorTypes.insert(geometryShader->uniqueDescriptorTypes.begin(), geometryShader->uniqueDescriptorTypes.end());
+		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
@@ -274,22 +319,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	graphicsPipelineCreateInfo.basePipelineIndex = -1;
 	NEIGE_VK_CHECK(vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline));
-
-	if (vertexShader) {
-		vertexShader->destroy();
-	}
-	if (fragmentShader) {
-		fragmentShader->destroy();
-	}
-	if (tesselationControlShader) {
-		tesselationControlShader->destroy();
-	}
-	if (tesselationEvaluationShader) {
-		tesselationEvaluationShader->destroy();
-	}
-	if (geometryShader) {
-		geometryShader->destroy();
-	}
 }
 
 void GraphicsPipeline::destroy() {

@@ -11,11 +11,11 @@ struct GraphicsPipeline {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
 	VkDescriptorPool descriptorPool;
-	Shader* vertexShader = nullptr;
-	Shader* fragmentShader = nullptr;
-	Shader* tesselationControlShader = nullptr;
-	Shader* tesselationEvaluationShader = nullptr;
-	Shader* geometryShader = nullptr;
+	std::string vertexShaderPath;
+	std::string fragmentShaderPath;
+	std::string tesselationControlShaderPath;
+	std::string tesselationEvaluationShaderPath;
+	std::string geometryShaderPath;
 	std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 

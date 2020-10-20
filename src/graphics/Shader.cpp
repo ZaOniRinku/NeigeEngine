@@ -25,6 +25,7 @@ void Shader::init(const std::string& filePath) {
 	else {
 		NEIGE_ERROR("\"." + extension + "\" shader extension not supported.");
 	}
+
 	if (!glslInitialized) {
 		glslang::InitializeProcess();
 		glslInitialized = true;
@@ -49,7 +50,9 @@ void Shader::destroy() {
 	vkDestroyShaderModule(logicalDevice.device, module, nullptr);
 }
 
-void Shader::compile() {
+bool Shader::compile() {
+	spvCode.clear();
+	spvCode.shrink_to_fit();
 	const TBuiltInResource DefaultTBuiltInResource = {};
 	std::string code = FileTools::readAscii(file);
 	const char* codeString = code.c_str();
@@ -73,30 +76,50 @@ void Shader::compile() {
 	includer.pushExternalLocalDirectory(file);
 	std::string preprocess;
 	if (!shader.preprocess(&resource, defaultVersion, ENoProfile, false, false, messages, &preprocess, includer)) {
-		NEIGE_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
+		NEIGE_SHADER_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + shader.getInfoLog() + "\n" + shader.getInfoDebugLog());
+		if (module != VK_NULL_HANDLE) {
+			return false;
+		}
+		NEIGE_ERROR("Shader preprocess error.");
 	}
 
 	// Parse
 	const char* preprocessString = preprocess.c_str();
 	shader.setStrings(&preprocessString, 1);
 	if (!shader.parse(&resource, defaultVersion, false, messages)) {
-		NEIGE_ERROR("\"" + file + "\" shader parsing failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
+		NEIGE_SHADER_ERROR("\"" + file + "\" shader parsing failed.\n" + "\"" + shader.getInfoLog() + "\n" + shader.getInfoDebugLog());
+		if (module != VK_NULL_HANDLE) {
+			return false;
+		}
+		NEIGE_ERROR("Shader parsing error.");
 	}
 
 	// Link
 	glslang::TProgram program;
 	program.addShader(&shader);
 	if (!program.link(messages)) {
-		NEIGE_ERROR("\"" + file + "\" shader linking failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
+		NEIGE_SHADER_ERROR("\"" + file + "\" shader linking failed.\n" + "\"" + shader.getInfoLog() + "\n" + shader.getInfoDebugLog());
+		if (module != VK_NULL_HANDLE) {
+			return false;
+		}
+		NEIGE_ERROR("Shader linking error.");
 	}
 
 	// Compile
 	spv::SpvBuildLogger buildLogger;
 	glslang::SpvOptions spvOptions;
 	glslang::GlslangToSpv(*program.getIntermediate(shaderType), spvCode, &buildLogger, &spvOptions);
+
+	return true;
 }
 
 void Shader::reflect() {
+	descriptorSetLayouts.clear();
+	descriptorSetLayouts.shrink_to_fit();
+	pushConstantRanges.clear();
+	pushConstantRanges.shrink_to_fit();
+	uniqueDescriptorTypes.clear();
+
 	SpvReflectShaderModule spvShaderModule;
 	SpvReflectResult result = spvReflectCreateShaderModule(spvCode.size() * sizeof(uint32_t), spvCode.data(), &spvShaderModule);
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" shader reflection failed.");
@@ -155,6 +178,22 @@ void Shader::reflect() {
 	}
 
 	spvReflectDestroyShaderModule(&spvShaderModule);
+}
+
+void Shader::reload() {
+	if (compile()) {
+		destroy();
+
+		VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
+		shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		shaderModuleCreateInfo.pNext = nullptr;
+		shaderModuleCreateInfo.flags = 0;
+		shaderModuleCreateInfo.codeSize = spvCode.size() * sizeof(uint32_t);
+		shaderModuleCreateInfo.pCode = spvCode.data();
+		NEIGE_VK_CHECK(vkCreateShaderModule(logicalDevice.device, &shaderModuleCreateInfo, nullptr, &module));
+
+		reflect();
+	}
 }
 
 EShLanguage Shader::shaderTypeToGlslangShaderType() {

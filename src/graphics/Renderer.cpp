@@ -21,7 +21,7 @@ void Renderer::init() {
 	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
 	NEIGE_INFO("Swapchain format : " + std::to_string(swapchain.surfaceFormat.format));
 	NEIGE_INFO("Swapchain color space : " + std::to_string(swapchain.surfaceFormat.colorSpace));
-	NEIGE_INFO("Present mode :" + std::to_string(swapchain.presentMode));
+	NEIGE_INFO("Present mode : " + std::to_string(swapchain.presentMode));
 
 	// Sync objects
 	fences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -35,13 +35,17 @@ void Renderer::init() {
 
 	// Vertices and indices
 	std::vector<Vertex> vertices;
-	vertices.push_back({ glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	vertices.push_back({ glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	vertices.push_back({ glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
+	vertices.push_back({ glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
+	vertices.push_back({ glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
+	vertices.push_back({ glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
+	vertices.push_back({ glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
 	std::vector<uint32_t> indices;
+	indices.push_back(0);
+	indices.push_back(1);
 	indices.push_back(2);
 	indices.push_back(1);
-	indices.push_back(0);
+	indices.push_back(3);
+	indices.push_back(2);
 
 	Buffer stagingVertexBuffer;
 	vertexBuffer.size = vertices.size() * sizeof(Vertex);
@@ -67,6 +71,21 @@ void Renderer::init() {
 }
 
 void Renderer::update() {
+	int reloading = glfwGetKey(window->window, GLFW_KEY_P);
+	if (reloading == GLFW_PRESS && !pressed) {
+		pressed = true;
+		logicalDevice.wait();
+		for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
+			it->second.reload();
+			// Graphics pipelines
+			graphicsPipelines[0].destroy();
+			graphicsPipelines[0].init(true, &renderPasses[0], window->extent.width, window->extent.height);
+		}
+	}
+	else if (reloading == GLFW_RELEASE && pressed) {
+		pressed = false;
+	}
+
 	if (window->gotResized) {
 		window->gotResized = false;
 		while (window->extent.width == 0 || window->extent.height == 0) {
@@ -139,21 +158,20 @@ void Renderer::update() {
 void Renderer::destroy() {
 	logicalDevice.wait();
 	destroyResources();
+	for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
+		Shader* shader = &it->second;
+		shader->destroy();
+	}
+	shaders.clear();
 	for (Fence& fence : fences) {
 		fence.destroy();
 	}
-	fences.clear();
-	fences.shrink_to_fit();
 	for (Semaphore& IAsemaphore : IAsemaphores) {
 		IAsemaphore.destroy();
 	}
-	IAsemaphores.clear();
-	IAsemaphores.shrink_to_fit();
 	for (Semaphore& RFsemaphore : RFsemaphores) {
 		RFsemaphore.destroy();
 	}
-	RFsemaphores.clear();
-	RFsemaphores.shrink_to_fit();
 	vertexBuffer.destroy();
 	indexBuffer.destroy();
 	memoryAllocator.destroy();
@@ -173,7 +191,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 
 	vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 	vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-	vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 3, 1, 0, 0, 0);
+	vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 6, 1, 0, 0, 0);
 
 	renderPasses[0].end(&renderingCommandBuffers[frameInFlightIndex]);
 
@@ -220,13 +238,9 @@ void Renderer::createResources() {
 	}
 
 	// Graphics pipelines
-	Shader vertexShader;
-	vertexShader.init("../shaders/dummy_shader.vert");
-	Shader fragmentShader;
-	fragmentShader.init("../shaders/dummy_shader.frag");
 	GraphicsPipeline graphicsPipeline;
-	graphicsPipeline.vertexShader = &vertexShader;
-	graphicsPipeline.fragmentShader = &fragmentShader;
+	graphicsPipeline.vertexShaderPath = "../shaders/dummy_shader.vert";
+	graphicsPipeline.fragmentShaderPath = "../shaders/dummy_shader.frag";
 	graphicsPipeline.init(true, &renderPass, window->extent.width, window->extent.height);
 	graphicsPipelines.push_back(graphicsPipeline);
 
