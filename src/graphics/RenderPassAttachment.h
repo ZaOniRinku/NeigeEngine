@@ -14,6 +14,7 @@ struct RenderPassAttachment {
 	RenderPassAttachment(AttachmentType attachmentType,
 		VkFormat format,
 		VkSampleCountFlagBits msaaSamples,
+		VkAttachmentLoadOp loadOp,
 		VkAttachmentStoreOp storeOp,
 		VkAttachmentLoadOp stencilLoadOp,
 		VkAttachmentStoreOp stencilStoreOp);

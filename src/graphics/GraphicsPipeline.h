@@ -10,6 +10,7 @@
 struct GraphicsPipeline {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
+	VkDescriptorPool descriptorPool;
 	Shader* vertexShader = nullptr;
 	Shader* fragmentShader = nullptr;
 	Shader* tesselationControlShader = nullptr;
@@ -22,4 +23,3 @@ struct GraphicsPipeline {
 	void destroy();
 	void bind(CommandBuffer* commandBuffer);
 };
-

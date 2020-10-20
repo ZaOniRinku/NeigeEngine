@@ -3,13 +3,14 @@
 RenderPassAttachment::RenderPassAttachment(AttachmentType attachmentType,
 	VkFormat format,
 	VkSampleCountFlagBits msaaSamples,
+	VkAttachmentLoadOp loadOp,
 	VkAttachmentStoreOp storeOp,
 	VkAttachmentLoadOp stencilLoadOp,
 	VkAttachmentStoreOp stencilStoreOp) {
 	type = attachmentType;
 	description.format = format;
 	description.samples = msaaSamples;
-	description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	description.loadOp = loadOp;
 	description.storeOp = storeOp;
 	description.stencilLoadOp = stencilLoadOp;
 	description.stencilStoreOp = stencilStoreOp;

@@ -5,8 +5,7 @@
 
 struct Framebuffer {
 	VkFramebuffer framebuffer = VK_NULL_HANDLE;
-	std::vector<VkImageView> attachments;
 
-	void init(RenderPass* renderPass, uint32_t width, uint32_t height);
+	void init(RenderPass* renderPass, std::vector<VkImageView>& attachments, uint32_t width, uint32_t height);
 	void destroy();
 };

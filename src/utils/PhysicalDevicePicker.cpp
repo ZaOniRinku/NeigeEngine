@@ -41,6 +41,9 @@ void PhysicalDevicePicker::pick(Window* window) {
 		}
 	}
 	physicalDevice = preferredDevice;
+	physicalDevice.getMaxUsableSampleCount();
+	physicalDevice.findColorFormat();
+	physicalDevice.findDepthFormat();
 	NEIGE_ASSERT(physicalDevice.device != VK_NULL_HANDLE, "Unable to find a suitable GPU.");
 	NEIGE_INFO(physicalDevice.properties.deviceName);
 }

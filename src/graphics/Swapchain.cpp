@@ -2,7 +2,7 @@
 #include "../utils/ImageTools.h"
 #include "../utils/RendererResources.h"
 
-void Swapchain::init(const Window* window) {
+void Swapchain::init(const Window* window, uint32_t* swapchainSize) {
 	swapchainSupport = physicalDevice.swapchainSupport(window->surface.surface);
 	extent = swapchainSupport.extent(window->extent);
 	surfaceFormat = swapchainSupport.surfaceFormat();
@@ -42,7 +42,7 @@ void Swapchain::init(const Window* window) {
 	NEIGE_VK_CHECK(vkCreateSwapchainKHR(logicalDevice.device, &swapchainCreateInfo, nullptr, &swapchain));
 
 	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, nullptr));
-	NEIGE_INFO("Swapchain size : " + std::to_string(imageNumber));
+	*swapchainSize = imageNumber;
 	images.resize(imageNumber);
 	imageViews.resize(imageNumber);
 	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, images.data()));
@@ -56,4 +56,8 @@ void Swapchain::destroy() {
 		vkDestroyImageView(logicalDevice.device, imageViews[i], nullptr);
 	}
 	vkDestroySwapchainKHR(logicalDevice.device, swapchain, nullptr);
+}
+
+VkResult Swapchain::acquireNextImage(Semaphore* imageAvailableSemaphore, uint32_t* index) {
+	return vkAcquireNextImageKHR(logicalDevice.device, swapchain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore->semaphore, VK_NULL_HANDLE, index);
 }

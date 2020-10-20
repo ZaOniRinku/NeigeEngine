@@ -53,3 +53,7 @@ void LogicalDevice::init() {
 void LogicalDevice::destroy() {
 	vkDestroyDevice(device, nullptr);
 }
+
+void LogicalDevice::wait() {
+	NEIGE_VK_CHECK(vkDeviceWaitIdle(device));
+}

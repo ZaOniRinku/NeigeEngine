@@ -64,6 +64,7 @@ void Shader::compile() {
 	shader.setEnvClient(glslang::EShClientVulkan, vulkanClientVersion);
 	shader.setEnvTarget(glslang::EShTargetSpv, languageVersion);
 	TBuiltInResource resource = DefaultTBuiltInResource;
+	resource.maxDrawBuffers = 32;
 	EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
 	int defaultVersion = 450;
 
@@ -72,21 +73,21 @@ void Shader::compile() {
 	includer.pushExternalLocalDirectory(file);
 	std::string preprocess;
 	if (!shader.preprocess(&resource, defaultVersion, ENoProfile, false, false, messages, &preprocess, includer)) {
-		NEIGE_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
 	}
 
 	// Parse
 	const char* preprocessString = preprocess.c_str();
 	shader.setStrings(&preprocessString, 1);
 	if (!shader.parse(&resource, defaultVersion, false, messages)) {
-		NEIGE_ERROR("\"" + file + "\" shader parcing failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader parsing failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
 	}
 
 	// Link
 	glslang::TProgram program;
 	program.addShader(&shader);
 	if (!program.link(messages)) {
-		NEIGE_ERROR("\"" + file + "\" shader linking failed.\n" + "\"" + file + "\" error:" + shader.getInfoLog() + "\n" + "\"" + file + "\" error:" + shader.getInfoDebugLog());
+		NEIGE_ERROR("\"" + file + "\" shader linking failed.\n" + "\"" + file + "\" error: " + shader.getInfoLog() + "\n" + "\"" + file + "\" error: " + shader.getInfoDebugLog());
 	}
 
 	// Compile
@@ -117,6 +118,7 @@ void Shader::reflect() {
 			VkDescriptorSetLayoutBinding binding = {};
 			binding.binding = reflectBinding.binding;
 			binding.descriptorType = static_cast<VkDescriptorType>(reflectBinding.descriptor_type);
+			uniqueDescriptorTypes.insert(binding.descriptorType);
 			binding.descriptorCount = 1;
 			for (uint32_t k = 0; k < reflectBinding.array.dims_count; k++) {
 				binding.descriptorCount *= reflectBinding.array.dims[k];

@@ -39,9 +39,9 @@ void Window::createSurface() {
 	NEIGE_VK_CHECK(glfwCreateWindowSurface(instance.instance, window, nullptr, &surface.surface));
 }
 
-bool Window::windowGotResized() {
+void Window::windowGotResized() {
+	gotResized = true;
 	updateExtent();
-	return true;
 }
 
 bool Window::windowGotClosed() {
@@ -50,4 +50,8 @@ bool Window::windowGotClosed() {
 
 void Window::pollEvents() {
 	glfwPollEvents();
+}
+
+void Window::waitEvents() {
+	glfwWaitEvents();
 }

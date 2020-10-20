@@ -1,7 +1,7 @@
 #include "Framebuffer.h"
 #include "../utils/RendererResources.h"
 
-void Framebuffer::init(RenderPass* renderPass, uint32_t width, uint32_t height) {
+void Framebuffer::init(RenderPass* renderPass, std::vector<VkImageView>& attachments, uint32_t width, uint32_t height) {
 	VkFramebufferCreateInfo framebufferCreateInfo = {};
 	framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferCreateInfo.pNext = nullptr;

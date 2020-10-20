@@ -13,10 +13,14 @@ struct PhysicalDevice {
 	VkPhysicalDeviceMemoryProperties memoryProperties;
 	QueueFamilyIndices queueFamilyIndices;
 	VkSampleCountFlagBits maxUsableSampleCount;
+	VkFormat colorFormat = VK_FORMAT_UNDEFINED;
+	VkFormat depthFormat = VK_FORMAT_UNDEFINED;
 
 	bool isSuitable(const Surface* surface);
 	void findQueueFamilies(VkSurfaceKHR surface);
 	bool extensionSupport();
 	void getMaxUsableSampleCount();
 	SwapchainSupport swapchainSupport(VkSurfaceKHR surface);
+	void findColorFormat();
+	void findDepthFormat();
 };

@@ -3,6 +3,7 @@
 
 void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t viewportWidth, uint32_t viewportHeight) {
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
+	std::set<VkDescriptorType> uniqueDescriptorTypes;
 
 	if (vertexShader) {
 		NEIGE_ASSERT(vertexShader->type == VERTEX, "Vertex shader in pipeline is not a vertex shader.");
@@ -28,6 +29,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 		descriptorSetLayouts.insert(descriptorSetLayouts.end(), vertexShader->descriptorSetLayouts.begin(), vertexShader->descriptorSetLayouts.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), vertexShader->pushConstantRanges.begin(), vertexShader->pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(vertexShader->uniqueDescriptorTypes.begin(), vertexShader->uniqueDescriptorTypes.end());
 	}
 
 	if (fragmentShader) {
@@ -45,6 +47,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 		descriptorSetLayouts.insert(descriptorSetLayouts.end(), fragmentShader->descriptorSetLayouts.begin(), fragmentShader->descriptorSetLayouts.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), fragmentShader->pushConstantRanges.begin(), fragmentShader->pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(fragmentShader->uniqueDescriptorTypes.begin(), fragmentShader->uniqueDescriptorTypes.end());
 	}
 
 	if (tesselationControlShader) {
@@ -62,6 +65,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 		descriptorSetLayouts.insert(descriptorSetLayouts.end(), tesselationControlShader->descriptorSetLayouts.begin(), tesselationControlShader->descriptorSetLayouts.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), tesselationControlShader->pushConstantRanges.begin(), tesselationControlShader->pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(tesselationControlShader->uniqueDescriptorTypes.begin(), tesselationControlShader->uniqueDescriptorTypes.end());
 	}
 
 	if (tesselationEvaluationShader) {
@@ -79,6 +83,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 		descriptorSetLayouts.insert(descriptorSetLayouts.end(), tesselationEvaluationShader->descriptorSetLayouts.begin(), tesselationEvaluationShader->descriptorSetLayouts.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), tesselationEvaluationShader->pushConstantRanges.begin(), tesselationEvaluationShader->pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(tesselationEvaluationShader->uniqueDescriptorTypes.begin(), tesselationEvaluationShader->uniqueDescriptorTypes.end());
 	}
 
 	if (geometryShader) {
@@ -96,6 +101,29 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 		descriptorSetLayouts.insert(descriptorSetLayouts.end(), geometryShader->descriptorSetLayouts.begin(), geometryShader->descriptorSetLayouts.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), geometryShader->pushConstantRanges.begin(), geometryShader->pushConstantRanges.end());
+		uniqueDescriptorTypes.insert(geometryShader->uniqueDescriptorTypes.begin(), geometryShader->uniqueDescriptorTypes.end());
+	}
+
+	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
+
+	// Descriptor pool
+	std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+	for (std::set<VkDescriptorType>::iterator it = uniqueDescriptorTypes.begin(); it != uniqueDescriptorTypes.end(); it++) {
+		VkDescriptorPoolSize descriptorPoolSize = {};
+		descriptorPoolSize.type = *it;
+		descriptorPoolSize.descriptorCount = 2048;
+		descriptorPoolSizes.push_back(descriptorPoolSize);
+	}
+
+	if (descriptorPoolSizes.size() != 0) {
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolCreateInfo.pNext = nullptr;
+		descriptorPoolCreateInfo.flags = 0;
+		descriptorPoolCreateInfo.maxSets = 8192;
+		descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+		descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+		NEIGE_VK_CHECK(vkCreateDescriptorPool(logicalDevice.device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
 	}
 
 	// Pipeline layout
@@ -166,7 +194,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	rasterizationCreateInfo.depthBiasConstantFactor = 0.0f;
 	rasterizationCreateInfo.depthBiasClamp = 0.0f;
 	rasterizationCreateInfo.depthBiasSlopeFactor = 0.0f;
-	rasterizationCreateInfo.lineWidth = 0.0f;
+	rasterizationCreateInfo.lineWidth = 1.0f;
 
 	// Multisample
 	VkPipelineMultisampleStateCreateInfo multisampleCreateInfo = {};
@@ -197,6 +225,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 
 	// Color blend
 	VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo = {};
+	colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	if (colorBlend) {
 		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 		colorBlendAttachment.blendEnable = VK_TRUE;
@@ -211,7 +240,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 			VK_COLOR_COMPONENT_B_BIT |
 			VK_COLOR_COMPONENT_A_BIT };
 
-		colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlendCreateInfo.pNext = nullptr;
 		colorBlendCreateInfo.flags = 0;
 		colorBlendCreateInfo.logicOpEnable = VK_FALSE;
@@ -246,6 +274,22 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	graphicsPipelineCreateInfo.basePipelineIndex = -1;
 	NEIGE_VK_CHECK(vkCreateGraphicsPipelines(logicalDevice.device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline));
+
+	if (vertexShader) {
+		vertexShader->destroy();
+	}
+	if (fragmentShader) {
+		fragmentShader->destroy();
+	}
+	if (tesselationControlShader) {
+		tesselationControlShader->destroy();
+	}
+	if (tesselationEvaluationShader) {
+		tesselationEvaluationShader->destroy();
+	}
+	if (geometryShader) {
+		geometryShader->destroy();
+	}
 }
 
 void GraphicsPipeline::destroy() {

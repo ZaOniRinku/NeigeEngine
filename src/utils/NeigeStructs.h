@@ -8,7 +8,8 @@
 
 // Layers
 const std::vector<const char*> layers = {
-	"VK_LAYER_KHRONOS_validation"
+	"VK_LAYER_KHRONOS_validation",
+	"VK_LAYER_LUNARG_monitor"
 };
 
 // Extensions
@@ -53,8 +54,6 @@ struct SwapchainSupport {
 	VkSurfaceFormatKHR surfaceFormat() {
 		for (const auto& format : formats) {
 			if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR) {
-				NEIGE_INFO("Swapchain format : VK_FORMAT_B8G8R8A8_SRGB");
-				NEIGE_INFO("Swapchain color space : VK_COLORSPACE_SRGB_NONLINEAR_KHR");
 				return format;
 			}
 		}
@@ -66,15 +65,12 @@ struct SwapchainSupport {
 		VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 		for (const auto& presentMode : presentModes) {
 			if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-				NEIGE_INFO("Present mode : VK_PRESENT_MODE_MAILBOX_KHR");
 				return presentMode;
 			}
 			else if (presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-				NEIGE_INFO("Present mode : VK_PRESENT_MODE_IMMEDIATE_KHR");
 				return presentMode;
 			}
 		}
-		NEIGE_INFO("Present mode : VK_PRESENT_MODE_FIFO_KHR");
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 };
@@ -93,6 +89,7 @@ struct Vertex {
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec2 uv;
+	glm::vec3 color;
 	glm::vec3 tangent;
 
 	static VkVertexInputBindingDescription getInputBindingDescription() {
@@ -127,9 +124,16 @@ struct Vertex {
 		uvAttribute.offset = offsetof(Vertex, uv);
 		inputAttributeDescriptions.push_back(uvAttribute);
 
+		VkVertexInputAttributeDescription colorAttribute = {};
+		colorAttribute.binding = 0;
+		colorAttribute.location = 3;
+		colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+		colorAttribute.offset = offsetof(Vertex, color);
+		inputAttributeDescriptions.push_back(colorAttribute);
+
 		VkVertexInputAttributeDescription tangentAttribute = {};
 		tangentAttribute.binding = 0;
-		tangentAttribute.location = 3;
+		tangentAttribute.location = 4;
 		tangentAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 		tangentAttribute.offset = offsetof(Vertex, tangent);
 		inputAttributeDescriptions.push_back(tangentAttribute);

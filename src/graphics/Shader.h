@@ -25,6 +25,7 @@ struct Shader {
 	std::vector<uint32_t> spvCode;
 	std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 	std::vector<VkPushConstantRange> pushConstantRanges;
+	std::set<VkDescriptorType> uniqueDescriptorTypes;
 	bool glslInitialized = false;
 
 	void init(const std::string& filePath);

@@ -23,7 +23,13 @@ void Image::init(uint32_t arrayLayers,
 }
 
 void Image::destroy() {
-	vkDestroySampler(logicalDevice.device, imageSampler, nullptr);
-	vkDestroyImageView(logicalDevice.device, imageView, nullptr);
-	vkDestroyImage(logicalDevice.device, image, nullptr);
+	if (imageSampler != VK_NULL_HANDLE) {
+		vkDestroySampler(logicalDevice.device, imageSampler, nullptr);
+	}
+	if (imageView != VK_NULL_HANDLE) {
+		vkDestroyImageView(logicalDevice.device, imageView, nullptr);
+	}
+	if (image != VK_NULL_HANDLE) {
+		vkDestroyImage(logicalDevice.device, image, nullptr);
+	}
 }

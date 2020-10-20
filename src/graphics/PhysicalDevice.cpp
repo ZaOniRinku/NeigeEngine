@@ -5,7 +5,6 @@ bool PhysicalDevice::isSuitable(const Surface* surface) {
 	vkGetPhysicalDeviceFeatures(device, &features);
 	vkGetPhysicalDeviceMemoryProperties(device, &memoryProperties);
 	findQueueFamilies(surface->surface);
-	getMaxUsableSampleCount();
 	if (queueFamilyIndices.isComplete()) {
 		if (extensionSupport()) {
 			SwapchainSupport deviceSwapchainSupport = swapchainSupport(surface->surface);
@@ -81,4 +80,37 @@ SwapchainSupport PhysicalDevice::swapchainSupport(VkSurfaceKHR surface){
 	}
 
 	return swapchainSupport;
+}
+
+void PhysicalDevice::findColorFormat() {
+	std::vector<VkFormat> colorFormats;
+	colorFormats.push_back(VK_FORMAT_R32G32B32A32_SFLOAT);
+	colorFormats.push_back(VK_FORMAT_R16G16B16A16_SFLOAT);
+	colorFormats.push_back(VK_FORMAT_B8G8R8A8_SRGB);
+
+	for (VkFormat format : colorFormats) {
+		VkFormatProperties formatProperties;
+		vkGetPhysicalDeviceFormatProperties(device, format, &formatProperties);
+		if ((formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) == VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) {
+			colorFormat = format;
+			break;
+		}
+	}
+	NEIGE_ASSERT(colorFormat != VK_FORMAT_UNDEFINED, "Unable to find a suitable color format.");
+}
+
+void PhysicalDevice::findDepthFormat() {
+	std::vector<VkFormat> depthFormats;
+	depthFormats.push_back(VK_FORMAT_D32_SFLOAT);
+	depthFormats.push_back(VK_FORMAT_D32_SFLOAT_S8_UINT);
+	depthFormats.push_back(VK_FORMAT_D24_UNORM_S8_UINT);
+	for (VkFormat format : depthFormats) {
+		VkFormatProperties formatProperties;
+		vkGetPhysicalDeviceFormatProperties(device, format, &formatProperties);
+		if ((formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+			depthFormat = format;
+			break;
+		}
+	}
+	NEIGE_ASSERT(depthFormat != VK_FORMAT_UNDEFINED, "Unable to find a suitable depth format.");
 }

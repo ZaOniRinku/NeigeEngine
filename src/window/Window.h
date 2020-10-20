@@ -16,13 +16,15 @@ struct Window {
 	GLFWwindow* window;
 	Surface surface;
 	VkExtent2D extent;
+	bool gotResized = false;
 
 	void init();
 	void destroy();
 	void updateExtent();
 	std::vector<const char*> instanceExtensions();
 	void createSurface();
-	bool windowGotResized();
+	void windowGotResized();
 	bool windowGotClosed();
 	void pollEvents();
+	void waitEvents();
 };

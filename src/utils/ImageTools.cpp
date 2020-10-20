@@ -98,7 +98,7 @@ void ImageTools::loadImage(const std::string& filePath,
 		NEIGE_ERROR("Error with image file \"" + filePath + "\".");
 	}
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-	BufferTools::createStagingBuffer(buffer.buffer, buffer.deviceMemory, buffer.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	BufferTools::createStagingBuffer(buffer.buffer, buffer.deviceMemory, buffer.size);
 	void* data;
 	buffer.map(0, buffer.size, &data);
 	memcpy(data, pixels, static_cast<size_t>(buffer.size));
