@@ -1,5 +1,5 @@
 #include "Renderer.h"
-#include "../utils/RendererResources.h"
+#include "resources/RendererResources.h"
 
 void Renderer::init() {
 	// Instance
@@ -19,9 +19,9 @@ void Renderer::init() {
 	createResources();
 
 	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
-	NEIGE_INFO("Swapchain format : " + std::to_string(swapchain.surfaceFormat.format));
-	NEIGE_INFO("Swapchain color space : " + std::to_string(swapchain.surfaceFormat.colorSpace));
-	NEIGE_INFO("Present mode : " + std::to_string(swapchain.presentMode));
+	NEIGE_INFO("Swapchain format : " + NeigeVKTranslate::vkFormatToString(swapchain.surfaceFormat.format));
+	NEIGE_INFO("Swapchain color space : " + NeigeVKTranslate::vkColorSpaceToString(swapchain.surfaceFormat.colorSpace));
+	NEIGE_INFO("Present mode : " + NeigeVKTranslate::vkPresentModeToString(swapchain.presentMode));
 
 	// Sync objects
 	fences.resize(MAX_FRAMES_IN_FLIGHT);

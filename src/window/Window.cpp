@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "../utils/RendererResources.h"
+#include "../graphics/resources/RendererResources.h"
 
 void Window::init() {
 	glfwInit();
