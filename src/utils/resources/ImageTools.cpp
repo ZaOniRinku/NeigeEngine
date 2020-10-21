@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 
-void ImageTools::createImage(VkImage* image,
+VkDeviceSize ImageTools::createImage(VkImage* image,
 	uint32_t arrayLayers,
 	uint32_t width,
 	uint32_t height,
@@ -29,7 +29,7 @@ void ImageTools::createImage(VkImage* image,
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	NEIGE_VK_CHECK(vkCreateImage(logicalDevice.device, &imageCreateInfo, nullptr, image));
 
-	memoryAllocator.allocate(image, memoryProperties);
+	return memoryAllocator.allocate(image, memoryProperties);
 }
 
 void ImageTools::createImageView(VkImageView* imageView,

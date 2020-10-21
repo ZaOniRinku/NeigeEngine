@@ -13,6 +13,7 @@ struct Block {
 
 	VkDeviceSize offset;
 	VkDeviceSize size;
+	VkDeviceSize allocationId;
 	bool inUse;
 };
 
@@ -22,15 +23,17 @@ struct Chunk {
 	Block* head;
 
 	Chunk(int32_t memoryType, VkDeviceSize size);
-	VkDeviceSize allocate(VkMemoryRequirements memRequirements);
+	VkDeviceSize allocate(VkMemoryRequirements memRequirements, VkDeviceSize* allocationNumber);
 	void freeBlocks();
 };
 
 struct MemoryAllocator {
 	std::vector<Chunk> chunks;
+	VkDeviceSize allocationNumber;
 
 	void destroy();
 	VkDeviceSize allocate(VkBuffer* bufferToAllocate, VkMemoryPropertyFlags flags);
 	VkDeviceSize allocate(VkImage* imageToAllocate, VkMemoryPropertyFlags flags);
+	void deallocate(VkDeviceSize allocationId);
 	int32_t findProperties(uint32_t memoryTypeBitsRequirement, VkMemoryPropertyFlags requiredProperties);
 };

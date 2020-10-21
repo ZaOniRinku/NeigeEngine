@@ -11,6 +11,8 @@ struct Image {
 	uint32_t height;
 	uint32_t mipmapLevels;
 
+	VkDeviceSize allocationId;
+
 	void init(uint32_t arrayLayers,
 		uint32_t imageWidth,
 		uint32_t imageHeight,

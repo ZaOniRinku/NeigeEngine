@@ -15,11 +15,12 @@ Chunk::Chunk(int32_t memoryType, VkDeviceSize size) {
 	block->size = size;
 	block->inUse = false;
 	block->next = nullptr;
+	block->allocationId = -1;
 
 	head = block;
 }
 
-VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements) {
+VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements, VkDeviceSize* allocationNumber) {
 	Block* curr = head;
 	while (curr) {
 		if (!curr->inUse) {
@@ -43,6 +44,7 @@ VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements) {
 				// If we have exactly enough space, no need to subdivide
 				if (curr->size == memRequirements.size) {
 					curr->inUse = true;
+					curr->allocationId = (*allocationNumber)++;
 					return curr->offset;
 				}
 
@@ -52,11 +54,13 @@ VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements) {
 				newBlock->offset = curr->offset + memRequirements.size;
 				newBlock->size = curr->size - memRequirements.size;
 				newBlock->next = curr->next;
+				newBlock->allocationId = -1;
 
 				// The size of the current block is now the size of the data
 				curr->size = memRequirements.size;
 				curr->inUse = true;
 				curr->next = newBlock;
+				curr->allocationId = (*allocationNumber)++;
 
 				return curr->offset;
 			}
@@ -89,14 +93,14 @@ VkDeviceSize MemoryAllocator::allocate(VkBuffer* bufferToAllocate, VkMemoryPrope
 	int32_t properties = findProperties(memRequirements.memoryTypeBits, flags);
 
 	// Look for the first block with enough space
-	for (Chunk chunk : chunks) {
+	for (Chunk& chunk : chunks) {
 		if (chunk.type == properties) {
 			VkDeviceSize offset;
-			offset = chunk.allocate(memRequirements);
+			offset = chunk.allocate(memRequirements, &allocationNumber);
 
 			if (offset != -1) {
 				vkBindBufferMemory(logicalDevice.device, *bufferToAllocate, chunk.memory, offset);
-				return 1;
+				return allocationNumber - 1;
 			}
 		}
 	}
@@ -106,7 +110,7 @@ VkDeviceSize MemoryAllocator::allocate(VkBuffer* bufferToAllocate, VkMemoryPrope
 
 	// Add to this chunk
 	VkDeviceSize offset;
-	offset = newChunk.allocate(memRequirements);
+	offset = newChunk.allocate(memRequirements, &allocationNumber);
 
 	if (offset == -1) {
 		NEIGE_ERROR("Unable to allocate memory (buffer).");
@@ -116,7 +120,8 @@ VkDeviceSize MemoryAllocator::allocate(VkBuffer* bufferToAllocate, VkMemoryPrope
 
 	chunks.push_back(newChunk);
 
-	return 1;
+	NEIGE_INFO("New memory chunk allocated.");
+	return allocationNumber - 1;
 }
 
 VkDeviceSize MemoryAllocator::allocate(VkImage* imageToAllocate, VkMemoryPropertyFlags flags) {
@@ -125,14 +130,14 @@ VkDeviceSize MemoryAllocator::allocate(VkImage* imageToAllocate, VkMemoryPropert
 	int32_t properties = findProperties(memRequirements.memoryTypeBits, flags);
 
 	// Look for the first block with enough space
-	for (Chunk chunk : chunks) {
+	for (Chunk& chunk : chunks) {
 		if (chunk.type == properties) {
 			VkDeviceSize offset;
-			offset = chunk.allocate(memRequirements);
+			offset = chunk.allocate(memRequirements, &allocationNumber);
 
 			if (offset != -1) {
 				vkBindImageMemory(logicalDevice.device, *imageToAllocate, chunk.memory, offset);
-				return 1;
+				return allocationNumber - 1;
 			}
 		}
 	}
@@ -142,7 +147,7 @@ VkDeviceSize MemoryAllocator::allocate(VkImage* imageToAllocate, VkMemoryPropert
 
 	// Add to this chunk
 	VkDeviceSize offset;
-	offset = newChunk.allocate(memRequirements);
+	offset = newChunk.allocate(memRequirements, &allocationNumber);
 
 	if (offset == -1) {
 		NEIGE_ERROR("Unable to allocate memory (image).");
@@ -152,7 +157,23 @@ VkDeviceSize MemoryAllocator::allocate(VkImage* imageToAllocate, VkMemoryPropert
 
 	chunks.push_back(newChunk);
 
-	return 1;
+	NEIGE_INFO("New memory chunk allocated.");
+	return allocationNumber - 1;
+}
+
+void MemoryAllocator::deallocate(VkDeviceSize allocationId) {
+	for (Chunk& chunk : chunks) {
+		Block* curr = chunk.head;
+		while (curr) {
+			if (curr->inUse && curr->allocationId == allocationId) {
+				curr->inUse = false;
+				curr->allocationId = -1;
+				return;
+			}
+			curr = curr->next;
+		}
+	}
+	NEIGE_WARNING("Could not deallocate.");
 }
 
 int32_t MemoryAllocator::findProperties(uint32_t memoryTypeBitsRequirement, VkMemoryPropertyFlags requiredProperties) {

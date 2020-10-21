@@ -13,7 +13,7 @@ void Image::init(uint32_t arrayLayers,
 	VkImageAspectFlags imageViewAspectFlags,
 	VkSamplerAddressMode imageViewAddressMode,
 	VkMemoryPropertyFlags imageMemoryProperties) {
-	ImageTools::createImage(&image, arrayLayers, imageWidth, imageHeight, mipLevels, msaaSamples, format, imageUsage, imageMemoryProperties);
+	allocationId = ImageTools::createImage(&image, arrayLayers, imageWidth, imageHeight, mipLevels, msaaSamples, format, imageUsage, imageMemoryProperties);
 	VkImageViewType imageViewType = arrayLayers == 6 ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 	ImageTools::createImageView(&imageView, image, arrayLayers, mipLevels, imageViewType, format, imageViewAspectFlags);
 	ImageTools::createImageSampler(&imageSampler, mipLevels, filter, imageViewAddressMode);
@@ -30,6 +30,7 @@ void Image::destroy() {
 		vkDestroyImageView(logicalDevice.device, imageView, nullptr);
 	}
 	if (image != VK_NULL_HANDLE) {
+		memoryAllocator.deallocate(allocationId);
 		vkDestroyImage(logicalDevice.device, image, nullptr);
 	}
 }

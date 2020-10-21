@@ -9,7 +9,7 @@
 #include "../../graphics/commands/CommandPool.h"
 
 struct ImageTools {
-	static void createImage(VkImage* image,
+	static VkDeviceSize createImage(VkImage* image,
 		uint32_t arrayLayers,
 		uint32_t width,
 		uint32_t height,

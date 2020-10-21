@@ -5,7 +5,7 @@
 #include "../../graphics/commands/CommandPool.h"
 
 struct BufferTools {
-	static void createBuffer(VkBuffer& buffer,
+	static VkDeviceSize createBuffer(VkBuffer& buffer,
 		VkDeviceSize size,
 		VkBufferUsageFlags usage,
 		VkMemoryPropertyFlags memoryProperties);
