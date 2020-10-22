@@ -8,9 +8,9 @@
 #include <vector>
 
 struct GraphicsPipeline {
-	VkPipeline pipeline;
-	VkPipelineLayout pipelineLayout;
-	VkDescriptorPool descriptorPool;
+	VkPipeline pipeline = VK_NULL_HANDLE;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 	std::string vertexShaderPath;
 	std::string fragmentShaderPath;
 	std::string tesselationControlShaderPath;

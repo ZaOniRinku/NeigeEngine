@@ -2,6 +2,9 @@
 #include "../resources/RendererResources.h"
 
 void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t viewportWidth, uint32_t viewportHeight) {
+	pushConstantRanges.clear();
+	pushConstantRanges.shrink_to_fit();
+
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
 
@@ -322,6 +325,12 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 }
 
 void GraphicsPipeline::destroy() {
+	if (descriptorPool != VK_NULL_HANDLE) {
+		vkDestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
+		descriptorPool = VK_NULL_HANDLE;
+	}
+	descriptorSetLayouts.clear();
+	descriptorSetLayouts.shrink_to_fit();
 	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
 	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
 }

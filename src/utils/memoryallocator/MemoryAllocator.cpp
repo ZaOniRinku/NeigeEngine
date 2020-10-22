@@ -14,6 +14,7 @@ Chunk::Chunk(int32_t memoryType, VkDeviceSize size) {
 	block->offset = 0;
 	block->size = size;
 	block->inUse = false;
+	block->prev = nullptr;
 	block->next = nullptr;
 	block->allocationId = -1;
 
@@ -53,6 +54,7 @@ VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements, VkDeviceSize*
 				newBlock->inUse = false;
 				newBlock->offset = curr->offset + memRequirements.size;
 				newBlock->size = curr->size - memRequirements.size;
+				newBlock->prev = curr;
 				newBlock->next = curr->next;
 				newBlock->allocationId = -1;
 

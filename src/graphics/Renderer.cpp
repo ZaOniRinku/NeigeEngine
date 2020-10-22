@@ -77,10 +77,10 @@ void Renderer::update() {
 		logicalDevice.wait();
 		for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 			it->second.reload();
-			// Graphics pipelines
-			graphicsPipelines[0].destroy();
-			graphicsPipelines[0].init(true, &renderPasses[0], window->extent.width, window->extent.height);
 		}
+		// Graphics pipelines
+		graphicsPipelines[0].destroy();
+		graphicsPipelines[0].init(true, &renderPasses[0], window->extent.width, window->extent.height);
 	}
 	else if (reloading == GLFW_RELEASE && pressed) {
 		pressed = false;

@@ -47,6 +47,11 @@ void Shader::init(const std::string& filePath) {
 }
 
 void Shader::destroy() {
+	for (size_t i = 0; i < descriptorSetLayouts.size(); i++) {
+		vkDestroyDescriptorSetLayout(logicalDevice.device, descriptorSetLayouts[i], nullptr);
+	}
+	descriptorSetLayouts.clear();
+	descriptorSetLayouts.shrink_to_fit();
 	vkDestroyShaderModule(logicalDevice.device, module, nullptr);
 }
 
@@ -114,8 +119,6 @@ bool Shader::compile() {
 }
 
 void Shader::reflect() {
-	descriptorSetLayouts.clear();
-	descriptorSetLayouts.shrink_to_fit();
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 	uniqueDescriptorTypes.clear();
@@ -132,8 +135,7 @@ void Shader::reflect() {
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find descriptors sets.");
 
 	// Bindings
-	std::vector<std::vector<VkDescriptorSetLayoutBinding>> layoutBindings;
-	layoutBindings.resize(descriptorSetCount);
+	std::vector<std::vector<VkDescriptorSetLayoutBinding>> layoutBindings(descriptorSetCount);
 	for (uint32_t i = 0; i < descriptorSetCount; i++) {
 		const SpvReflectDescriptorSet& reflectSet = *descriptorSets[i];
 		for (uint32_t j = 0; j < reflectSet.binding_count; j++) {
@@ -176,7 +178,6 @@ void Shader::reflect() {
 		pushConstantRange.stageFlags = shaderTypeToVkShaderFlagBits();
 		pushConstantRanges.push_back(pushConstantRange);
 	}
-
 	spvReflectDestroyShaderModule(&spvShaderModule);
 }
 

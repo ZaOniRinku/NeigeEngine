@@ -9,6 +9,7 @@
 #define CHUNK_SIZE 268435456
 
 struct Block {
+	Block* prev;
 	Block* next;
 
 	VkDeviceSize offset;
