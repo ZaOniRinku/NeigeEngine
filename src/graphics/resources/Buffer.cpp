@@ -2,8 +2,13 @@
 #include "../resources/RendererResources.h"
 
 void Buffer::destroy() {
+	if (deviceMemory != VK_NULL_HANDLE) {
+		vkFreeMemory(logicalDevice.device, deviceMemory, nullptr);
+	}
+	else {
+		memoryAllocator.deallocate(allocationId);
+	}
 	vkDestroyBuffer(logicalDevice.device, buffer, nullptr);
-	vkFreeMemory(logicalDevice.device, deviceMemory, nullptr);
 }
 
 void Buffer::map(VkDeviceSize offset, VkDeviceSize size, void** data) {

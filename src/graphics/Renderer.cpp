@@ -54,7 +54,7 @@ void Renderer::init() {
 	stagingVertexBuffer.map(0, vertexBuffer.size, &vertexData);
 	memcpy(vertexData, vertices.data(), static_cast<size_t>(vertexBuffer.size));
 	stagingVertexBuffer.unmap();
-	BufferTools::createBuffer(vertexBuffer.buffer, vertexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	vertexBuffer.allocationId = BufferTools::createBuffer(vertexBuffer.buffer, vertexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	BufferTools::copyBuffer(stagingVertexBuffer.buffer, vertexBuffer.buffer, vertexBuffer.size);
 	stagingVertexBuffer.destroy();
 
@@ -65,7 +65,7 @@ void Renderer::init() {
 	stagingIndexBuffer.map(0, indexBuffer.size, &indexData);
 	memcpy(indexData, indices.data(), static_cast<size_t>(indexBuffer.size));
 	stagingIndexBuffer.unmap();
-	BufferTools::createBuffer(indexBuffer.buffer, indexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	indexBuffer.allocationId = BufferTools::createBuffer(indexBuffer.buffer, indexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	BufferTools::copyBuffer(stagingIndexBuffer.buffer, indexBuffer.buffer, indexBuffer.size);
 	stagingIndexBuffer.destroy();
 }

@@ -6,6 +6,8 @@ struct Buffer {
 	VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
 	VkDeviceSize size;
 
+	VkDeviceSize allocationId;
+
 	void destroy();
 	void map(VkDeviceSize offset, VkDeviceSize size, void** data);
 	void unmap();
