@@ -39,7 +39,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -66,7 +66,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -93,7 +93,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		tesselationControlShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationControlShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -120,7 +120,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		tesselationEvaluationShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationEvaluationShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -147,12 +147,21 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		geometryShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(geometryShaderCreateInfo);
 
-		descriptorSetLayouts.insert(descriptorSetLayouts.end(), shader.descriptorSetLayouts.begin(), shader.descriptorSetLayouts.end());
+		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
+
+	// Descriptor set layout
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorSetLayoutCreateInfo.pNext = nullptr;
+	descriptorSetLayoutCreateInfo.flags = 0;
+	descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size());
+	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+	NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
 	// Descriptor pool
 	std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
@@ -179,8 +188,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutCreateInfo.pNext = nullptr;
 	pipelineLayoutCreateInfo.flags = 0;
-	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-	pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
+	pipelineLayoutCreateInfo.setLayoutCount = 1;
+	pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
 	pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
 	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
 	NEIGE_VK_CHECK(vkCreatePipelineLayout(logicalDevice.device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
@@ -329,8 +338,10 @@ void GraphicsPipeline::destroy() {
 		vkDestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
 		descriptorPool = VK_NULL_HANDLE;
 	}
-	descriptorSetLayouts.clear();
-	descriptorSetLayouts.shrink_to_fit();
+	if (descriptorSetLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(logicalDevice.device, descriptorSetLayout, nullptr);
+		descriptorSetLayout = VK_NULL_HANDLE;
+	}
 	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
 	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "../../utils/NeigeDefines.h"
-#include "../../utils/NeigeStructs.h"
+#include "../../utils/structs/RendererStructs.h"
 
 // Debug messenger callback
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

@@ -1,7 +1,7 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "../../utils/NeigeDefines.h"
-#include "../../utils/NeigeStructs.h"
+#include "../../utils/structs/RendererStructs.h"
 #include <set>
 
 struct LogicalDevice {

@@ -2,7 +2,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include "../../external/glfw/include/GLFW/glfw3.h"
 #include "../utils/NeigeDefines.h"
-#include "../utils/NeigeStructs.h"
+#include "../utils/structs/RendererStructs.h"
 #include "Surface.h"
 #include <vector>
 

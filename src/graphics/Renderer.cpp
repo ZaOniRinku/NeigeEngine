@@ -1,5 +1,10 @@
 #include "Renderer.h"
 #include "resources/RendererResources.h"
+#include "../ecs/ECS.h"
+#include "../ecs/components/Transform.h"
+#include "../ecs/components/Camera.h"
+
+extern ECS ecs;
 
 void Renderer::init() {
 	// Instance
@@ -247,7 +252,7 @@ void Renderer::createResources() {
 	// Command pools and buffers
 	renderingCommandPools.resize(swapchainSize);
 	renderingCommandBuffers.resize(swapchainSize);
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		renderingCommandPools[i].init();
 		renderingCommandBuffers[i].init(&renderingCommandPools[i]);
 	}

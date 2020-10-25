@@ -48,8 +48,8 @@ SET(GRAPHICS_DEVICES_SOURCES src/graphics/devices/LogicalDevice.cpp src/graphics
 SET(GRAPHICS_DEVICES_HEADERS src/graphics/devices/LogicalDevice.h src/graphics/devices/PhysicalDevice.h src/graphics/devices/PhysicalDevicePicker.h)
 SET(GRAPHICS_INSTANCE_SOURCES src/graphics/instance/Instance.cpp)
 SET(GRAPHICS_INSTANCE_HEADERS src/graphics/instance/Instance.h)
-SET(GRAPHICS_PIPELINES_SOURCES src/graphics/pipelines/GraphicsPipeline.cpp src/graphics/pipelines/Shader.cpp)
-SET(GRAPHICS_PIPELINES_HEADERS src/graphics/pipelines/GraphicsPipeline.h src/graphics/pipelines/Shader.h)
+SET(GRAPHICS_PIPELINES_SOURCES src/graphics/pipelines/DescriptorSet.cpp src/graphics/pipelines/GraphicsPipeline.cpp src/graphics/pipelines/Shader.cpp)
+SET(GRAPHICS_PIPELINES_HEADERS src/graphics/pipelines/DescriptorSet.h src/graphics/pipelines/GraphicsPipeline.h src/graphics/pipelines/Shader.h)
 SET(GRAPHICS_RENDERPASSES_SOURCES src/graphics/renderpasses/Framebuffer.cpp src/graphics/renderpasses/RenderPass.cpp src/graphics/renderpasses/RenderPassAttachment.cpp src/graphics/renderpasses/Swapchain.cpp)
 SET(GRAPHICS_RENDERPASSES_HEADERS src/graphics/renderpasses/Framebuffer.h src/graphics/renderpasses/RenderPass.h src/graphics/renderpasses/RenderPassAttachment.h src/graphics/renderpasses/Swapchain.h)
 SET(GRAPHICS_RESOURCES_SOURCES src/graphics/resources/Buffer.cpp src/graphics/resources/Image.cpp)
@@ -63,15 +63,19 @@ SET(UTILS_MEMORYALLOCATOR_SOURCES src/utils/memoryallocator/MemoryAllocator.cpp)
 SET(UTILS_MEMORYALLOCATOR_HEADERS src/utils/memoryallocator/MemoryAllocator.h)
 SET(UTILS_RESOURCES_SOURCES src/utils/resources/BufferTools.cpp src/utils/resources/FileTools.cpp src/utils/resources/ImageTools.cpp src/utils/resources/ModelLoader.cpp)
 SET(UTILS_RESOURCES_HEADERS src/utils/resources/BufferTools.h src/utils/resources/FileTools.h src/utils/resources/ImageTools.h src/utils/resources/ModelLoader.h)
+SET(UTILS_STRUCTS_HEADERS src/utils/structs/RendererStructs.h src/utils/structs/ShaderStructs.h)
 SET(UTILS_SOURCES src/utils/NeigeVKTranslate.cpp ${UTILS_MEMORYALLOCATOR_SOURCES} ${UTILS_RESOURCES_SOURCES})
-SET(UTILS_HEADERS src/utils/NeigeDefines.h src/utils/NeigeStructs.h src/utils/NeigeVKTranslate.h ${UTILS_MEMORYALLOCATOR_HEADERS} ${UTILS_RESOURCES_HEADERS})
+SET(UTILS_HEADERS src/utils/NeigeDefines.h src/utils/NeigeVKTranslate.h ${UTILS_MEMORYALLOCATOR_HEADERS} ${UTILS_RESOURCES_HEADERS} ${UTILS_STRUCTS_HEADERS})
 
 SET(WINDOW_SOURCES src/window/Surface.cpp src/window/Window.cpp)
 SET(WINDOW_HEADERS src/window/Surface.h src/window/Window.h)
 
+SET(ECS_COMPONENTS_HEADERS src/ecs/components/Camera.h src/ecs/components/Transform.h)
+SET(ECS_HEADERS src/ecs/ECS.h ${ECS_COMPONENTS_HEADERS})
+
 SET(EXTERNAL_SOURCES external/spirv-reflect/spirv_reflect.c)
 
 SET(SOURCES ${GAME_SOURCES} ${GRAPHICS_SOURCES} ${UTILS_SOURCES} ${WINDOW_SOURCES} ${EXTERNAL_SOURCES})
-SET(HEADERS ${GAME_HEADERS} ${GRAPHICS_HEADERS} ${UTILS_HEADERS} ${WINDOW_HEADERS})
+SET(HEADERS ${GAME_HEADERS} ${GRAPHICS_HEADERS} ${UTILS_HEADERS} ${WINDOW_HEADERS} ${ECS_HEADERS})
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES} ${HEADERS})

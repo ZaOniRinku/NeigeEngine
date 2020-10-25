@@ -7,4 +7,3 @@ struct ModelLoader {
 	static void load(const std::string& filePath);
 	static void loadglTF(const std::string& filePath);
 };
-

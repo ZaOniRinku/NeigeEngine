@@ -1,7 +1,8 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "../utils/NeigeDefines.h"
-#include "../utils/NeigeStructs.h"
+#include "../utils/structs/RendererStructs.h"
+#include "../utils/structs/ShaderStructs.h"
 #include "../utils/NeigeVKTranslate.h"
 #include "../utils/resources/ImageTools.h"
 #include "devices/PhysicalDevicePicker.h"
@@ -20,7 +21,7 @@
 #include <string>
 #include <map>
 
-#define MAX_FRAMES_IN_FLIGHT 3
+#define MAX_FRAMES_IN_FLIGHT 1
 
 struct Renderer {
 	Window* window;

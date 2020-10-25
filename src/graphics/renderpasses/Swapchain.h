@@ -1,6 +1,6 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
-#include "../../utils/NeigeStructs.h"
+#include "../../utils/structs/RendererStructs.h"
 #include "../../window/Window.h"
 #include "../sync/Semaphore.h"
 

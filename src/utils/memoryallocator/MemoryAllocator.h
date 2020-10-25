@@ -30,7 +30,7 @@ struct Chunk {
 
 struct MemoryAllocator {
 	std::vector<Chunk> chunks;
-	VkDeviceSize allocationNumber;
+	VkDeviceSize allocationNumber = 0;
 
 	void destroy();
 	VkDeviceSize allocate(VkBuffer* bufferToAllocate, VkMemoryPropertyFlags flags);
