@@ -6,6 +6,7 @@
 #include "../commands/CommandBuffer.h"
 #include "../renderpasses/RenderPass.h"
 #include "Shader.h"
+#include "Viewport.h"
 #include <vector>
 
 struct GraphicsPipeline {
@@ -20,8 +21,9 @@ struct GraphicsPipeline {
 	std::string geometryShaderPath;
 	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 	std::vector<VkPushConstantRange> pushConstantRanges;
+	Viewport* viewport;
 
-	void init(bool colorBlend, RenderPass* renderPass, uint32_t viewportWidth, uint32_t viewportHeight);
+	void init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse);
 	void destroy();
 	void bind(CommandBuffer* commandBuffer);
 };

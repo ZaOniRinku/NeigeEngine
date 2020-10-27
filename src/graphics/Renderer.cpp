@@ -19,14 +19,66 @@ void Renderer::init() {
 	// Logical device
 	logicalDevice.init();
 
-	NEIGE_INFO("Max frames in flight : " + std::to_string(MAX_FRAMES_IN_FLIGHT));
+	// Swapchain
+	swapchain.init(window, &swapchainSize);
 
-	createResources();
+	// Render passes
+	std::vector<RenderPassAttachment> attachments;
+	attachments.push_back(RenderPassAttachment(COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	attachments.push_back(RenderPassAttachment(DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	attachments.push_back(RenderPassAttachment(SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+
+	std::vector<SubpassDependency> dependencies;
+	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
+	RenderPass renderPass;
+	renderPass.init(attachments, dependencies);
+	renderPasses.push_back(renderPass);
+
+	NEIGE_INFO("Max frames in flight : " + std::to_string(MAX_FRAMES_IN_FLIGHT));
 
 	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
 	NEIGE_INFO("Swapchain format : " + NeigeVKTranslate::vkFormatToString(swapchain.surfaceFormat.format));
 	NEIGE_INFO("Swapchain color space : " + NeigeVKTranslate::vkColorSpaceToString(swapchain.surfaceFormat.colorSpace));
 	NEIGE_INFO("Present mode : " + NeigeVKTranslate::vkPresentModeToString(swapchain.presentMode));
+
+	// Framebuffers
+	Image colorAttachment;
+	colorAttachment.allocationId = ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
+	colorImages.push_back(colorAttachment);
+	Image depthAttachment;
+	depthAttachment.allocationId = ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
+	depthImages.push_back(depthAttachment);
+	std::vector<std::vector<VkImageView>> framebufferAttachments;
+	framebufferAttachments.resize(swapchainSize);
+	framebuffers.resize(swapchainSize);
+	for (int i = 0; i < framebufferAttachments.size(); i++) {
+		framebufferAttachments[i].push_back(colorAttachment.imageView);
+		framebufferAttachments[i].push_back(depthAttachment.imageView);
+		framebufferAttachments[i].push_back(swapchain.imageViews[i]);
+		framebuffers[i].init(&renderPasses[0], framebufferAttachments[i], window->extent.width, window->extent.height);
+	}
+
+	// Fullscreen viewport
+	fullscreenViewport.init(window->extent.width, window->extent.height);
+
+	// Graphics pipelines
+	GraphicsPipeline graphicsPipeline;
+	graphicsPipeline.vertexShaderPath = "../shaders/dummy_shader.vert";
+	graphicsPipeline.fragmentShaderPath = "../shaders/dummy_shader.frag";
+	graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
+	graphicsPipelines.push_back(graphicsPipeline);
+
+	// Command pools and buffers
+	renderingCommandPools.resize(swapchainSize);
+	renderingCommandBuffers.resize(swapchainSize);
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		renderingCommandPools[i].init();
+		renderingCommandBuffers[i].init(&renderingCommandPools[i]);
+	}
 
 	// Sync objects
 	fences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -83,9 +135,8 @@ void Renderer::update() {
 		for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 			it->second.reload();
 		}
-		// Graphics pipelines
 		graphicsPipelines[0].destroy();
-		graphicsPipelines[0].init(true, &renderPasses[0], window->extent.width, window->extent.height);
+		graphicsPipelines[0].init(true, &renderPasses[0], &fullscreenViewport);
 	}
 	else if (reloading == GLFW_RELEASE && pressed) {
 		pressed = false;
@@ -99,6 +150,10 @@ void Renderer::update() {
 		logicalDevice.wait();
 		destroyResources();
 		createResources();
+		fullscreenViewport.viewport.width = static_cast<float>(window->extent.width);
+		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
+		fullscreenViewport.scissor.extent.width = window->extent.width;
+		fullscreenViewport.scissor.extent.height = window->extent.height;
 	}
 
 	fences[currentFrame].wait();
@@ -112,6 +167,10 @@ void Renderer::update() {
 		logicalDevice.wait();
 		destroyResources();
 		createResources();
+		fullscreenViewport.viewport.width = static_cast<float>(window->extent.width);
+		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
+		fullscreenViewport.scissor.extent.width = window->extent.width;
+		fullscreenViewport.scissor.extent.height = window->extent.height;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		NEIGE_ERROR("Unable to acquire swapchain image.");
@@ -152,6 +211,10 @@ void Renderer::update() {
 		logicalDevice.wait();
 		destroyResources();
 		createResources();
+		fullscreenViewport.viewport.width = static_cast<float>(window->extent.width);
+		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
+		fullscreenViewport.scissor.extent.width = window->extent.width;
+		fullscreenViewport.scissor.extent.height = window->extent.height;
 	}
 	else if (result != VK_SUCCESS) {
 		NEIGE_ERROR("Unable to present image to the swapchain.");
@@ -163,6 +226,21 @@ void Renderer::update() {
 void Renderer::destroy() {
 	logicalDevice.wait();
 	destroyResources();
+	for (CommandPool& renderingCommandPool : renderingCommandPools) {
+		renderingCommandPool.destroy();
+	}
+	renderingCommandPools.clear();
+	renderingCommandPools.shrink_to_fit();
+	for (RenderPass& renderPass : renderPasses) {
+		renderPass.destroy();
+	}
+	renderPasses.clear();
+	renderPasses.shrink_to_fit();
+	for (GraphicsPipeline& graphicsPipeline : graphicsPipelines) {
+		graphicsPipeline.destroy();
+	}
+	graphicsPipelines.clear();
+	graphicsPipelines.shrink_to_fit();
 	for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 		Shader* shader = &it->second;
 		shader->destroy();
@@ -209,18 +287,6 @@ void Renderer::createResources() {
 	// Swapchain
 	swapchain.init(window, &swapchainSize);
 
-	// Render passes
-	std::vector<RenderPassAttachment> attachments;
-	attachments.push_back(RenderPassAttachment(COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-
-	std::vector<SubpassDependency> dependencies;
-	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
-	RenderPass renderPass;
-	renderPass.init(attachments, dependencies);
-	renderPasses.push_back(renderPass);
-
 	// Framebuffers
 	Image colorAttachment;
 	colorAttachment.allocationId = ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -239,22 +305,7 @@ void Renderer::createResources() {
 		framebufferAttachments[i].push_back(colorAttachment.imageView);
 		framebufferAttachments[i].push_back(depthAttachment.imageView);
 		framebufferAttachments[i].push_back(swapchain.imageViews[i]);
-		framebuffers[i].init(&renderPass, framebufferAttachments[i], window->extent.width, window->extent.height);
-	}
-
-	// Graphics pipelines
-	GraphicsPipeline graphicsPipeline;
-	graphicsPipeline.vertexShaderPath = "../shaders/dummy_shader.vert";
-	graphicsPipeline.fragmentShaderPath = "../shaders/dummy_shader.frag";
-	graphicsPipeline.init(true, &renderPass, window->extent.width, window->extent.height);
-	graphicsPipelines.push_back(graphicsPipeline);
-
-	// Command pools and buffers
-	renderingCommandPools.resize(swapchainSize);
-	renderingCommandBuffers.resize(swapchainSize);
-	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		renderingCommandPools[i].init();
-		renderingCommandBuffers[i].init(&renderingCommandPools[i]);
+		framebuffers[i].init(&renderPasses[0], framebufferAttachments[i], window->extent.width, window->extent.height);
 	}
 }
 
@@ -270,24 +321,9 @@ void Renderer::destroyResources() {
 	}
 	depthImages.clear();
 	depthImages.shrink_to_fit();
-	for (RenderPass& renderPass : renderPasses) {
-		renderPass.destroy();
-	}
-	renderPasses.clear();
-	renderPasses.shrink_to_fit();
 	for (Framebuffer& framebuffer : framebuffers) {
 		framebuffer.destroy();
 	}
 	framebuffers.clear();
 	framebuffers.shrink_to_fit();
-	for (GraphicsPipeline& graphicsPipeline : graphicsPipelines) {
-		graphicsPipeline.destroy();
-	}
-	graphicsPipelines.clear();
-	graphicsPipelines.shrink_to_fit();
-	for (CommandPool& renderingCommandPool : renderingCommandPools) {
-		renderingCommandPool.destroy();
-	}
-	renderingCommandPools.clear();
-	renderingCommandPools.shrink_to_fit();
 }

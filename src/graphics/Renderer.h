@@ -8,13 +8,14 @@
 #include "devices/PhysicalDevicePicker.h"
 #include "commands/CommandBuffer.h"
 #include "commands/CommandPool.h"
-#include "sync/Fence.h"
-#include "renderpasses/Framebuffer.h"
 #include "pipelines/GraphicsPipeline.h"
-#include "resources/Image.h"
-#include "renderpasses/RenderPass.h"
-#include "sync/Semaphore.h"
 #include "pipelines/Shader.h"
+#include "pipelines/Viewport.h"
+#include "resources/Image.h"
+#include "renderpasses/Framebuffer.h"
+#include "renderpasses/RenderPass.h"
+#include "sync/Fence.h"
+#include "sync/Semaphore.h"
 #include "../window/Window.h"
 #include <iostream>
 #include <vector>
@@ -29,6 +30,8 @@ struct Renderer {
 	std::vector<Fence> fences;
 	std::vector<Semaphore> IAsemaphores;
 	std::vector<Semaphore> RFsemaphores;
+
+	Viewport fullscreenViewport;
 
 	std::vector<Image> colorImages;
 	std::vector<Image> depthImages;

@@ -1,7 +1,9 @@
 #include "GraphicsPipeline.h"
 #include "../resources/RendererResources.h"
 
-void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t viewportWidth, uint32_t viewportHeight) {
+void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse) {
+	viewport = viewportToUse;
+
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 
@@ -215,28 +217,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 
-	// Viewport
-	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(viewportWidth);
-	viewport.height = static_cast<float>(viewportHeight);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-
-	VkRect2D scissor = {};
-	scissor.offset = { 0, 0 };
-	scissor.extent = { viewportWidth, viewportHeight };
-
-	VkPipelineViewportStateCreateInfo viewportCreateInfo = {};
-	viewportCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportCreateInfo.pNext = nullptr;
-	viewportCreateInfo.flags = 0;
-	viewportCreateInfo.viewportCount = 1;
-	viewportCreateInfo.pViewports = &viewport;
-	viewportCreateInfo.scissorCount = 1;
-	viewportCreateInfo.pScissors = &scissor;
-
 	// Rasterization
 	VkPipelineRasterizationStateCreateInfo rasterizationCreateInfo = {};
 	rasterizationCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -309,6 +289,15 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 		colorBlendCreateInfo.blendConstants[3] = 0.0f;
 	}
 
+	// Dynamic states
+	VkPipelineDynamicStateCreateInfo dynamicCreateInfo = {};
+	dynamicCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicCreateInfo.pNext = nullptr;
+	dynamicCreateInfo.flags = 0;
+	std::array<VkDynamicState, 2> dynamicStates = { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT };
+	dynamicCreateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+	dynamicCreateInfo.pDynamicStates = dynamicStates.data();
+
 	// Pipeline
 	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
 	graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -319,12 +308,12 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, uint32_t vi
 	graphicsPipelineCreateInfo.pVertexInputState = &vertexInputCreateInfo;
 	graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
 	graphicsPipelineCreateInfo.pTessellationState = nullptr;
-	graphicsPipelineCreateInfo.pViewportState = &viewportCreateInfo;
+	graphicsPipelineCreateInfo.pViewportState = &viewport->viewportCreateInfo;
 	graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
 	graphicsPipelineCreateInfo.pMultisampleState = &multisampleCreateInfo;
 	graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilCreateInfo;
 	graphicsPipelineCreateInfo.pColorBlendState = colorBlend ? &colorBlendCreateInfo : nullptr;
-	graphicsPipelineCreateInfo.pDynamicState = nullptr;
+	graphicsPipelineCreateInfo.pDynamicState = &dynamicCreateInfo;
 	graphicsPipelineCreateInfo.layout = pipelineLayout;
 	graphicsPipelineCreateInfo.renderPass = renderPass->renderPass;
 	graphicsPipelineCreateInfo.subpass = 0;
@@ -348,4 +337,6 @@ void GraphicsPipeline::destroy() {
 
 void GraphicsPipeline::bind(CommandBuffer* commandBuffer) {
 	vkCmdBindPipeline(commandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	viewport->setViewport(commandBuffer);
+	viewport->setScissor(commandBuffer);
 }
