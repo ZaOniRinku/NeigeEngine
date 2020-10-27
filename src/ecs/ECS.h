@@ -179,7 +179,7 @@ public:
 		NEIGE_ASSERT(systems.find(typeName) == systems.end(), "System \"" + std::string(typeName) + "\" is already registered (register system).");
 
 		std::shared_ptr<T> system = std::make_shared<T>();
-		systems.insert({typeName, system});
+		systems.insert({ typeName, system });
 		return system;
 	}
 
@@ -189,7 +189,7 @@ public:
 
 		NEIGE_ASSERT(systems.find(typeName) != systems.end(), "System \"" + std::string(typeName) + "\" does not exist (set components).");
 
-		componentMasks.insert({typeName, componentMask });
+		componentMasks.insert({ typeName, componentMask });
 	}
 
 	void entityDestroyed(Entity entity) {
@@ -203,8 +203,8 @@ public:
 		for (auto const& pair : systems) {
 			auto const& type = pair.first;
 			auto const& system = pair.second;
-			auto const& componentMask = componentMasks[type];
-			if ((entityComponentMask & componentMask) == componentMask) {
+			auto const& systemComponentMask = componentMasks[type];
+			if ((entityComponentMask & systemComponentMask) == systemComponentMask) {
 				system->entities.insert(entity);
 			} else {
 				system->entities.erase(entity);

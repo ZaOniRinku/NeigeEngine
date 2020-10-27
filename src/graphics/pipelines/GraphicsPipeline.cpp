@@ -41,7 +41,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
-		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
+		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -68,7 +69,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
 
-		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
+		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -95,7 +97,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		tesselationControlShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationControlShaderCreateInfo);
 
-		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
+		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -122,7 +125,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		tesselationEvaluationShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationEvaluationShaderCreateInfo);
 
-		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
+		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -149,7 +153,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		geometryShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(geometryShaderCreateInfo);
 
-		descriptorSetLayoutBindings.insert(descriptorSetLayoutBindings.end(), shader.descriptorSetLayoutBindings.begin(), shader.descriptorSetLayoutBindings.end());
+		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -161,8 +166,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptorSetLayoutCreateInfo.pNext = nullptr;
 	descriptorSetLayoutCreateInfo.flags = 0;
-	descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size());
-	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+	descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
+	descriptorSetLayoutCreateInfo.pBindings = layoutBindings.data();
 	NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 
 	// Descriptor pool

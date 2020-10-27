@@ -5,6 +5,15 @@
 #include "../../external/glm/glm/glm.hpp"
 #include "../NeigeDefines.h"
 
+enum SHADER_TYPE {
+	VERTEX,
+	FRAGMENT,
+	TESSELATION_CONTROL,
+	TESSELATION_EVALUATION,
+	GEOMETRY,
+	COMPUTE
+};
+
 // Vertex
 struct Vertex {
 	glm::vec3 position;

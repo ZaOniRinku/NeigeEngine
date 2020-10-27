@@ -1,23 +1,23 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
-#include "../../graphics/utils/NeigeDefines.h"
-#include "../utils/structs/RendererStructs.h"
-#include "../utils/structs/ShaderStructs.h"
-#include "../utils/NeigeVKTranslate.h"
-#include "../utils/resources/ImageTools.h"
-#include "devices/PhysicalDevicePicker.h"
-#include "commands/CommandBuffer.h"
-#include "commands/CommandPool.h"
-#include "pipelines/GraphicsPipeline.h"
-#include "pipelines/Shader.h"
-#include "pipelines/Viewport.h"
-#include "resources/Image.h"
-#include "renderpasses/Framebuffer.h"
-#include "renderpasses/RenderPass.h"
-#include "sync/Fence.h"
-#include "sync/Semaphore.h"
-#include "../window/Window.h"
-#include "../ecs/ECS.h"
+#include "../../utils/NeigeDefines.h"
+#include "../../utils/structs/RendererStructs.h"
+#include "../../utils/structs/ShaderStructs.h"
+#include "../../utils/NeigeVKTranslate.h"
+#include "../../utils/resources/ImageTools.h"
+#include "../../graphics/devices/PhysicalDevicePicker.h"
+#include "../../graphics/commands/CommandBuffer.h"
+#include "../../graphics/commands/CommandPool.h"
+#include "../../graphics/pipelines/GraphicsPipeline.h"
+#include "../../graphics/pipelines/Shader.h"
+#include "../../graphics/pipelines/Viewport.h"
+#include "../../graphics/resources/Image.h"
+#include "../../graphics/renderpasses/Framebuffer.h"
+#include "../../graphics/renderpasses/RenderPass.h"
+#include "../../graphics/sync/Fence.h"
+#include "../../graphics/sync/Semaphore.h"
+#include "../../window/Window.h"
+#include "../ECS.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -25,12 +25,12 @@
 
 #define MAX_FRAMES_IN_FLIGHT 1
 
-struct Renderer {
+struct Renderer : public System {
 	Window* window;
 
 	// Entities
 	Entity camera;
-	std::vector<Entity> entities;
+	std::unordered_map<Entity, uint64_t> entityGraphicsPipelines;
 
 	// Sync
 	std::vector<Fence> fences;

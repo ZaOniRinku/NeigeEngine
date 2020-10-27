@@ -47,8 +47,10 @@ void Shader::init(const std::string& filePath) {
 }
 
 void Shader::destroy() {
-	descriptorSetLayoutBindings.clear();
-	descriptorSetLayoutBindings.shrink_to_fit();
+	layoutBindings.clear();
+	layoutBindings.shrink_to_fit();
+	layoutBindingsShaderTypes.clear();
+	layoutBindingsShaderTypes.shrink_to_fit();
 	vkDestroyShaderModule(logicalDevice.device, module, nullptr);
 }
 
@@ -146,7 +148,8 @@ void Shader::reflect() {
 			}
 			binding.stageFlags = shaderTypeToVkShaderFlagBits();
 			binding.pImmutableSamplers = nullptr;
-			descriptorSetLayoutBindings.push_back(binding);
+			layoutBindings.push_back(binding);
+			layoutBindingsShaderTypes.push_back(type);
 		}
 	}
 	

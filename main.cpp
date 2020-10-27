@@ -2,22 +2,34 @@
 #include "src/ecs/ECS.h"
 #include "src/ecs/components/Transform.h"
 #include "src/ecs/components/Camera.h"
+#include "src/ecs/components/Renderable.h"
 
 ECS ecs;
 
 int main(void) {
+	ecs.init();
+
+	Game g;
+
 	Window w;
 	w.extent.width = 480;
 	w.extent.height = 360;
 
-	ecs.init();
-	Entity entity = ecs.createEntity();
-	ecs.registerComponent<Transform>();
-	ecs.addComponent(entity, Transform{});
-	ecs.registerComponent<Camera>();
-	ecs.addComponent(entity, Camera{});
-
-	Game g;
 	g.window = &w;
+	g.init();
+
+	Entity rectangle = ecs.createEntity();
+	ecs.addComponent(rectangle, Renderable{
+		"../shaders/dummy_shader.vert",
+		"../shaders/dummy_shader.frag",
+		"",
+		"",
+		"" });
+	ecs.addComponent(rectangle, Transform{
+		glm::vec3(2.0f, 1.0f, 2.0f),
+		glm::vec3(0.0f),
+		glm::vec3(1.0f)
+		});
+
 	g.launch();
 }

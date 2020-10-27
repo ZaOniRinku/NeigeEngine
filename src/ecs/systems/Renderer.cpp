@@ -1,15 +1,15 @@
 #include "Renderer.h"
-#include "resources/RendererResources.h"
-#include "../ecs/ECS.h"
-#include "../ecs/components/Transform.h"
-#include "../ecs/components/Camera.h"
+#include "../../graphics/resources/RendererResources.h"
+#include "../components/Transform.h"
+#include "../components/Camera.h"
+#include "../components/Renderable.h"
 
 extern ECS ecs;
 
 void Renderer::init() {
 	// Instance
 	instance.init(VK_MAKE_VERSION(0, 0, 1), window->instanceExtensions());
-	
+
 	// Surface
 	window->createSurface();
 
@@ -22,6 +22,13 @@ void Renderer::init() {
 	// Swapchain
 	swapchain.init(window, &swapchainSize);
 
+	NEIGE_INFO("Max frames in flight : " + std::to_string(MAX_FRAMES_IN_FLIGHT));
+
+	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
+	NEIGE_INFO("Swapchain format : " + NeigeVKTranslate::vkFormatToString(swapchain.surfaceFormat.format));
+	NEIGE_INFO("Swapchain color space : " + NeigeVKTranslate::vkColorSpaceToString(swapchain.surfaceFormat.colorSpace));
+	NEIGE_INFO("Present mode : " + NeigeVKTranslate::vkPresentModeToString(swapchain.presentMode));
+
 	// Render passes
 	std::vector<RenderPassAttachment> attachments;
 	attachments.push_back(RenderPassAttachment(COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
@@ -33,13 +40,6 @@ void Renderer::init() {
 	RenderPass renderPass;
 	renderPass.init(attachments, dependencies);
 	renderPasses.push_back(renderPass);
-
-	NEIGE_INFO("Max frames in flight : " + std::to_string(MAX_FRAMES_IN_FLIGHT));
-
-	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
-	NEIGE_INFO("Swapchain format : " + NeigeVKTranslate::vkFormatToString(swapchain.surfaceFormat.format));
-	NEIGE_INFO("Swapchain color space : " + NeigeVKTranslate::vkColorSpaceToString(swapchain.surfaceFormat.colorSpace));
-	NEIGE_INFO("Present mode : " + NeigeVKTranslate::vkPresentModeToString(swapchain.presentMode));
 
 	// Framebuffers
 	Image colorAttachment;
@@ -55,7 +55,7 @@ void Renderer::init() {
 	std::vector<std::vector<VkImageView>> framebufferAttachments;
 	framebufferAttachments.resize(swapchainSize);
 	framebuffers.resize(swapchainSize);
-	for (int i = 0; i < framebufferAttachments.size(); i++) {
+	for (size_t i = 0; i < framebufferAttachments.size(); i++) {
 		framebufferAttachments[i].push_back(colorAttachment.imageView);
 		framebufferAttachments[i].push_back(depthAttachment.imageView);
 		framebufferAttachments[i].push_back(swapchain.imageViews[i]);
@@ -66,11 +66,19 @@ void Renderer::init() {
 	fullscreenViewport.init(window->extent.width, window->extent.height);
 
 	// Graphics pipelines
-	GraphicsPipeline graphicsPipeline;
-	graphicsPipeline.vertexShaderPath = "../shaders/dummy_shader.vert";
-	graphicsPipeline.fragmentShaderPath = "../shaders/dummy_shader.frag";
-	graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
-	graphicsPipelines.push_back(graphicsPipeline);
+	for (Entity entity : entities) {
+		auto const& renderable = ecs.getComponent<Renderable>(entity);
+
+		GraphicsPipeline graphicsPipeline;
+		graphicsPipeline.vertexShaderPath = renderable.vertexShaderPath;
+		graphicsPipeline.fragmentShaderPath = renderable.fragmentShaderPath;
+		graphicsPipeline.tesselationControlShaderPath = renderable.tesselationControlShaderPath;
+		graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
+		graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
+		graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
+		graphicsPipelines.push_back(graphicsPipeline);
+		entityGraphicsPipelines.emplace(entity, graphicsPipelines.size() - 1);
+	}
 
 	// Command pools and buffers
 	renderingCommandPools.resize(swapchainSize);
@@ -229,23 +237,16 @@ void Renderer::destroy() {
 	for (CommandPool& renderingCommandPool : renderingCommandPools) {
 		renderingCommandPool.destroy();
 	}
-	renderingCommandPools.clear();
-	renderingCommandPools.shrink_to_fit();
 	for (RenderPass& renderPass : renderPasses) {
 		renderPass.destroy();
 	}
-	renderPasses.clear();
-	renderPasses.shrink_to_fit();
 	for (GraphicsPipeline& graphicsPipeline : graphicsPipelines) {
 		graphicsPipeline.destroy();
 	}
-	graphicsPipelines.clear();
-	graphicsPipelines.shrink_to_fit();
 	for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 		Shader* shader = &it->second;
 		shader->destroy();
 	}
-	shaders.clear();
 	for (Fence& fence : fences) {
 		fence.destroy();
 	}
@@ -270,11 +271,13 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	VkDeviceSize offset = 0;
 	renderPasses[0].begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
 
-	graphicsPipelines[0].bind(&renderingCommandBuffers[frameInFlightIndex]);
+	for (Entity entity : entities) {
+		graphicsPipelines[entityGraphicsPipelines.find(entity)->second].bind(&renderingCommandBuffers[frameInFlightIndex]);
 
-	vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
-	vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-	vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 6, 1, 0, 0, 0);
+		vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
+		vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 6, 1, 0, 0, 0);
+	}
 
 	renderPasses[0].end(&renderingCommandBuffers[frameInFlightIndex]);
 

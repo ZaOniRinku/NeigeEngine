@@ -19,7 +19,8 @@ struct GraphicsPipeline {
 	std::string tesselationControlShaderPath;
 	std::string tesselationEvaluationShaderPath;
 	std::string geometryShaderPath;
-	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	std::vector<SHADER_TYPE> layoutBindingsShaderTypes;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	Viewport* viewport;
 

@@ -6,24 +6,17 @@
 #include "../../external/spirv-reflect/spirv_reflect.h"
 #include "../../utils/resources/FileTools.h"
 #include "../../utils/NeigeDefines.h"
+#include "../../utils/structs/ShaderStructs.h"
 #include <string>
 #include <vector>
-
-enum SHADER_TYPE {
-	VERTEX,
-	FRAGMENT,
-	TESSELATION_CONTROL,
-	TESSELATION_EVALUATION,
-	GEOMETRY,
-	COMPUTE
-};
 
 struct Shader {
 	VkShaderModule module = VK_NULL_HANDLE;
 	std::string file;
 	enum SHADER_TYPE type;
 	std::vector<uint32_t> spvCode;
-	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	std::vector<SHADER_TYPE> layoutBindingsShaderTypes;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
 	bool glslInitialized = false;
