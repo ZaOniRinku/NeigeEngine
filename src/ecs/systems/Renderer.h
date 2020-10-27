@@ -30,7 +30,6 @@ struct Renderer : public System {
 
 	// Entities
 	Entity camera;
-	std::unordered_map<Entity, uint64_t> entityGraphicsPipelines;
 
 	// Sync
 	std::vector<Fence> fences;
@@ -39,7 +38,7 @@ struct Renderer : public System {
 
 	// Pipelines
 	Viewport fullscreenViewport;
-	std::vector<GraphicsPipeline> graphicsPipelines;
+	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
 
 	// Render passes
 	std::vector<Image> colorImages;

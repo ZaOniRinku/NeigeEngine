@@ -76,8 +76,8 @@ void Renderer::init() {
 		graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
 		graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
 		graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
-		graphicsPipelines.push_back(graphicsPipeline);
-		entityGraphicsPipelines.emplace(entity, graphicsPipelines.size() - 1);
+		graphicsPipelines.emplace(renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath, graphicsPipeline);
+		std::cout << renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath << std::endl;
 	}
 
 	// Command pools and buffers
@@ -240,8 +240,9 @@ void Renderer::destroy() {
 	for (RenderPass& renderPass : renderPasses) {
 		renderPass.destroy();
 	}
-	for (GraphicsPipeline& graphicsPipeline : graphicsPipelines) {
-		graphicsPipeline.destroy();
+	for (std::unordered_map<std::string, GraphicsPipeline>::iterator it = graphicsPipelines.begin(); it != graphicsPipelines.end(); it++) {
+		GraphicsPipeline* graphicsPipeline = &it->second;
+		graphicsPipeline->destroy();
 	}
 	for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 		Shader* shader = &it->second;
@@ -272,7 +273,9 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	renderPasses[0].begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
 
 	for (Entity entity : entities) {
-		graphicsPipelines[entityGraphicsPipelines.find(entity)->second].bind(&renderingCommandBuffers[frameInFlightIndex]);
+		auto const& renderable = ecs.getComponent<Renderable>(entity);
+
+		graphicsPipelines.at(renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath).bind(&renderingCommandBuffers[frameInFlightIndex]);
 
 		vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 		vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
