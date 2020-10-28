@@ -5,7 +5,7 @@
 #include "../../external/glm/glm/glm.hpp"
 #include "../NeigeDefines.h"
 
-enum SHADER_TYPE {
+enum struct ShaderType {
 	VERTEX,
 	FRAGMENT,
 	TESSELATION_CONTROL,

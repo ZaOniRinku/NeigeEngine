@@ -13,10 +13,10 @@
 struct Shader {
 	VkShaderModule module = VK_NULL_HANDLE;
 	std::string file;
-	enum SHADER_TYPE type;
+	ShaderType type;
 	std::vector<uint32_t> spvCode;
 	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-	std::vector<SHADER_TYPE> layoutBindingsShaderTypes;
+	std::vector<ShaderType> layoutBindingsShaderTypes;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
 	bool glslInitialized = false;

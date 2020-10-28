@@ -2,7 +2,7 @@
 #include <iostream>
 #include <bitset>
 
-enum KeyState {
+enum struct KeyState {
 	PRESSED,
 	HELD,
 	RELEASED,
@@ -10,35 +10,39 @@ enum KeyState {
 };
 
 struct KeyboardInputs {
-	KeyState qKey = NONE;
-	KeyState wKey = NONE;
-	KeyState eKey = NONE;
-	KeyState rKey = NONE;
-	KeyState tKey = NONE;
-	KeyState yKey = NONE;
-	KeyState uKey = NONE;
-	KeyState iKey = NONE;
-	KeyState oKey = NONE;
-	KeyState pKey = NONE;
-	KeyState aKey = NONE;
-	KeyState sKey = NONE;
-	KeyState dKey = NONE;
-	KeyState fKey = NONE;
-	KeyState gKey = NONE;
-	KeyState hKey = NONE;
-	KeyState jKey = NONE;
-	KeyState kKey = NONE;
-	KeyState lKey = NONE;
-	KeyState zKey = NONE;
-	KeyState xKey = NONE;
-	KeyState cKey = NONE;
-	KeyState vKey = NONE;
-	KeyState bKey = NONE;
-	KeyState nKey = NONE;
-	KeyState mKey = NONE;
-	KeyState escapeKey = NONE;
-	KeyState spaceKey = NONE;
-	KeyState shiftKey = NONE;
+	KeyState qKey = KeyState::NONE;
+	KeyState wKey = KeyState::NONE;
+	KeyState eKey = KeyState::NONE;
+	KeyState rKey = KeyState::NONE;
+	KeyState tKey = KeyState::NONE;
+	KeyState yKey = KeyState::NONE;
+	KeyState uKey = KeyState::NONE;
+	KeyState iKey = KeyState::NONE;
+	KeyState oKey = KeyState::NONE;
+	KeyState pKey = KeyState::NONE;
+	KeyState aKey = KeyState::NONE;
+	KeyState sKey = KeyState::NONE;
+	KeyState dKey = KeyState::NONE;
+	KeyState fKey = KeyState::NONE;
+	KeyState gKey = KeyState::NONE;
+	KeyState hKey = KeyState::NONE;
+	KeyState jKey = KeyState::NONE;
+	KeyState kKey = KeyState::NONE;
+	KeyState lKey = KeyState::NONE;
+	KeyState zKey = KeyState::NONE;
+	KeyState xKey = KeyState::NONE;
+	KeyState cKey = KeyState::NONE;
+	KeyState vKey = KeyState::NONE;
+	KeyState bKey = KeyState::NONE;
+	KeyState nKey = KeyState::NONE;
+	KeyState mKey = KeyState::NONE;
+	KeyState leftKey = KeyState::NONE;
+	KeyState rightKey = KeyState::NONE;
+	KeyState upKey = KeyState::NONE;
+	KeyState downKey = KeyState::NONE;
+	KeyState escapeKey = KeyState::NONE;
+	KeyState spaceKey = KeyState::NONE;
+	KeyState shiftKey = KeyState::NONE;
 
 	void update();
 };

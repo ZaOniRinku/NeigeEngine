@@ -37,6 +37,7 @@ void Renderer::init() {
 		glm::vec3(0.0f)
 		});
 	ecs.addComponent(camera, Camera{
+		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f)
 		});
 	cameraBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -213,7 +214,7 @@ void Renderer::init() {
 
 void Renderer::update() {
 	if (NEIGE_DEBUG) {
-		if (keyboardInputs.pKey == PRESSED) {
+		if (keyboardInputs.pKey == KeyState::PRESSED) {
 			logicalDevice.wait();
 			for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 				it->second.reload();
@@ -358,7 +359,7 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 	const auto& cameraCamera = ecs.getComponent<Camera>(camera);
 
 	CameraUniformBufferObject cubo = {};
-	glm::mat4 view = Camera::createLookAtView(cameraTransform.position, cameraTransform.position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = Camera::createLookAtView(cameraTransform.position, cameraTransform.position + cameraCamera.to, glm::vec3(0.0f, 1.0f, 0.0f));
 	cubo.viewProj = cameraCamera.projection * view;
 	cubo.position = cameraTransform.position;
 

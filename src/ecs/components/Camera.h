@@ -5,6 +5,7 @@
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
 
 struct Camera {
+	glm::vec3 to;
 	glm::mat4 projection;
 
 	static glm::mat4 createLookAtView(glm::vec3 eye, glm::vec3 center, glm::vec3 up) {

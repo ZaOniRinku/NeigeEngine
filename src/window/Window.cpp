@@ -49,235 +49,267 @@ void Window::windowGotResized() {
 void Window::keyAction(int key, int action) {
 	switch (key) {
 	case GLFW_KEY_Q:
-		if (keyboardInputs.qKey == NONE) {
-			keyboardInputs.qKey = PRESSED;
+		if (keyboardInputs.qKey == KeyState::NONE) {
+			keyboardInputs.qKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.qKey == PRESSED || keyboardInputs.qKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.qKey = RELEASED;
+		else if ((keyboardInputs.qKey == KeyState::PRESSED || keyboardInputs.qKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.qKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_W:
-		if (keyboardInputs.wKey == NONE) {
-			keyboardInputs.wKey = PRESSED;
+		if (keyboardInputs.wKey == KeyState::NONE) {
+			keyboardInputs.wKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.wKey == PRESSED || keyboardInputs.wKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.wKey = RELEASED;
+		else if ((keyboardInputs.wKey == KeyState::PRESSED || keyboardInputs.wKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.wKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_E:
-		if (keyboardInputs.eKey == NONE) {
-			keyboardInputs.eKey = PRESSED;
+		if (keyboardInputs.eKey == KeyState::NONE) {
+			keyboardInputs.eKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.eKey == PRESSED || keyboardInputs.eKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.eKey = RELEASED;
+		else if ((keyboardInputs.eKey == KeyState::PRESSED || keyboardInputs.eKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.eKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_R:
-		if (keyboardInputs.rKey == NONE) {
-			keyboardInputs.rKey = PRESSED;
+		if (keyboardInputs.rKey == KeyState::NONE) {
+			keyboardInputs.rKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.rKey == PRESSED || keyboardInputs.rKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.rKey = RELEASED;
+		else if ((keyboardInputs.rKey == KeyState::PRESSED || keyboardInputs.rKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.rKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_T:
-		if (keyboardInputs.tKey == NONE) {
-			keyboardInputs.tKey = PRESSED;
+		if (keyboardInputs.tKey == KeyState::NONE) {
+			keyboardInputs.tKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.tKey == PRESSED || keyboardInputs.tKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.tKey = RELEASED;
+		else if ((keyboardInputs.tKey == KeyState::PRESSED || keyboardInputs.tKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.tKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_Y:
-		if (keyboardInputs.yKey == NONE) {
-			keyboardInputs.yKey = PRESSED;
+		if (keyboardInputs.yKey == KeyState::NONE) {
+			keyboardInputs.yKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.yKey == PRESSED || keyboardInputs.yKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.yKey = RELEASED;
+		else if ((keyboardInputs.yKey == KeyState::PRESSED || keyboardInputs.yKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.yKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_U:
-		if (keyboardInputs.uKey == NONE) {
-			keyboardInputs.uKey = PRESSED;
+		if (keyboardInputs.uKey == KeyState::NONE) {
+			keyboardInputs.uKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.uKey == PRESSED || keyboardInputs.uKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.uKey = RELEASED;
+		else if ((keyboardInputs.uKey == KeyState::PRESSED || keyboardInputs.uKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.uKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_I:
-		if (keyboardInputs.iKey == NONE) {
-			keyboardInputs.iKey = PRESSED;
+		if (keyboardInputs.iKey == KeyState::NONE) {
+			keyboardInputs.iKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.iKey == PRESSED || keyboardInputs.iKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.iKey = RELEASED;
+		else if ((keyboardInputs.iKey == KeyState::PRESSED || keyboardInputs.iKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.iKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_O:
-		if (keyboardInputs.oKey == NONE) {
-			keyboardInputs.oKey = PRESSED;
+		if (keyboardInputs.oKey == KeyState::NONE) {
+			keyboardInputs.oKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.oKey == PRESSED || keyboardInputs.oKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.oKey = RELEASED;
+		else if ((keyboardInputs.oKey == KeyState::PRESSED || keyboardInputs.oKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.oKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_P:
-		if (keyboardInputs.pKey == NONE) {
-			keyboardInputs.pKey = PRESSED;
+		if (keyboardInputs.pKey == KeyState::NONE) {
+			keyboardInputs.pKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.pKey == PRESSED || keyboardInputs.pKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.pKey = RELEASED;
+		else if ((keyboardInputs.pKey == KeyState::PRESSED || keyboardInputs.pKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.pKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_A:
-		if (keyboardInputs.aKey == NONE) {
-			keyboardInputs.aKey = PRESSED;
+		if (keyboardInputs.aKey == KeyState::NONE) {
+			keyboardInputs.aKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.aKey == PRESSED || keyboardInputs.aKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.aKey = RELEASED;
+		else if ((keyboardInputs.aKey == KeyState::PRESSED || keyboardInputs.aKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.aKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_S:
-		if (keyboardInputs.sKey == NONE) {
-			keyboardInputs.sKey = PRESSED;
+		if (keyboardInputs.sKey == KeyState::NONE) {
+			keyboardInputs.sKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.sKey == PRESSED || keyboardInputs.sKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.sKey = RELEASED;
+		else if ((keyboardInputs.sKey == KeyState::PRESSED || keyboardInputs.sKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.sKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_D:
-		if (keyboardInputs.dKey == NONE) {
-			keyboardInputs.dKey = PRESSED;
+		if (keyboardInputs.dKey == KeyState::NONE) {
+			keyboardInputs.dKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.dKey == PRESSED || keyboardInputs.dKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.dKey = RELEASED;
+		else if ((keyboardInputs.dKey == KeyState::PRESSED || keyboardInputs.dKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.dKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_F:
-		if (keyboardInputs.fKey == NONE) {
-			keyboardInputs.fKey = PRESSED;
+		if (keyboardInputs.fKey == KeyState::NONE) {
+			keyboardInputs.fKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.fKey == PRESSED || keyboardInputs.fKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.fKey = RELEASED;
+		else if ((keyboardInputs.fKey == KeyState::PRESSED || keyboardInputs.fKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.fKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_G:
-		if (keyboardInputs.gKey == NONE) {
-			keyboardInputs.gKey = PRESSED;
+		if (keyboardInputs.gKey == KeyState::NONE) {
+			keyboardInputs.gKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.gKey == PRESSED || keyboardInputs.gKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.gKey = RELEASED;
+		else if ((keyboardInputs.gKey == KeyState::PRESSED || keyboardInputs.gKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.gKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_H:
-		if (keyboardInputs.hKey == NONE) {
-			keyboardInputs.hKey = PRESSED;
+		if (keyboardInputs.hKey == KeyState::NONE) {
+			keyboardInputs.hKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.hKey == PRESSED || keyboardInputs.hKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.hKey = RELEASED;
+		else if ((keyboardInputs.hKey == KeyState::PRESSED || keyboardInputs.hKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.hKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_J:
-		if (keyboardInputs.jKey == NONE) {
-			keyboardInputs.jKey = PRESSED;
+		if (keyboardInputs.jKey == KeyState::NONE) {
+			keyboardInputs.jKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.jKey == PRESSED || keyboardInputs.jKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.jKey = RELEASED;
+		else if ((keyboardInputs.jKey == KeyState::PRESSED || keyboardInputs.jKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.jKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_K:
-		if (keyboardInputs.kKey == NONE) {
-			keyboardInputs.kKey = PRESSED;
+		if (keyboardInputs.kKey == KeyState::NONE) {
+			keyboardInputs.kKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.kKey == PRESSED || keyboardInputs.kKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.kKey = RELEASED;
+		else if ((keyboardInputs.kKey == KeyState::PRESSED || keyboardInputs.kKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.kKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_L:
-		if (keyboardInputs.lKey == NONE) {
-			keyboardInputs.lKey = PRESSED;
+		if (keyboardInputs.lKey == KeyState::NONE) {
+			keyboardInputs.lKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.lKey == PRESSED || keyboardInputs.lKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.lKey = RELEASED;
+		else if ((keyboardInputs.lKey == KeyState::PRESSED || keyboardInputs.lKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.lKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_Z:
-		if (keyboardInputs.zKey == NONE) {
-			keyboardInputs.zKey = PRESSED;
+		if (keyboardInputs.zKey == KeyState::NONE) {
+			keyboardInputs.zKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.zKey == PRESSED || keyboardInputs.zKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.zKey = RELEASED;
+		else if ((keyboardInputs.zKey == KeyState::PRESSED || keyboardInputs.zKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.zKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_X:
-		if (keyboardInputs.xKey == NONE) {
-			keyboardInputs.xKey = PRESSED;
+		if (keyboardInputs.xKey == KeyState::NONE) {
+			keyboardInputs.xKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.xKey == PRESSED || keyboardInputs.xKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.xKey = RELEASED;
+		else if ((keyboardInputs.xKey == KeyState::PRESSED || keyboardInputs.xKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.xKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_C:
-		if (keyboardInputs.cKey == NONE) {
-			keyboardInputs.cKey = PRESSED;
+		if (keyboardInputs.cKey == KeyState::NONE) {
+			keyboardInputs.cKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.cKey == PRESSED || keyboardInputs.cKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.cKey = RELEASED;
+		else if ((keyboardInputs.cKey == KeyState::PRESSED || keyboardInputs.cKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.cKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_V:
-		if (keyboardInputs.vKey == NONE) {
-			keyboardInputs.vKey = PRESSED;
+		if (keyboardInputs.vKey == KeyState::NONE) {
+			keyboardInputs.vKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.vKey == PRESSED || keyboardInputs.vKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.vKey = RELEASED;
+		else if ((keyboardInputs.vKey == KeyState::PRESSED || keyboardInputs.vKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.vKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_B:
-		if (keyboardInputs.bKey == NONE) {
-			keyboardInputs.bKey = PRESSED;
+		if (keyboardInputs.bKey == KeyState::NONE) {
+			keyboardInputs.bKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.bKey == PRESSED || keyboardInputs.bKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.bKey = RELEASED;
+		else if ((keyboardInputs.bKey == KeyState::PRESSED || keyboardInputs.bKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.bKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_N:
-		if (keyboardInputs.nKey == NONE) {
-			keyboardInputs.nKey = PRESSED;
+		if (keyboardInputs.nKey == KeyState::NONE) {
+			keyboardInputs.nKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.nKey == PRESSED || keyboardInputs.nKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.nKey = RELEASED;
+		else if ((keyboardInputs.nKey == KeyState::PRESSED || keyboardInputs.nKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.nKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_M:
-		if (keyboardInputs.mKey == NONE) {
-			keyboardInputs.mKey = PRESSED;
+		if (keyboardInputs.mKey == KeyState::NONE) {
+			keyboardInputs.mKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.mKey == PRESSED || keyboardInputs.mKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.mKey = RELEASED;
+		else if ((keyboardInputs.mKey == KeyState::PRESSED || keyboardInputs.mKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.mKey = KeyState::RELEASED;
+		}
+		break;
+	case GLFW_KEY_LEFT:
+		if (keyboardInputs.leftKey == KeyState::NONE) {
+			keyboardInputs.leftKey = KeyState::PRESSED;
+		}
+		else if ((keyboardInputs.leftKey == KeyState::PRESSED || keyboardInputs.leftKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.leftKey = KeyState::RELEASED;
+		}
+		break;
+	case GLFW_KEY_RIGHT:
+		if (keyboardInputs.rightKey == KeyState::NONE) {
+			keyboardInputs.rightKey = KeyState::PRESSED;
+		}
+		else if ((keyboardInputs.rightKey == KeyState::PRESSED || keyboardInputs.rightKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.rightKey = KeyState::RELEASED;
+		}
+		break;
+	case GLFW_KEY_UP:
+		if (keyboardInputs.upKey == KeyState::NONE) {
+			keyboardInputs.upKey = KeyState::PRESSED;
+		}
+		else if ((keyboardInputs.upKey == KeyState::PRESSED || keyboardInputs.upKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.upKey = KeyState::RELEASED;
+		}
+		break;
+	case GLFW_KEY_DOWN:
+		if (keyboardInputs.downKey == KeyState::NONE) {
+			keyboardInputs.downKey = KeyState::PRESSED;
+		}
+		else if ((keyboardInputs.downKey == KeyState::PRESSED || keyboardInputs.downKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.downKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_ESCAPE:
-		if (keyboardInputs.escapeKey == NONE) {
-			keyboardInputs.escapeKey = PRESSED;
+		if (keyboardInputs.escapeKey == KeyState::NONE) {
+			keyboardInputs.escapeKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.escapeKey == PRESSED || keyboardInputs.escapeKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.escapeKey = RELEASED;
+		else if ((keyboardInputs.escapeKey == KeyState::PRESSED || keyboardInputs.escapeKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.escapeKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_SPACE:
-		if (keyboardInputs.spaceKey == NONE) {
-			keyboardInputs.spaceKey = PRESSED;
+		if (keyboardInputs.spaceKey == KeyState::NONE) {
+			keyboardInputs.spaceKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.spaceKey == PRESSED || keyboardInputs.spaceKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.spaceKey = RELEASED;
+		else if ((keyboardInputs.spaceKey == KeyState::PRESSED || keyboardInputs.spaceKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.spaceKey = KeyState::RELEASED;
 		}
 		break;
 	case GLFW_KEY_LEFT_SHIFT:
-		if (keyboardInputs.shiftKey == NONE) {
-			keyboardInputs.shiftKey = PRESSED;
+		if (keyboardInputs.shiftKey == KeyState::NONE) {
+			keyboardInputs.shiftKey = KeyState::PRESSED;
 		}
-		else if ((keyboardInputs.shiftKey == PRESSED || keyboardInputs.shiftKey == HELD) && action == GLFW_RELEASE) {
-			keyboardInputs.shiftKey = RELEASED;
+		else if ((keyboardInputs.shiftKey == KeyState::PRESSED || keyboardInputs.shiftKey == KeyState::HELD) && action == GLFW_RELEASE) {
+			keyboardInputs.shiftKey = KeyState::RELEASED;
 		}
 		break;
 	default:

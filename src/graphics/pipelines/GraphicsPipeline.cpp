@@ -23,7 +23,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		else {
 			shader = shaders[vertexShaderPath];
 		}
-		NEIGE_ASSERT(shader.type == VERTEX, "Vertex shader in pipeline is not a vertex shader.");
+		NEIGE_ASSERT(shader.type == ShaderType::VERTEX, "Vertex shader in pipeline is not a vertex shader.");
 
 		VkPipelineShaderStageCreateInfo vertexShaderCreateInfo = {};
 		vertexShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -59,7 +59,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		else {
 			shader = shaders[fragmentShaderPath];
 		}
-		NEIGE_ASSERT(shader.type == FRAGMENT, "Fragment shader in pipeline is not a fragment shader.");
+		NEIGE_ASSERT(shader.type == ShaderType::FRAGMENT, "Fragment shader in pipeline is not a fragment shader.");
 
 		VkPipelineShaderStageCreateInfo fragmentShaderCreateInfo = {};
 		fragmentShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -86,7 +86,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		else {
 			shader = shaders[tesselationControlShaderPath];
 		}
-		NEIGE_ASSERT(shader.type == TESSELATION_CONTROL, "Tesselation control shader in pipeline is not a tesselation control shader.");
+		NEIGE_ASSERT(shader.type == ShaderType::TESSELATION_CONTROL, "Tesselation control shader in pipeline is not a tesselation control shader.");
 
 		VkPipelineShaderStageCreateInfo tesselationControlShaderCreateInfo = {};
 		tesselationControlShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -113,7 +113,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		else {
 			shader = shaders[tesselationEvaluationShaderPath];
 		}
-		NEIGE_ASSERT(shader.type == TESSELATION_EVALUATION, "Tesselation evaluation shader in pipeline is not a tesselation evaluation shader.");
+		NEIGE_ASSERT(shader.type == ShaderType::TESSELATION_EVALUATION, "Tesselation evaluation shader in pipeline is not a tesselation evaluation shader.");
 
 		VkPipelineShaderStageCreateInfo tesselationEvaluationShaderCreateInfo = {};
 		tesselationEvaluationShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -140,7 +140,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		else {
 			shader = shaders[geometryShaderPath];
 		}
-		NEIGE_ASSERT(shader.type == GEOMETRY, "Geometry shader in pipeline is not a geometry shader.");
+		NEIGE_ASSERT(shader.type == ShaderType::GEOMETRY, "Geometry shader in pipeline is not a geometry shader.");
 
 		VkPipelineShaderStageCreateInfo geometryShaderCreateInfo = {};
 		geometryShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

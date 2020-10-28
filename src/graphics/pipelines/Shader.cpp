@@ -5,22 +5,22 @@ void Shader::init(const std::string& filePath) {
 	file = filePath;
 	std::string extension = FileTools::extension(filePath);
 	if (extension == "vert") {
-		type = VERTEX;
+		type = ShaderType::VERTEX;
 	}
 	else if (extension == "frag") {
-		type = FRAGMENT;
+		type = ShaderType::FRAGMENT;
 	}
 	else if (extension == "tesc") {
-		type = TESSELATION_CONTROL;
+		type = ShaderType::TESSELATION_CONTROL;
 	}
 	else if (extension == "tese") {
-		type = TESSELATION_EVALUATION;
+		type = ShaderType::TESSELATION_EVALUATION;
 	}
 	else if (extension == "geom") {
-		type = GEOMETRY;
+		type = ShaderType::GEOMETRY;
 	}
 	else if (extension == "comp") {
-		type = COMPUTE;
+		type = ShaderType::COMPUTE;
 	}
 	else {
 		NEIGE_ERROR("\"." + extension + "\" shader extension not supported.");
@@ -189,22 +189,22 @@ void Shader::reload() {
 
 EShLanguage Shader::shaderTypeToGlslangShaderType() {
 	switch (type) {
-	case VERTEX:
+	case ShaderType::VERTEX:
 		return EShLangVertex;
 		break;
-	case FRAGMENT:
+	case ShaderType::FRAGMENT:
 		return EShLangFragment;
 		break;
-	case TESSELATION_CONTROL:
+	case ShaderType::TESSELATION_CONTROL:
 		return EShLangTessControl;
 		break;
-	case TESSELATION_EVALUATION:
+	case ShaderType::TESSELATION_EVALUATION:
 		return EShLangTessEvaluation;
 		break;
-	case GEOMETRY:
+	case ShaderType::GEOMETRY:
 		return EShLangGeometry;
 		break;
-	case COMPUTE:
+	case ShaderType::COMPUTE:
 		return EShLangCompute;
 		break;
 	default:
@@ -214,22 +214,22 @@ EShLanguage Shader::shaderTypeToGlslangShaderType() {
 
 VkShaderStageFlagBits Shader::shaderTypeToVkShaderFlagBits() {
 	switch (type) {
-	case VERTEX:
+	case ShaderType::VERTEX:
 		return VK_SHADER_STAGE_VERTEX_BIT;
 		break;
-	case FRAGMENT:
+	case ShaderType::FRAGMENT:
 		return VK_SHADER_STAGE_FRAGMENT_BIT;
 		break;
-	case TESSELATION_CONTROL:
+	case ShaderType::TESSELATION_CONTROL:
 		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 		break;
-	case TESSELATION_EVALUATION:
+	case ShaderType::TESSELATION_EVALUATION:
 		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 		break;
-	case GEOMETRY:
+	case ShaderType::GEOMETRY:
 		return VK_SHADER_STAGE_GEOMETRY_BIT;
 		break;
-	case COMPUTE:
+	case ShaderType::COMPUTE:
 		return VK_SHADER_STAGE_COMPUTE_BIT;
 		break;
 	default:
