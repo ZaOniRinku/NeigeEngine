@@ -29,14 +29,24 @@ void CameraControls::update(double deltaTime) {
 			transform.position.y -= static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.leftKey == KeyState::HELD) {
-			angle -= static_cast<float>(sensitivity * deltaTime);
-			camera.to.x = sin(angle);
-			camera.to.z = -cos(angle);
+			yaw -= static_cast<float>(sensitivity * deltaTime * 100.0f);
+			yaw = glm::mod(yaw, 360.0f);
 		}
 		if (keyboardInputs.rightKey == KeyState::HELD) {
-			angle += static_cast<float>(sensitivity * deltaTime);
-			camera.to.x = sin(angle);
-			camera.to.z = -cos(angle);
+			yaw += static_cast<float>(sensitivity * deltaTime * 100.0f);
+			yaw = glm::mod(yaw, 360.0f);
 		}
+		if (keyboardInputs.upKey == KeyState::HELD) {
+			pitch -= static_cast<float>(sensitivity * deltaTime * 100.0f);
+			pitch = std::clamp(pitch, -89.0f, 89.0f);
+		}
+		if (keyboardInputs.downKey == KeyState::HELD) {
+			pitch += static_cast<float>(sensitivity * deltaTime * 100.0f);
+			pitch = std::clamp(pitch, -89.0f, 89.0f);
+		}
+		camera.to.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		camera.to.y = -sin(glm::radians(pitch));
+		camera.to.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+		camera.to = glm::normalize(camera.to);
 	}
 }
