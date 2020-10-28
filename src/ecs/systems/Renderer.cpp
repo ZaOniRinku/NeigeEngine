@@ -23,11 +23,25 @@ void Renderer::init() {
 	swapchain.init(window, &swapchainSize);
 
 	NEIGE_INFO("Max frames in flight : " + std::to_string(MAX_FRAMES_IN_FLIGHT));
-
 	NEIGE_INFO("Swapchain size : " + std::to_string(swapchainSize));
 	NEIGE_INFO("Swapchain format : " + NeigeVKTranslate::vkFormatToString(swapchain.surfaceFormat.format));
 	NEIGE_INFO("Swapchain color space : " + NeigeVKTranslate::vkColorSpaceToString(swapchain.surfaceFormat.colorSpace));
 	NEIGE_INFO("Present mode : " + NeigeVKTranslate::vkPresentModeToString(swapchain.presentMode));
+
+	// Camera
+	camera = ecs.createEntity();
+	ecs.addComponent(camera, Transform{
+		glm::vec3(0.0f),
+		glm::vec3(0.0f),
+		glm::vec3(0.0f)
+		});
+	ecs.addComponent(camera, Camera{
+		Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f)
+		});
+	cameraBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	for (Buffer& buffer : cameraBuffers) {
+		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(CameraUniformBufferObject));
+	}
 
 	// Render passes
 	std::vector<RenderPassAttachment> attachments;
@@ -65,24 +79,85 @@ void Renderer::init() {
 	// Fullscreen viewport
 	fullscreenViewport.init(window->extent.width, window->extent.height);
 
-	// Graphics pipelines
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
 
-		GraphicsPipeline graphicsPipeline;
-		graphicsPipeline.vertexShaderPath = renderable.vertexShaderPath;
-		graphicsPipeline.fragmentShaderPath = renderable.fragmentShaderPath;
-		graphicsPipeline.tesselationControlShaderPath = renderable.tesselationControlShaderPath;
-		graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
-		graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
-		graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
-		graphicsPipelines.emplace(renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath, graphicsPipeline);
-		std::cout << renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath << std::endl;
+		// Graphics pipelines
+		if (graphicsPipelines.find(mapKey) == graphicsPipelines.end()) {
+			GraphicsPipeline graphicsPipeline;
+			graphicsPipeline.vertexShaderPath = renderable.vertexShaderPath;
+			graphicsPipeline.fragmentShaderPath = renderable.fragmentShaderPath;
+			graphicsPipeline.tesselationControlShaderPath = renderable.tesselationControlShaderPath;
+			graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
+			graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
+			graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
+			graphicsPipelines.emplace(mapKey, graphicsPipeline);
+		}
+
+		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
+			std::vector<Buffer> buffers;
+			buffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+			std::vector<DescriptorSet> descriptorSets;
+			descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+				// Buffers
+				BufferTools::createUniformBuffer(buffers[i].buffer, buffers[i].deviceMemory, sizeof(ObjectUniformBufferObject));
+
+				// Descriptor sets
+				descriptorSets[i].init(&graphicsPipelines.at(mapKey));
+
+				VkDescriptorBufferInfo objectInfo = {};
+				objectInfo.buffer = buffers.at(i).buffer;
+				objectInfo.offset = 0;
+				objectInfo.range = sizeof(ObjectUniformBufferObject);
+
+				VkDescriptorBufferInfo cameraInfo = {};
+				cameraInfo.buffer = cameraBuffers.at(i).buffer;
+				cameraInfo.offset = 0;
+				cameraInfo.range = sizeof(CameraUniformBufferObject);
+
+				std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+
+				VkWriteDescriptorSet objectWriteDescriptorSet = {};
+				objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				objectWriteDescriptorSet.pNext = nullptr;
+				objectWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+				objectWriteDescriptorSet.dstBinding = 0;
+				objectWriteDescriptorSet.dstArrayElement = 0;
+				objectWriteDescriptorSet.descriptorCount = 1;
+				objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				objectWriteDescriptorSet.pImageInfo = nullptr;
+				objectWriteDescriptorSet.pBufferInfo = &objectInfo;
+				objectWriteDescriptorSet.pTexelBufferView = nullptr;
+				writesDescriptorSet.push_back(objectWriteDescriptorSet);
+
+				VkWriteDescriptorSet cameraWriteDescriptorSet = {};
+				cameraWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				cameraWriteDescriptorSet.pNext = nullptr;
+				cameraWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+				cameraWriteDescriptorSet.dstBinding = 1;
+				cameraWriteDescriptorSet.dstArrayElement = 0;
+				cameraWriteDescriptorSet.descriptorCount = 1;
+				cameraWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				cameraWriteDescriptorSet.pImageInfo = nullptr;
+				cameraWriteDescriptorSet.pBufferInfo = &cameraInfo;
+				cameraWriteDescriptorSet.pTexelBufferView = nullptr;
+				writesDescriptorSet.push_back(cameraWriteDescriptorSet);
+
+				descriptorSets[i].update(writesDescriptorSet);
+			}
+
+			entityBuffers.emplace(entity, buffers);
+			entityDescriptorSets.emplace(entity, descriptorSets);
+		}
 	}
 
 	// Command pools and buffers
-	renderingCommandPools.resize(swapchainSize);
-	renderingCommandBuffers.resize(swapchainSize);
+	renderingCommandPools.resize(MAX_FRAMES_IN_FLIGHT);
+	renderingCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		renderingCommandPools[i].init();
 		renderingCommandBuffers[i].init(&renderingCommandPools[i]);
@@ -136,18 +211,23 @@ void Renderer::init() {
 }
 
 void Renderer::update() {
-	int reloading = glfwGetKey(window->window, GLFW_KEY_P);
-	if (reloading == GLFW_PRESS && !pressed) {
-		pressed = true;
-		logicalDevice.wait();
-		for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
-			it->second.reload();
+	if (NEIGE_DEBUG) {
+		int reloading = glfwGetKey(window->window, GLFW_KEY_P);
+		if (reloading == GLFW_PRESS && !pressed) {
+			pressed = true;
+			logicalDevice.wait();
+			for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
+				it->second.reload();
+			}
+			for (std::unordered_map<std::string, GraphicsPipeline>::iterator it = graphicsPipelines.begin(); it != graphicsPipelines.end(); it++) {
+				GraphicsPipeline* graphicsPipeline = &it->second;
+				graphicsPipeline->destroyPipeline();
+				graphicsPipeline->init(true, &renderPasses[0], &fullscreenViewport);
+			}
 		}
-		graphicsPipelines[0].destroy();
-		graphicsPipelines[0].init(true, &renderPasses[0], &fullscreenViewport);
-	}
-	else if (reloading == GLFW_RELEASE && pressed) {
-		pressed = false;
+		else if (reloading == GLFW_RELEASE && pressed) {
+			pressed = false;
+		}
 	}
 
 	if (window->gotResized) {
@@ -183,6 +263,8 @@ void Renderer::update() {
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		NEIGE_ERROR("Unable to acquire swapchain image.");
 	}
+
+	updateData(currentFrame);
 
 	recordRenderingCommands(currentFrame, swapchainImage);
 
@@ -240,6 +322,14 @@ void Renderer::destroy() {
 	for (RenderPass& renderPass : renderPasses) {
 		renderPass.destroy();
 	}
+	for (Buffer& buffer : cameraBuffers) {
+		buffer.destroy();
+	}
+	for (std::unordered_map<Entity, std::vector<Buffer>>::iterator it = entityBuffers.begin(); it != entityBuffers.end(); it++) {
+		for (Buffer& buffer : it->second) {
+			buffer.destroy();
+		}
+	}
 	for (std::unordered_map<std::string, GraphicsPipeline>::iterator it = graphicsPipelines.begin(); it != graphicsPipelines.end(); it++) {
 		GraphicsPipeline* graphicsPipeline = &it->second;
 		graphicsPipeline->destroy();
@@ -265,6 +355,42 @@ void Renderer::destroy() {
 	instance.destroy();
 }
 
+void Renderer::updateData(uint32_t frameInFlightIndex) {
+	void* data;
+
+	const auto& cameraTransform = ecs.getComponent<Transform>(camera);
+	const auto& cameraCamera = ecs.getComponent<Camera>(camera);
+
+	CameraUniformBufferObject cubo = {};
+	glm::mat4 view = Camera::createLookAtView(cameraTransform.position, cameraTransform.position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	cubo.viewProj = cameraCamera.projection * view;
+	cubo.position = cameraTransform.position;
+
+	cameraBuffers.at(frameInFlightIndex).map(0, sizeof(CameraUniformBufferObject), &data);
+	memcpy(data, &cubo, sizeof(CameraUniformBufferObject));
+	cameraBuffers.at(frameInFlightIndex).unmap();
+
+	for (Entity entity : entities) {
+		const auto& objectTransform = ecs.getComponent<Transform>(entity);
+		auto const& renderable = ecs.getComponent<Renderable>(entity);
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
+
+		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
+			ObjectUniformBufferObject oubo = {};
+			glm::mat4 translate = glm::translate(glm::mat4(1.0f), objectTransform.position);
+			glm::mat4 rotateX = glm::rotate(glm::mat4(1.0f), glm::radians(objectTransform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::mat4 rotateY = glm::rotate(glm::mat4(1.0f), glm::radians(objectTransform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 rotateZ = glm::rotate(glm::mat4(1.0f), glm::radians(objectTransform.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 scale = glm::scale(glm::mat4(1.0f), objectTransform.scale);
+			oubo.model = translate * rotateX * rotateY * rotateZ * scale;
+
+			entityBuffers.at(entity).at(frameInFlightIndex).map(0, sizeof(ObjectUniformBufferObject), &data);
+			memcpy(data, &oubo, sizeof(ObjectUniformBufferObject));
+			entityBuffers.at(entity).at(frameInFlightIndex).unmap();
+		}
+	}
+}
+
 void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex) {
 	renderingCommandPools[frameInFlightIndex].reset();
 	renderingCommandBuffers[frameInFlightIndex].begin();
@@ -274,11 +400,17 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
 
-		graphicsPipelines.at(renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath).bind(&renderingCommandBuffers[frameInFlightIndex]);
+		graphicsPipelines.at(mapKey).bind(&renderingCommandBuffers[frameInFlightIndex]);
+
+		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
+			entityDescriptorSets.at(entity).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex]);
+		}
 
 		vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 		vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
 		vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 6, 1, 0, 0, 0);
 	}
 
@@ -288,8 +420,6 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 }
 
 void Renderer::createResources() {
-	NEIGE_INFO("Resource creation");
-
 	// Swapchain
 	swapchain.init(window, &swapchainSize);
 

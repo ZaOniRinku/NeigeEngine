@@ -10,15 +10,11 @@ void DescriptorSet::init(GraphicsPipeline* associatedGraphicsPipeline) {
 	descriptorSetAllocateInfo.descriptorPool = graphicsPipeline->descriptorPool;
 	descriptorSetAllocateInfo.descriptorSetCount = 1;
 	descriptorSetAllocateInfo.pSetLayouts = &graphicsPipeline->descriptorSetLayout;
-	NEIGE_VK_CHECK(vkAllocateDescriptorSets(logicalDevice.device, nullptr, &descriptorSet));
+	NEIGE_VK_CHECK(vkAllocateDescriptorSets(logicalDevice.device, &descriptorSetAllocateInfo, &descriptorSet));
 }
 
-void DescriptorSet::update() {
-	for (size_t i = 0; i < graphicsPipeline->layoutBindings.size(); i++) {
-		if (graphicsPipeline->layoutBindings.at(i).descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
-			
-		}
-	}
+void DescriptorSet::update(const std::vector<VkWriteDescriptorSet> writesDescriptorSet) {
+	vkUpdateDescriptorSets(logicalDevice.device, static_cast<uint32_t>(writesDescriptorSet.size()), writesDescriptorSet.data(), 0, nullptr);
 }
 
 void DescriptorSet::destroy() {

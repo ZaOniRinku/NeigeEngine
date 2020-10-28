@@ -12,6 +12,9 @@ struct BufferTools {
 	static void createStagingBuffer(VkBuffer& buffer,
 		VkDeviceMemory& deviceMemory,
 		VkDeviceSize size);
+	static void createUniformBuffer(VkBuffer& buffer,
+		VkDeviceMemory& deviceMemory,
+		VkDeviceSize size);
 	static void copyBuffer(VkBuffer srcBuffer,
 		VkBuffer dstBuffer,
 		VkDeviceSize size);

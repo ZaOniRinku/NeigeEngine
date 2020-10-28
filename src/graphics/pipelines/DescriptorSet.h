@@ -6,10 +6,9 @@
 struct DescriptorSet {
 	VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 	GraphicsPipeline* graphicsPipeline;
-	std::vector<VkWriteDescriptorSet> writesDescriptorSet;
 
 	void init(GraphicsPipeline* graphicsPipeline);
-	void update();
+	void update(const std::vector<VkWriteDescriptorSet> writeDescriptorSets);
 	void destroy();
 	void bind(CommandBuffer* commandBuffer);
 };

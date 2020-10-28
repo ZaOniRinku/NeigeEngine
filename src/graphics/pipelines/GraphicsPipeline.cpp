@@ -4,6 +4,9 @@
 void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse) {
 	viewport = viewportToUse;
 
+	layoutBindings.clear();
+	layoutBindings.shrink_to_fit();
+
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 
@@ -42,7 +45,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
 		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
-		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -70,7 +72,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		pipelineStages.push_back(fragmentShaderCreateInfo);
 
 		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
-		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -98,7 +99,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		pipelineStages.push_back(tesselationControlShaderCreateInfo);
 
 		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
-		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -126,7 +126,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		pipelineStages.push_back(tesselationEvaluationShaderCreateInfo);
 
 		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
-		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -154,7 +153,6 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		pipelineStages.push_back(geometryShaderCreateInfo);
 
 		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
-		layoutBindingsShaderTypes.insert(layoutBindingsShaderTypes.end(), shader.layoutBindingsShaderTypes.begin(), shader.layoutBindingsShaderTypes.end());
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -162,32 +160,36 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
 
 	// Descriptor set layout
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptorSetLayoutCreateInfo.pNext = nullptr;
-	descriptorSetLayoutCreateInfo.flags = 0;
-	descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
-	descriptorSetLayoutCreateInfo.pBindings = layoutBindings.data();
-	NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
-
-	// Descriptor pool
-	std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
-	for (std::set<VkDescriptorType>::iterator it = uniqueDescriptorTypes.begin(); it != uniqueDescriptorTypes.end(); it++) {
-		VkDescriptorPoolSize descriptorPoolSize = {};
-		descriptorPoolSize.type = *it;
-		descriptorPoolSize.descriptorCount = 2048;
-		descriptorPoolSizes.push_back(descriptorPoolSize);
+	if (descriptorSetLayout == VK_NULL_HANDLE) {
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+		descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		descriptorSetLayoutCreateInfo.pNext = nullptr;
+		descriptorSetLayoutCreateInfo.flags = 0;
+		descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
+		descriptorSetLayoutCreateInfo.pBindings = layoutBindings.data();
+		NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
 	}
 
-	if (descriptorPoolSizes.size() != 0) {
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
-		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		descriptorPoolCreateInfo.pNext = nullptr;
-		descriptorPoolCreateInfo.flags = 0;
-		descriptorPoolCreateInfo.maxSets = 8192;
-		descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
-		descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
-		NEIGE_VK_CHECK(vkCreateDescriptorPool(logicalDevice.device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+	// Descriptor pool
+	if (descriptorPool == VK_NULL_HANDLE) {
+		std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+		for (std::set<VkDescriptorType>::iterator it = uniqueDescriptorTypes.begin(); it != uniqueDescriptorTypes.end(); it++) {
+			VkDescriptorPoolSize descriptorPoolSize = {};
+			descriptorPoolSize.type = *it;
+			descriptorPoolSize.descriptorCount = 2048;
+			descriptorPoolSizes.push_back(descriptorPoolSize);
+		}
+
+		if (descriptorPoolSizes.size() != 0) {
+			VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+			descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			descriptorPoolCreateInfo.pNext = nullptr;
+			descriptorPoolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			descriptorPoolCreateInfo.maxSets = 8192;
+			descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+			descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+			NEIGE_VK_CHECK(vkCreateDescriptorPool(logicalDevice.device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+		}
 	}
 
 	// Pipeline layout
@@ -336,12 +338,16 @@ void GraphicsPipeline::destroy() {
 		vkDestroyDescriptorSetLayout(logicalDevice.device, descriptorSetLayout, nullptr);
 		descriptorSetLayout = VK_NULL_HANDLE;
 	}
-	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
-	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
+	destroyPipeline();
 }
 
 void GraphicsPipeline::bind(CommandBuffer* commandBuffer) {
 	vkCmdBindPipeline(commandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	viewport->setViewport(commandBuffer);
 	viewport->setScissor(commandBuffer);
+}
+
+void GraphicsPipeline::destroyPipeline() {
+	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
+	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
 }

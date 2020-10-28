@@ -9,6 +9,7 @@
 #include "../../graphics/commands/CommandBuffer.h"
 #include "../../graphics/commands/CommandPool.h"
 #include "../../graphics/pipelines/GraphicsPipeline.h"
+#include "../../graphics/pipelines/DescriptorSet.h"
 #include "../../graphics/pipelines/Shader.h"
 #include "../../graphics/pipelines/Viewport.h"
 #include "../../graphics/resources/Image.h"
@@ -23,13 +24,14 @@
 #include <string>
 #include <map>
 
-#define MAX_FRAMES_IN_FLIGHT 1
+#define MAX_FRAMES_IN_FLIGHT 2
 
 struct Renderer : public System {
 	Window* window;
 
-	// Entities
+	// Camera
 	Entity camera;
+	std::vector<Buffer> cameraBuffers;
 
 	// Sync
 	std::vector<Fence> fences;
@@ -39,12 +41,16 @@ struct Renderer : public System {
 	// Pipelines
 	Viewport fullscreenViewport;
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
+	std::unordered_map<Entity, std::vector<DescriptorSet>> entityDescriptorSets;
+	std::unordered_map<Entity, std::vector<Buffer>> entityBuffers;
 
 	// Render passes
 	std::vector<Image> colorImages;
 	std::vector<Image> depthImages;
 	std::vector<RenderPass> renderPasses;
 	std::vector<Framebuffer> framebuffers;
+
+	// Command buffers
 	std::vector<CommandPool> renderingCommandPools;
 	std::vector<CommandBuffer> renderingCommandBuffers;
 
@@ -60,6 +66,7 @@ struct Renderer : public System {
 	void init();
 	void update();
 	void destroy();
+	void updateData(uint32_t frameInFlightIndex);
 	void recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex);
 	void createResources();
 	void destroyResources();

@@ -26,8 +26,21 @@ int main(void) {
 		"",
 		"" });
 	ecs.addComponent(rectangle, Transform{
-		glm::vec3(2.0f, 1.0f, 2.0f),
-		glm::vec3(0.0f),
+		glm::vec3(5.0f, 0.0f, 0.0f),
+		glm::vec3(90.0f),
+		glm::vec3(1.0f)
+		});
+
+	Entity rectangle2 = ecs.createEntity();
+	ecs.addComponent(rectangle2, Renderable{
+		"../shaders/dummy_shader.vert",
+		"../shaders/dummy_shader.frag",
+		"",
+		"",
+		"" });
+	ecs.addComponent(rectangle2, Transform{
+		glm::vec3(5.0f, 1.0f, 2.0f),
+		glm::vec3(180.0f),
 		glm::vec3(1.0f)
 		});
 
