@@ -212,9 +212,8 @@ void Renderer::init() {
 
 void Renderer::update() {
 	if (NEIGE_DEBUG) {
-		int reloading = glfwGetKey(window->window, GLFW_KEY_P);
-		if (reloading == GLFW_PRESS && !pressed) {
-			pressed = true;
+		if (window->inputs.pKey == PRESSED) {
+			std::cout << "pressed" << std::endl;
 			logicalDevice.wait();
 			for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 				it->second.reload();
@@ -224,9 +223,6 @@ void Renderer::update() {
 				graphicsPipeline->destroyPipeline();
 				graphicsPipeline->init(true, &renderPasses[0], &fullscreenViewport);
 			}
-		}
-		else if (reloading == GLFW_RELEASE && pressed) {
-			pressed = false;
 		}
 	}
 

@@ -3,6 +3,7 @@
 #include "../../external/glfw/include/GLFW/glfw3.h"
 #include "../utils/NeigeDefines.h"
 #include "../utils/structs/RendererStructs.h"
+#include "../inputs/KeyboardInputs.h"
 #include "Surface.h"
 #include <vector>
 
@@ -13,10 +14,17 @@ struct Window {
 		pointer->windowGotResized();
 	}
 
+	// Callback for keys
+	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+		auto pointer = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+		pointer->keyAction(key, action);
+	}
+
 	GLFWwindow* window;
 	Surface surface;
 	VkExtent2D extent;
 	bool gotResized = false;
+	KeyboardInputs inputs;
 
 	void init();
 	void destroy();
@@ -24,6 +32,7 @@ struct Window {
 	std::vector<const char*> instanceExtensions();
 	void createSurface();
 	void windowGotResized();
+	void keyAction(int key, int action);
 	bool windowGotClosed();
 	void pollEvents();
 	void waitEvents();
