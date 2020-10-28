@@ -71,11 +71,11 @@ SET(WINDOW_SOURCES src/window/Surface.cpp src/window/Window.cpp)
 SET(WINDOW_HEADERS src/window/Surface.h src/window/Window.h)
 
 SET(INPUTS_SOURCES src/inputs/KeyboardInputs.cpp)
-SET(INPUTS_HEADERS src/inputs/KeyboardInputs.h)
+SET(INPUTS_HEADERS src/inputs/Inputs.h src/inputs/KeyboardInputs.h)
 
 SET(ECS_COMPONENTS_HEADERS src/ecs/components/Camera.h src/ecs/components/Renderable.h src/ecs/components/Transform.h)
-SET(ECS_SYSTEMS_HEADERS src/ecs/systems/Renderer.h)
-SET(ECS_SYSTEMS_SOURCES src/ecs/systems/Renderer.cpp)
+SET(ECS_SYSTEMS_HEADERS src/ecs/systems/CameraControls.h src/ecs/systems/Renderer.h)
+SET(ECS_SYSTEMS_SOURCES src/ecs/systems/CameraControls.cpp src/ecs/systems/Renderer.cpp)
 SET(ECS_HEADERS src/ecs/ECS.h ${ECS_COMPONENTS_HEADERS} ${ECS_SYSTEMS_HEADERS})
 SET(ECS_SOURCES ${ECS_SYSTEMS_SOURCES})
 

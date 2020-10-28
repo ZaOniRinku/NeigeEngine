@@ -3,7 +3,6 @@
 #include "../../external/glfw/include/GLFW/glfw3.h"
 #include "../utils/NeigeDefines.h"
 #include "../utils/structs/RendererStructs.h"
-#include "../inputs/KeyboardInputs.h"
 #include "Surface.h"
 #include <vector>
 
@@ -24,7 +23,6 @@ struct Window {
 	Surface surface;
 	VkExtent2D extent;
 	bool gotResized = false;
-	KeyboardInputs inputs;
 
 	void init();
 	void destroy();

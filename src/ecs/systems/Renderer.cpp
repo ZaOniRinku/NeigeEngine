@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "../../graphics/resources/RendererResources.h"
+#include "../../inputs/Inputs.h"
 #include "../components/Transform.h"
 #include "../components/Camera.h"
 #include "../components/Renderable.h"
@@ -212,8 +213,7 @@ void Renderer::init() {
 
 void Renderer::update() {
 	if (NEIGE_DEBUG) {
-		if (window->inputs.pKey == PRESSED) {
-			std::cout << "pressed" << std::endl;
+		if (keyboardInputs.pKey == PRESSED) {
 			logicalDevice.wait();
 			for (std::unordered_map<std::string, Shader>::iterator it = shaders.begin(); it != shaders.end(); it++) {
 				it->second.reload();

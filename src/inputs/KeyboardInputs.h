@@ -10,8 +10,6 @@ enum KeyState {
 };
 
 struct KeyboardInputs {
-	void update();
-
 	KeyState qKey = NONE;
 	KeyState wKey = NONE;
 	KeyState eKey = NONE;
@@ -41,4 +39,6 @@ struct KeyboardInputs {
 	KeyState escapeKey = NONE;
 	KeyState spaceKey = NONE;
 	KeyState shiftKey = NONE;
+
+	void update();
 };
