@@ -8,19 +8,19 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments, std::vector
 		reference.attachment = attachmentCount++;
 		VkClearValue clearValue = {};
 		switch (attachments[i].type) {
-		case COLOR:
+		case AttachmentType::COLOR:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			colorAttachmentReferences.push_back(reference);
 			clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 			clearValues.push_back(clearValue);
 			break;
-		case DEPTH:
+		case AttachmentType::DEPTH:
 			reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			depthAttachmentReference = reference;
 			clearValue.depthStencil = { 1.0f, 0 };
 			clearValues.push_back(clearValue);
 			break;
-		case SWAPCHAIN:
+		case AttachmentType::SWAPCHAIN:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			swapchainAttachmentReference = reference;
 			break;

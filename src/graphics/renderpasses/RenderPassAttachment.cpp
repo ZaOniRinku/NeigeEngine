@@ -17,13 +17,13 @@ RenderPassAttachment::RenderPassAttachment(AttachmentType attachmentType,
 	description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	switch (type) {
-	case COLOR:
+	case AttachmentType::COLOR:
 		description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		break;
-	case DEPTH:
+	case AttachmentType::DEPTH:
 		description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		break;
-	case SWAPCHAIN:
+	case AttachmentType::SWAPCHAIN:
 		description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		break;
 	}

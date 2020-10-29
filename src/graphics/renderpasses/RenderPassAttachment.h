@@ -1,7 +1,7 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 
-enum AttachmentType {
+enum struct AttachmentType {
 	COLOR,
 	DEPTH,
 	SWAPCHAIN

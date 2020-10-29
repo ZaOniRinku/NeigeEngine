@@ -47,9 +47,9 @@ void Renderer::init() {
 
 	// Render passes
 	std::vector<RenderPassAttachment> attachments;
-	attachments.push_back(RenderPassAttachment(COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	attachments.push_back(RenderPassAttachment(AttachmentType::SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
 
 	std::vector<SubpassDependency> dependencies;
 	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
@@ -239,6 +239,8 @@ void Renderer::update() {
 		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
 		fullscreenViewport.scissor.extent.width = window->extent.width;
 		fullscreenViewport.scissor.extent.height = window->extent.height;
+		auto& cameraCamera = ecs.getComponent<Camera>(camera);
+		cameraCamera.projection = Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f);
 	}
 
 	fences[currentFrame].wait();
@@ -256,6 +258,8 @@ void Renderer::update() {
 		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
 		fullscreenViewport.scissor.extent.width = window->extent.width;
 		fullscreenViewport.scissor.extent.height = window->extent.height;
+		auto& cameraCamera = ecs.getComponent<Camera>(camera);
+		cameraCamera.projection = Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f);
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		NEIGE_ERROR("Unable to acquire swapchain image.");
@@ -302,6 +306,8 @@ void Renderer::update() {
 		fullscreenViewport.viewport.height = static_cast<float>(window->extent.height);
 		fullscreenViewport.scissor.extent.width = window->extent.width;
 		fullscreenViewport.scissor.extent.height = window->extent.height;
+		auto& cameraCamera = ecs.getComponent<Camera>(camera);
+		cameraCamera.projection = Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f);
 	}
 	else if (result != VK_SUCCESS) {
 		NEIGE_ERROR("Unable to present image to the swapchain.");
