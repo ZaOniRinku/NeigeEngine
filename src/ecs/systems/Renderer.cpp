@@ -59,12 +59,12 @@ void Renderer::init() {
 
 	// Framebuffers
 	Image colorAttachment;
-	colorAttachment.allocationId = ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
 	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
 	colorImages.push_back(colorAttachment);
 	Image depthAttachment;
-	depthAttachment.allocationId = ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
 	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
 	depthImages.push_back(depthAttachment);
@@ -81,9 +81,18 @@ void Renderer::init() {
 	// Fullscreen viewport
 	fullscreenViewport.init(window->extent.width, window->extent.height);
 
+	// Descriptors
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
-		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
+
+		// Model
+		if (models.find(renderable.modelPath) == models.end()) {
+			Model model;
+			model.init(renderable.modelPath);
+			models.emplace(renderable.modelPath, model);
+		}
+
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
 
 		// Graphics pipelines
 		if (graphicsPipelines.find(mapKey) == graphicsPipelines.end()) {
@@ -93,6 +102,7 @@ void Renderer::init() {
 			graphicsPipeline.tesselationControlShaderPath = renderable.tesselationControlShaderPath;
 			graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
 			graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
+			graphicsPipeline.topology = renderable.topology;
 			graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
 			graphicsPipelines.emplace(mapKey, graphicsPipeline);
 		}
@@ -174,42 +184,6 @@ void Renderer::init() {
 		IAsemaphores[i].init();
 		RFsemaphores[i].init();
 	}
-
-	// Vertices and indices
-	std::vector<Vertex> vertices;
-	vertices.push_back({ glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	vertices.push_back({ glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	vertices.push_back({ glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	vertices.push_back({ glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f) });
-	std::vector<uint32_t> indices;
-	indices.push_back(0);
-	indices.push_back(1);
-	indices.push_back(2);
-	indices.push_back(1);
-	indices.push_back(3);
-	indices.push_back(2);
-
-	Buffer stagingVertexBuffer;
-	vertexBuffer.size = vertices.size() * sizeof(Vertex);
-	BufferTools::createStagingBuffer(stagingVertexBuffer.buffer, stagingVertexBuffer.deviceMemory, vertexBuffer.size);
-	void* vertexData;
-	stagingVertexBuffer.map(0, vertexBuffer.size, &vertexData);
-	memcpy(vertexData, vertices.data(), static_cast<size_t>(vertexBuffer.size));
-	stagingVertexBuffer.unmap();
-	vertexBuffer.allocationId = BufferTools::createBuffer(vertexBuffer.buffer, vertexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	BufferTools::copyBuffer(stagingVertexBuffer.buffer, vertexBuffer.buffer, vertexBuffer.size);
-	stagingVertexBuffer.destroy();
-
-	Buffer stagingIndexBuffer;
-	indexBuffer.size = indices.size() * sizeof(uint32_t);
-	BufferTools::createStagingBuffer(stagingIndexBuffer.buffer, stagingIndexBuffer.deviceMemory, indexBuffer.size);
-	void* indexData;
-	stagingIndexBuffer.map(0, indexBuffer.size, &indexData);
-	memcpy(indexData, indices.data(), static_cast<size_t>(indexBuffer.size));
-	stagingIndexBuffer.unmap();
-	indexBuffer.allocationId = BufferTools::createBuffer(indexBuffer.buffer, indexBuffer.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	BufferTools::copyBuffer(stagingIndexBuffer.buffer, indexBuffer.buffer, indexBuffer.size);
-	stagingIndexBuffer.destroy();
 }
 
 void Renderer::update() {
@@ -341,6 +315,10 @@ void Renderer::destroy() {
 		Shader* shader = &it->second;
 		shader->destroy();
 	}
+	for (std::unordered_map<std::string, Model>::iterator it = models.begin(); it != models.end(); it++) {
+		Model* model = &it->second;
+		model->destroy();
+	}
 	for (Fence& fence : fences) {
 		fence.destroy();
 	}
@@ -350,8 +328,6 @@ void Renderer::destroy() {
 	for (Semaphore& RFsemaphore : RFsemaphores) {
 		RFsemaphore.destroy();
 	}
-	vertexBuffer.destroy();
-	indexBuffer.destroy();
 	memoryAllocator.destroy();
 	window->surface.destroy();
 	logicalDevice.destroy();
@@ -376,7 +352,7 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 	for (Entity entity : entities) {
 		const auto& objectTransform = ecs.getComponent<Transform>(entity);
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
-		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
 
 		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
 			ObjectUniformBufferObject oubo = {};
@@ -403,7 +379,8 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
-		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath;
+
+		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
 
 		graphicsPipelines.at(mapKey).bind(&renderingCommandBuffers[frameInFlightIndex]);
 
@@ -411,10 +388,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 			entityDescriptorSets.at(entity).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex]);
 		}
 
-		vkCmdBindVertexBuffers(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
-		vkCmdBindIndexBuffer(renderingCommandBuffers[frameInFlightIndex].commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-		vkCmdDrawIndexed(renderingCommandBuffers[frameInFlightIndex].commandBuffer, 6, 1, 0, 0, 0);
+		models.at(renderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex]);
 	}
 
 	renderPasses[0].end(&renderingCommandBuffers[frameInFlightIndex]);
@@ -428,12 +402,12 @@ void Renderer::createResources() {
 
 	// Framebuffers
 	Image colorAttachment;
-	colorAttachment.allocationId = ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
 	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
 	colorImages.push_back(colorAttachment);
 	Image depthAttachment;
-	depthAttachment.allocationId = ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
 	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
 	depthImages.push_back(depthAttachment);

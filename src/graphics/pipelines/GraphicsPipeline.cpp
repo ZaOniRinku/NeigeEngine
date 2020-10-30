@@ -221,7 +221,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	inputAssemblyCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	inputAssemblyCreateInfo.pNext = nullptr;
 	inputAssemblyCreateInfo.flags = 0;
-	inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssemblyCreateInfo.topology = topologyToVkTopology();
 	inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 
 	// Rasterization
@@ -350,4 +350,19 @@ void GraphicsPipeline::bind(CommandBuffer* commandBuffer) {
 void GraphicsPipeline::destroyPipeline() {
 	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
 	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
+}
+
+VkPrimitiveTopology GraphicsPipeline::topologyToVkTopology() {
+	switch (topology) {
+	case Topology::TRIANGLE_LIST:
+		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	case Topology::TRIANGLE_STRIP:
+		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+	case Topology::LINE_STRIP:
+		return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+	case Topology::POINT_LIST:
+		return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+	default:
+		NEIGE_ERROR("Unsupported primitive topology");
+	}
 }

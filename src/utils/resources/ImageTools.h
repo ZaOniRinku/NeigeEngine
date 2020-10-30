@@ -9,7 +9,7 @@
 #include "../../graphics/commands/CommandPool.h"
 
 struct ImageTools {
-	static VkDeviceSize createImage(VkImage* image,
+	static void createImage(VkImage* image,
 		uint32_t arrayLayers,
 		uint32_t width,
 		uint32_t height,
@@ -17,7 +17,8 @@ struct ImageTools {
 		VkSampleCountFlagBits msaaSamples,
 		VkFormat format,
 		VkImageUsageFlags usage,
-		VkMemoryPropertyFlags memoryProperties);
+		VkMemoryPropertyFlags memoryProperties,
+		VkDeviceSize* allocationId);
 	static void createImageView(VkImageView* imageView,
 		VkImage image,
 		uint32_t arrayLayers,
@@ -31,7 +32,8 @@ struct ImageTools {
 		VkSamplerAddressMode addressMode);
 	static void loadImage(const std::string& filePath,
 		VkImage* imageDestination,
-		VkFormat format);
+		VkFormat format,
+		VkDeviceSize* allocationId);
 	static void transitionLayout(VkImage image,
 		VkFormat format,
 		VkImageLayout oldLayout,

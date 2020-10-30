@@ -22,9 +22,11 @@ struct GraphicsPipeline {
 	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	Viewport* viewport;
+	Topology topology;
 
 	void init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse);
 	void destroy();
 	void bind(CommandBuffer* commandBuffer);
 	void destroyPipeline();
+	VkPrimitiveTopology topologyToVkTopology();
 };

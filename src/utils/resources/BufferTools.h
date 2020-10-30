@@ -5,10 +5,11 @@
 #include "../../graphics/commands/CommandPool.h"
 
 struct BufferTools {
-	static VkDeviceSize createBuffer(VkBuffer& buffer,
+	static void createBuffer(VkBuffer& buffer,
 		VkDeviceSize size,
 		VkBufferUsageFlags usage,
-		VkMemoryPropertyFlags memoryProperties);
+		VkMemoryPropertyFlags memoryProperties,
+		VkDeviceSize* allocationId);
 	static void createStagingBuffer(VkBuffer& buffer,
 		VkDeviceMemory& deviceMemory,
 		VkDeviceSize size);

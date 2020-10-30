@@ -14,6 +14,19 @@ enum struct ShaderType {
 	COMPUTE
 };
 
+enum struct Topology {
+	TRIANGLE_LIST,
+	TRIANGLE_STRIP,
+	LINE_STRIP,
+	POINT_LIST
+};
+
+// Model primitive
+struct Primitive {
+	uint32_t firstIndex;
+	uint32_t indexCount;
+};
+
 // Vertex
 struct Vertex {
 	glm::vec3 position;

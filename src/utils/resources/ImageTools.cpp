@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
 
-VkDeviceSize ImageTools::createImage(VkImage* image,
+void ImageTools::createImage(VkImage* image,
 	uint32_t arrayLayers,
 	uint32_t width,
 	uint32_t height,
@@ -10,7 +10,8 @@ VkDeviceSize ImageTools::createImage(VkImage* image,
 	VkSampleCountFlagBits msaaSamples,
 	VkFormat format,
 	VkImageUsageFlags usage,
-	VkMemoryPropertyFlags memoryProperties) {
+	VkMemoryPropertyFlags memoryProperties,
+	VkDeviceSize* allocationId) {
 	VkImageCreateInfo imageCreateInfo = {};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageCreateInfo.pNext = nullptr;
@@ -29,7 +30,7 @@ VkDeviceSize ImageTools::createImage(VkImage* image,
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	NEIGE_VK_CHECK(vkCreateImage(logicalDevice.device, &imageCreateInfo, nullptr, image));
 
-	return memoryAllocator.allocate(image, memoryProperties);
+	*allocationId = memoryAllocator.allocate(image, memoryProperties);
 }
 
 void ImageTools::createImageView(VkImageView* imageView,
@@ -86,27 +87,32 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 
 void ImageTools::loadImage(const std::string& filePath,
 	VkImage* imageDestination,
-	VkFormat format) {
+	VkFormat format,
+	VkDeviceSize* allocationId) {
 	Buffer buffer;
 	int width;
 	int height;
 	int texChannels;
 	uint32_t mipLevels;
 	stbi_uc* pixels = stbi_load(filePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
-	buffer.size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4;
+	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4;
 	if (!pixels) {
 		NEIGE_ERROR("Error with image file \"" + filePath + "\".");
 	}
+
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-	BufferTools::createStagingBuffer(buffer.buffer, buffer.deviceMemory, buffer.size);
+
+	BufferTools::createStagingBuffer(buffer.buffer, buffer.deviceMemory, size);
 	void* data;
-	buffer.map(0, buffer.size, &data);
-	memcpy(data, pixels, static_cast<size_t>(buffer.size));
+	buffer.map(0, size, &data);
+	memcpy(data, pixels, static_cast<size_t>(size));
 	buffer.unmap();
-	createImage(imageDestination, 1, width, height, mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	createImage(imageDestination, 1, width, height, mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
 	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, 1);
 	BufferTools::copyToImage(buffer.buffer, *imageDestination, width, height, 1);
 	generateMipmaps(*imageDestination, format, width, height, mipLevels);
+
 	buffer.destroy();
 }
 

@@ -1,10 +1,11 @@
 #include "BufferTools.h"
 #include "../../graphics/resources/RendererResources.h"
 
-VkDeviceSize BufferTools::createBuffer(VkBuffer& buffer,
+void BufferTools::createBuffer(VkBuffer& buffer,
 	VkDeviceSize size,
 	VkBufferUsageFlags usage,
-	VkMemoryPropertyFlags memoryProperties) {
+	VkMemoryPropertyFlags memoryProperties,
+	VkDeviceSize* allocationId) {
 	VkBufferCreateInfo bufferCreateInfo = {};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferCreateInfo.pNext = nullptr;
@@ -14,7 +15,7 @@ VkDeviceSize BufferTools::createBuffer(VkBuffer& buffer,
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	NEIGE_VK_CHECK(vkCreateBuffer(logicalDevice.device, &bufferCreateInfo, nullptr, &buffer));
 
-	return memoryAllocator.allocate(&buffer, memoryProperties);
+	*allocationId = memoryAllocator.allocate(&buffer, memoryProperties);
 }
 
 void BufferTools::createStagingBuffer(VkBuffer& buffer,

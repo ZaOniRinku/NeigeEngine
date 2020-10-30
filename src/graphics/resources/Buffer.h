@@ -4,7 +4,6 @@
 struct Buffer {
 	VkBuffer buffer = VK_NULL_HANDLE;
 	VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
-	VkDeviceSize size;
 
 	VkDeviceSize allocationId;
 

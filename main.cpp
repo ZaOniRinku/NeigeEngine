@@ -3,6 +3,7 @@
 #include "src/ecs/components/Transform.h"
 #include "src/ecs/components/Camera.h"
 #include "src/ecs/components/Renderable.h"
+#include "src/utils/resources/ModelLoader.h"
 
 ECS ecs;
 
@@ -20,11 +21,13 @@ int main(void) {
 
 	Entity rectangle = ecs.createEntity();
 	ecs.addComponent(rectangle, Renderable{
+		"../models/Box.gltf",
 		"../shaders/dummy_shader.vert",
 		"../shaders/dummy_shader.frag",
 		"",
 		"",
-		""
+		"",
+		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(rectangle, Transform{
 		glm::vec3(5.0f, 0.0f, 0.0f),
@@ -34,11 +37,13 @@ int main(void) {
 
 	Entity rectangle2 = ecs.createEntity();
 	ecs.addComponent(rectangle2, Renderable{
+		"../models/Box.glb",
 		"../shaders/dummy_shader.vert",
 		"../shaders/dummy_shader.frag",
 		"",
 		"",
-		""
+		"",
+		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(rectangle2, Transform{
 		glm::vec3(5.0f, 1.0f, 2.0f),

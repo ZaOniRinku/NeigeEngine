@@ -5,6 +5,7 @@
 #include "../../utils/structs/ShaderStructs.h"
 #include "../../utils/NeigeVKTranslate.h"
 #include "../../utils/resources/ImageTools.h"
+#include "../../utils/resources/ModelLoader.h"
 #include "../../graphics/devices/PhysicalDevicePicker.h"
 #include "../../graphics/commands/CommandBuffer.h"
 #include "../../graphics/commands/CommandPool.h"
