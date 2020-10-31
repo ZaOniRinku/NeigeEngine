@@ -33,6 +33,9 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 					for (size_t j = 0; j < mesh->primitives_count; j++) {
 						cgltf_primitive* primitive = &mesh->primitives[j];
 
+						std::vector<Vertex> primitiveVertices;
+						std::vector<uint32_t> primitiveIndices;
+
 						firstIndex += indexCount;
 						indexCount = 0;
 
@@ -97,66 +100,92 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 							vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
 							vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
 							vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
-							vertices->push_back(vertex);
+							primitiveVertices.push_back(vertex);
 							uvPos += 2;
 						}
 
 						// Indices
 						cgltf_accessor* accessor = primitive->indices;
-						cgltf_buffer_view* buffer_view = accessor->buffer_view;
-						cgltf_component_type component_type = accessor->component_type;
-						char* buffer = static_cast<char*>(buffer_view->buffer->data);
-						switch (component_type) {
-						case cgltf_component_type_r_8:
-						{
-							int8_t* index = reinterpret_cast<int8_t*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+						if (accessor != NULL) {
+							cgltf_buffer_view* buffer_view = accessor->buffer_view;
+							cgltf_component_type component_type = accessor->component_type;
+							char* buffer = static_cast<char*>(buffer_view->buffer->data);
+							switch (component_type) {
+							case cgltf_component_type_r_8:
+							{
+								int8_t* index = reinterpret_cast<int8_t*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
-						}
-						case cgltf_component_type_r_8u:
-						{
-							uint8_t* index = reinterpret_cast<uint8_t*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+							case cgltf_component_type_r_8u:
+							{
+								uint8_t* index = reinterpret_cast<uint8_t*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
-						}
-						case cgltf_component_type_r_16:
-						{
-							int16_t* index = reinterpret_cast<int16_t*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+							case cgltf_component_type_r_16:
+							{
+								int16_t* index = reinterpret_cast<int16_t*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
-						}
-						case cgltf_component_type_r_16u:
-						{
-							uint16_t* index = reinterpret_cast<uint16_t*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+							case cgltf_component_type_r_16u:
+							{
+								uint16_t* index = reinterpret_cast<uint16_t*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
-						}
-						case cgltf_component_type_r_32u:
-						{
-							uint32_t* index = reinterpret_cast<uint32_t*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+							case cgltf_component_type_r_32u:
+							{
+								uint32_t* index = reinterpret_cast<uint32_t*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
-						}
-						case cgltf_component_type_r_32f:
-						{
-							float* index = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
-							for (size_t l = 0; l < accessor->count; l++) {
-								indices->push_back(static_cast<uint32_t>(index[l]));
+							case cgltf_component_type_r_32f:
+							{
+								float* index = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+								for (size_t l = 0; l < accessor->count; l++) {
+									primitiveIndices.push_back(static_cast<uint32_t>(index[l]));
+								}
+								break;
 							}
-							break;
+							default:
+								NEIGE_ERROR("Indices component type unknown for model file \"" + filePath + "\".");
+							}
+							indexCount = static_cast<uint32_t>(accessor->count);
 						}
-						default:
-							NEIGE_ERROR("Indices component type unknown for model file \"" + filePath + "\".");
+
+						// Tangents
+						if (tangentCount == 0) {
+							for (size_t l = 0; l < primitiveIndices.size(); l += 3) {
+								Vertex* vertex0 = &primitiveVertices.at(primitiveIndices.at(l + 0));
+								Vertex* vertex1 = &primitiveVertices.at(primitiveIndices.at(l + 1));
+								Vertex* vertex2 = &primitiveVertices.at(primitiveIndices.at(l + 2));
+
+								glm::vec3 dPos1 = vertex1->position - vertex0->position;
+								glm::vec3 dPos2 = vertex2->position - vertex0->position;
+
+								glm::vec2 dUV1 = vertex1->uv - vertex0->uv;
+								glm::vec2 dUV2 = vertex2->uv - vertex0->uv;
+
+								float r = 1.0f / (dUV1.x * dUV2.y - dUV1.y * dUV2.x);
+
+								glm::vec3 tangent = (dPos1 * dUV2.y - dPos2 * dUV1.y) * r;
+
+								vertex0->tangent += tangent;
+								vertex1->tangent += tangent;
+								vertex2->tangent += tangent;
+							}
 						}
 
 						// Textures
@@ -206,33 +235,20 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 									textures.emplace(metallicRoughnessImage->uri, image);
 								}
-								primitiveMaterial.metallicKey = metallicRoughnessImage->uri;
-								primitiveMaterial.roughnessKey = metallicRoughnessImage->uri;
+								primitiveMaterial.metallicRoughnessKey = metallicRoughnessImage->uri;
 							}
 							else {
-								std::string metallicMapKey = std::to_string(metallicFactor);
-								float metallicArray[4] = { metallicFactor, metallicFactor, metallicFactor, 1.0f };
+								std::string metallicRoughnessMapKey = std::to_string(metallicFactor) + std::to_string(roughnessFactor);
+								float metallicRoughnessArray[4] = { 0.0f, metallicFactor, roughnessFactor, 1.0f };
 
-								if (textures.find(metallicMapKey) == textures.end()) {
+								if (textures.find(metallicRoughnessMapKey) == textures.end()) {
 									Image image;
-									ImageTools::loadColor(metallicArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::loadColor(metallicRoughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(metallicMapKey, image);
+									textures.emplace(metallicRoughnessMapKey, image);
 								}
-								primitiveMaterial.metallicKey = metallicMapKey;
-
-								std::string roughnessMapKey = std::to_string(roughnessFactor);
-								float roughnessArray[4] = { roughnessFactor, roughnessFactor, roughnessFactor, 1.0f };
-
-								if (textures.find(roughnessMapKey) == textures.end()) {
-									Image image;
-									ImageTools::loadColor(roughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
-									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(roughnessMapKey, image);
-								}
-								primitiveMaterial.roughnessKey = roughnessMapKey;
+								primitiveMaterial.metallicRoughnessKey = metallicRoughnessMapKey;
 							}
 						}
 
@@ -254,8 +270,16 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 						materials.push_back(primitiveMaterial);
 
 						// Primitive
-						indexCount = static_cast<uint32_t>(accessor->count);
 						primitives->push_back({ firstIndex, indexCount, static_cast<uint64_t>(materials.size() - 1) });
+
+						vertices->insert(vertices->end(), primitiveVertices.begin(), primitiveVertices.end());
+						indices->insert(indices->end(), primitiveIndices.begin(), primitiveIndices.end());
+					}
+
+					for (size_t l = 0; l < vertices->size(); l++) {
+						Vertex* vertex = &vertices->at(l);
+
+						vertex->tangent = glm::normalize(vertex->tangent);
 					}
 				}
 			}

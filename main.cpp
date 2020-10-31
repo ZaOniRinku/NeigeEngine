@@ -21,9 +21,9 @@ int main(void) {
 
 	Entity rectangle = ecs.createEntity();
 	ecs.addComponent(rectangle, Renderable{
-		"../modelfiles/BoxTextured.gltf",
-		"../shaders/dummy_shader.vert",
-		"../shaders/dummy_shader.frag",
+		"../modelfiles/BoomBox.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/pbr.frag",
 		"",
 		"",
 		"",
@@ -32,22 +32,38 @@ int main(void) {
 	ecs.addComponent(rectangle, Transform{
 		glm::vec3(5.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 90.0f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 1.0f)
+		glm::vec3(100.0f, 100.0f, 100.0f)
 		});
 
 	Entity rectangle2 = ecs.createEntity();
 	ecs.addComponent(rectangle2, Renderable{
-		"../modelfiles/Box.gltf",
-		"../shaders/dummy_shader.vert",
-		"../shaders/dummy_shader.frag",
+		"../modelfiles/Duck2.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/pbr.frag",
 		"",
 		"",
 		"",
-		Topology::WIREFRAME
+		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(rectangle2, Transform{
 		glm::vec3(5.0f, 1.0f, 2.0f),
-		glm::vec3(180.0f, 180.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.01f, 0.01f, 0.01f)
+		});
+
+	Entity rectangle3 = ecs.createEntity();
+	ecs.addComponent(rectangle3, Renderable{
+		"../modelfiles/DamagedHelmet.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/pbr.frag",
+		"",
+		"",
+		"",
+		Topology::TRIANGLE_LIST
+		});
+	ecs.addComponent(rectangle3, Transform{
+		glm::vec3(5.0f, 1.0f, -2.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
 

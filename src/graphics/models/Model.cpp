@@ -68,23 +68,14 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 		normalInfo.imageView = textures.at(normal).imageView;
 		normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-		std::string metallic = materials[primitives[i].materialIndex].metallicKey;
-		if (metallic == "") {
-			metallic = "defaultMetallic";
+		std::string metallicRoughness = materials[primitives[i].materialIndex].metallicRoughnessKey;
+		if (metallicRoughness == "") {
+			metallicRoughness = "defaultMetallicRoughness";
 		}
-		VkDescriptorImageInfo metallicInfo = {};
-		metallicInfo.sampler = textures.at(metallic).imageSampler;
-		metallicInfo.imageView = textures.at(metallic).imageView;
-		metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-		std::string roughness = materials[primitives[i].materialIndex].roughnessKey;
-		if (roughness == "") {
-			roughness = "defaultRoughness";
-		}
-		VkDescriptorImageInfo roughnessInfo = {};
-		roughnessInfo.sampler = textures.at(roughness).imageSampler;
-		roughnessInfo.imageView = textures.at(roughness).imageView;
-		roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		VkDescriptorImageInfo metallicRoughnessInfo = {};
+		metallicRoughnessInfo.sampler = textures.at(metallicRoughness).imageSampler;
+		metallicRoughnessInfo.imageView = textures.at(metallicRoughness).imageView;
+		metallicRoughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 		std::vector<VkWriteDescriptorSet> writesDescriptorSet;
 
@@ -114,31 +105,18 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 		normalWriteDescriptorSet.pTexelBufferView = nullptr;
 		writesDescriptorSet.push_back(normalWriteDescriptorSet);
 
-		VkWriteDescriptorSet metallicWriteDescriptorSet = {};
-		metallicWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		metallicWriteDescriptorSet.pNext = nullptr;
-		metallicWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
-		metallicWriteDescriptorSet.dstBinding = 2;
-		metallicWriteDescriptorSet.dstArrayElement = 0;
-		metallicWriteDescriptorSet.descriptorCount = 1;
-		metallicWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		metallicWriteDescriptorSet.pImageInfo = &metallicInfo;
-		metallicWriteDescriptorSet.pBufferInfo = nullptr;
-		metallicWriteDescriptorSet.pTexelBufferView = nullptr;
-		writesDescriptorSet.push_back(metallicWriteDescriptorSet);
-
-		VkWriteDescriptorSet roughnessWriteDescriptorSet = {};
-		roughnessWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		roughnessWriteDescriptorSet.pNext = nullptr;
-		roughnessWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
-		roughnessWriteDescriptorSet.dstBinding = 3;
-		roughnessWriteDescriptorSet.dstArrayElement = 0;
-		roughnessWriteDescriptorSet.descriptorCount = 1;
-		roughnessWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		roughnessWriteDescriptorSet.pImageInfo = &roughnessInfo;
-		roughnessWriteDescriptorSet.pBufferInfo = nullptr;
-		roughnessWriteDescriptorSet.pTexelBufferView = nullptr;
-		writesDescriptorSet.push_back(roughnessWriteDescriptorSet);
+		VkWriteDescriptorSet metallicRoughnessWriteDescriptorSet = {};
+		metallicRoughnessWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		metallicRoughnessWriteDescriptorSet.pNext = nullptr;
+		metallicRoughnessWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		metallicRoughnessWriteDescriptorSet.dstBinding = 2;
+		metallicRoughnessWriteDescriptorSet.dstArrayElement = 0;
+		metallicRoughnessWriteDescriptorSet.descriptorCount = 1;
+		metallicRoughnessWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		metallicRoughnessWriteDescriptorSet.pImageInfo = &metallicRoughnessInfo;
+		metallicRoughnessWriteDescriptorSet.pBufferInfo = nullptr;
+		metallicRoughnessWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(metallicRoughnessWriteDescriptorSet);
 
 		descriptorSets[i].update(writesDescriptorSet);
 	}

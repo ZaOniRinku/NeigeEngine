@@ -33,8 +33,7 @@ struct Primitive {
 struct Material {
 	std::string diffuseKey = "";
 	std::string normalKey = "";
-	std::string metallicKey = "";
-	std::string roughnessKey = "";
+	std::string metallicRoughnessKey = "";
 };
 
 // Vertex

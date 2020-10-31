@@ -96,19 +96,12 @@ void Renderer::init() {
 	ImageTools::createImageSampler(&defaultNormalImage.imageSampler, defaultNormalImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 	textures.emplace("defaultNormal", defaultNormalImage);
 
-	float defaultMetallic[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	Image defaultMetallicImage;
-	ImageTools::loadColor(defaultMetallic, &defaultMetallicImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultMetallicImage.mipmapLevels, &defaultMetallicImage.allocationId);
-	ImageTools::createImageView(&defaultMetallicImage.imageView, defaultMetallicImage.image, 1, defaultMetallicImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultMetallicImage.imageSampler, defaultMetallicImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-	textures.emplace("defaultMetallic", defaultMetallicImage);
-
-	float defaultRoughness[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	Image defaultRoughnessImage;
-	ImageTools::loadColor(defaultRoughness, &defaultRoughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultRoughnessImage.mipmapLevels, &defaultRoughnessImage.allocationId);
-	ImageTools::createImageView(&defaultRoughnessImage.imageView, defaultRoughnessImage.image, 1, defaultRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultRoughnessImage.imageSampler, defaultRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-	textures.emplace("defaultRoughness", defaultRoughnessImage);
+	float defaultMetallicRoughness[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Image defaultMetallicRoughnessImage;
+	ImageTools::loadColor(defaultMetallicRoughness, &defaultMetallicRoughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultMetallicRoughnessImage.mipmapLevels, &defaultMetallicRoughnessImage.allocationId);
+	ImageTools::createImageView(&defaultMetallicRoughnessImage.imageView, defaultMetallicRoughnessImage.image, 1, defaultMetallicRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultMetallicRoughness", defaultMetallicRoughnessImage);
 
 	// Descriptors
 	for (Entity entity : entities) {
