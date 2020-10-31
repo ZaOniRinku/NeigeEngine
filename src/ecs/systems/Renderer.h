@@ -55,10 +55,6 @@ struct Renderer : public System {
 	std::vector<CommandPool> renderingCommandPools;
 	std::vector<CommandBuffer> renderingCommandBuffers;
 
-	// Buffers
-	Buffer vertexBuffer;
-	Buffer indexBuffer;
-
 	uint32_t swapchainSize;
 	uint32_t currentFrame = 0;
 

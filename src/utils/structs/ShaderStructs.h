@@ -26,6 +26,15 @@ enum struct Topology {
 struct Primitive {
 	uint32_t firstIndex;
 	uint32_t indexCount;
+	uint64_t materialIndex;
+};
+
+// Material
+struct Material {
+	std::string diffuseKey = "";
+	std::string normalKey = "";
+	std::string metallicKey = "";
+	std::string roughnessKey = "";
 };
 
 // Vertex

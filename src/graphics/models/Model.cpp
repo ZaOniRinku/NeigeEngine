@@ -1,4 +1,5 @@
 #include "Model.h"
+#include "../resources/RendererResources.h"
 
 void Model::init(std::string filePath) {
 	std::vector<Vertex> vertices;
@@ -39,6 +40,106 @@ void Model::draw(CommandBuffer* commandBuffer) {
 	vkCmdBindVertexBuffers(commandBuffer->commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 	vkCmdBindIndexBuffer(commandBuffer->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	for (size_t i = 0; i < primitives.size(); i++) {
+		descriptorSets.at(i).bind(commandBuffer, 1);
 		vkCmdDrawIndexed(commandBuffer->commandBuffer, primitives[i].indexCount, 1, primitives[i].firstIndex, 0, 0);
+	}
+}
+
+void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
+	descriptorSets.resize(primitives.size());
+	for (size_t i = 0; i < primitives.size(); i++) {
+		descriptorSets.at(i).init(graphicsPipeline, 1);
+
+		std::string diffuse = materials[primitives[i].materialIndex].diffuseKey;
+		if (diffuse == "") {
+			diffuse = "defaultDiffuse";
+		}
+		VkDescriptorImageInfo diffuseInfo = {};
+		diffuseInfo.sampler = textures.at(diffuse).imageSampler;
+		diffuseInfo.imageView = textures.at(diffuse).imageView;
+		diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		std::string normal = materials[primitives[i].materialIndex].normalKey;
+		if (normal == "") {
+			normal = "defaultNormal";
+		}
+		VkDescriptorImageInfo normalInfo = {};
+		normalInfo.sampler = textures.at(normal).imageSampler;
+		normalInfo.imageView = textures.at(normal).imageView;
+		normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		std::string metallic = materials[primitives[i].materialIndex].metallicKey;
+		if (metallic == "") {
+			metallic = "defaultMetallic";
+		}
+		VkDescriptorImageInfo metallicInfo = {};
+		metallicInfo.sampler = textures.at(metallic).imageSampler;
+		metallicInfo.imageView = textures.at(metallic).imageView;
+		metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		std::string roughness = materials[primitives[i].materialIndex].roughnessKey;
+		if (roughness == "") {
+			roughness = "defaultRoughness";
+		}
+		VkDescriptorImageInfo roughnessInfo = {};
+		roughnessInfo.sampler = textures.at(roughness).imageSampler;
+		roughnessInfo.imageView = textures.at(roughness).imageView;
+		roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+
+		VkWriteDescriptorSet diffuseWriteDescriptorSet = {};
+		diffuseWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		diffuseWriteDescriptorSet.pNext = nullptr;
+		diffuseWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		diffuseWriteDescriptorSet.dstBinding = 0;
+		diffuseWriteDescriptorSet.dstArrayElement = 0;
+		diffuseWriteDescriptorSet.descriptorCount = 1;
+		diffuseWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		diffuseWriteDescriptorSet.pImageInfo = &diffuseInfo;
+		diffuseWriteDescriptorSet.pBufferInfo = nullptr;
+		diffuseWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(diffuseWriteDescriptorSet);
+
+		VkWriteDescriptorSet normalWriteDescriptorSet = {};
+		normalWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		normalWriteDescriptorSet.pNext = nullptr;
+		normalWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		normalWriteDescriptorSet.dstBinding = 1;
+		normalWriteDescriptorSet.dstArrayElement = 0;
+		normalWriteDescriptorSet.descriptorCount = 1;
+		normalWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		normalWriteDescriptorSet.pImageInfo = &normalInfo;
+		normalWriteDescriptorSet.pBufferInfo = nullptr;
+		normalWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(normalWriteDescriptorSet);
+
+		VkWriteDescriptorSet metallicWriteDescriptorSet = {};
+		metallicWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		metallicWriteDescriptorSet.pNext = nullptr;
+		metallicWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		metallicWriteDescriptorSet.dstBinding = 2;
+		metallicWriteDescriptorSet.dstArrayElement = 0;
+		metallicWriteDescriptorSet.descriptorCount = 1;
+		metallicWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		metallicWriteDescriptorSet.pImageInfo = &metallicInfo;
+		metallicWriteDescriptorSet.pBufferInfo = nullptr;
+		metallicWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(metallicWriteDescriptorSet);
+
+		VkWriteDescriptorSet roughnessWriteDescriptorSet = {};
+		roughnessWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		roughnessWriteDescriptorSet.pNext = nullptr;
+		roughnessWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		roughnessWriteDescriptorSet.dstBinding = 3;
+		roughnessWriteDescriptorSet.dstArrayElement = 0;
+		roughnessWriteDescriptorSet.descriptorCount = 1;
+		roughnessWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		roughnessWriteDescriptorSet.pImageInfo = &roughnessInfo;
+		roughnessWriteDescriptorSet.pBufferInfo = nullptr;
+		roughnessWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(roughnessWriteDescriptorSet);
+
+		descriptorSets[i].update(writesDescriptorSet);
 	}
 }

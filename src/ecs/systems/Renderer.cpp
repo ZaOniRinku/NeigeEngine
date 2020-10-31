@@ -81,16 +81,38 @@ void Renderer::init() {
 	// Fullscreen viewport
 	fullscreenViewport.init(window->extent.width, window->extent.height);
 
+	// Default textures
+	float defaultDiffuse[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	Image defaultDiffuseImage;
+	ImageTools::loadColor(defaultDiffuse, &defaultDiffuseImage.image, VK_FORMAT_R8G8B8A8_SRGB, &defaultDiffuseImage.mipmapLevels, &defaultDiffuseImage.allocationId);
+	ImageTools::createImageView(&defaultDiffuseImage.imageView, defaultDiffuseImage.image, 1, defaultDiffuseImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultDiffuseImage.imageSampler, defaultDiffuseImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultDiffuse", defaultDiffuseImage);
+
+	float defaultNormal[4] = { 0.5f, 0.5f, 1.0f, 1.0f };
+	Image defaultNormalImage;
+	ImageTools::loadColor(defaultNormal, &defaultNormalImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultNormalImage.mipmapLevels, &defaultNormalImage.allocationId);
+	ImageTools::createImageView(&defaultNormalImage.imageView, defaultNormalImage.image, 1, defaultNormalImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultNormalImage.imageSampler, defaultNormalImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultNormal", defaultNormalImage);
+
+	float defaultMetallic[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Image defaultMetallicImage;
+	ImageTools::loadColor(defaultMetallic, &defaultMetallicImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultMetallicImage.mipmapLevels, &defaultMetallicImage.allocationId);
+	ImageTools::createImageView(&defaultMetallicImage.imageView, defaultMetallicImage.image, 1, defaultMetallicImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultMetallicImage.imageSampler, defaultMetallicImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultMetallic", defaultMetallicImage);
+
+	float defaultRoughness[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Image defaultRoughnessImage;
+	ImageTools::loadColor(defaultRoughness, &defaultRoughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultRoughnessImage.mipmapLevels, &defaultRoughnessImage.allocationId);
+	ImageTools::createImageView(&defaultRoughnessImage.imageView, defaultRoughnessImage.image, 1, defaultRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultRoughnessImage.imageSampler, defaultRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultRoughness", defaultRoughnessImage);
+
 	// Descriptors
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
-
-		// Model
-		if (models.find(renderable.modelPath) == models.end()) {
-			Model model;
-			model.init(renderable.modelPath);
-			models.emplace(renderable.modelPath, model);
-		}
 
 		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
 
@@ -107,7 +129,7 @@ void Renderer::init() {
 			graphicsPipelines.emplace(mapKey, graphicsPipeline);
 		}
 
-		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
+		if (graphicsPipelines.at(mapKey).sets.size() != 0) {
 			std::vector<Buffer> buffers;
 			buffers.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -116,10 +138,10 @@ void Renderer::init() {
 
 			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 				// Buffers
-				BufferTools::createUniformBuffer(buffers[i].buffer, buffers[i].deviceMemory, sizeof(ObjectUniformBufferObject));
+				BufferTools::createUniformBuffer(buffers.at(i).buffer, buffers.at(i).deviceMemory, sizeof(ObjectUniformBufferObject));
 
 				// Descriptor sets
-				descriptorSets[i].init(&graphicsPipelines.at(mapKey));
+				descriptorSets[i].init(&graphicsPipelines.at(mapKey), 0);
 
 				VkDescriptorBufferInfo objectInfo = {};
 				objectInfo.buffer = buffers.at(i).buffer;
@@ -164,6 +186,14 @@ void Renderer::init() {
 
 			entityBuffers.emplace(entity, buffers);
 			entityDescriptorSets.emplace(entity, descriptorSets);
+		}
+
+		// Model
+		if (models.find(renderable.modelPath) == models.end()) {
+			Model model;
+			model.init(renderable.modelPath);
+			model.createDescriptorSets(&graphicsPipelines.at(mapKey));
+			models.emplace(renderable.modelPath, model);
 		}
 	}
 
@@ -315,6 +345,10 @@ void Renderer::destroy() {
 		Shader* shader = &it->second;
 		shader->destroy();
 	}
+	for (std::unordered_map<std::string, Image>::iterator it = textures.begin(); it != textures.end(); it++) {
+		Image* texture = &it->second;
+		texture->destroy();
+	}
 	for (std::unordered_map<std::string, Model>::iterator it = models.begin(); it != models.end(); it++) {
 		Model* model = &it->second;
 		model->destroy();
@@ -352,9 +386,10 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 	for (Entity entity : entities) {
 		const auto& objectTransform = ecs.getComponent<Transform>(entity);
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
+
 		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
 
-		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
+		if (graphicsPipelines.at(mapKey).sets.size() != 0) {
 			ObjectUniformBufferObject oubo = {};
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), objectTransform.position);
 			glm::mat4 rotateX = glm::rotate(glm::mat4(1.0f), glm::radians(objectTransform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -374,18 +409,18 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	renderingCommandPools[frameInFlightIndex].reset();
 	renderingCommandBuffers[frameInFlightIndex].begin();
 
-	VkDeviceSize offset = 0;
 	renderPasses[0].begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
 
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
 
 		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));
+		GraphicsPipeline* graphicsPipeline = &graphicsPipelines.at(mapKey);
 
-		graphicsPipelines.at(mapKey).bind(&renderingCommandBuffers[frameInFlightIndex]);
+		graphicsPipeline->bind(&renderingCommandBuffers[frameInFlightIndex]);
 
-		if (graphicsPipelines.at(mapKey).layoutBindings.size() != 0) {
-			entityDescriptorSets.at(entity).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex]);
+		if (graphicsPipeline->sets.size() != 0) {
+			entityDescriptorSets.at(entity).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 		}
 
 		models.at(renderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex]);
@@ -403,13 +438,13 @@ void Renderer::createResources() {
 	// Framebuffers
 	Image colorAttachment;
 	ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
-	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
+	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 	colorImages.push_back(colorAttachment);
 	Image depthAttachment;
 	ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
-	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
+	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	depthImages.push_back(depthAttachment);
 	std::vector<std::vector<VkImageView>> framebufferAttachments;
 	framebufferAttachments.resize(swapchainSize);

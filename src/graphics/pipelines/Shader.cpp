@@ -47,8 +47,8 @@ void Shader::init(const std::string& filePath) {
 }
 
 void Shader::destroy() {
-	layoutBindings.clear();
-	layoutBindings.shrink_to_fit();
+	sets.clear();
+	sets.shrink_to_fit();
 	layoutBindingsShaderTypes.clear();
 	layoutBindingsShaderTypes.shrink_to_fit();
 	vkDestroyShaderModule(logicalDevice.device, module, nullptr);
@@ -57,6 +57,7 @@ void Shader::destroy() {
 bool Shader::compile() {
 	spvCode.clear();
 	spvCode.shrink_to_fit();
+
 	const TBuiltInResource DefaultTBuiltInResource = {};
 	std::string code = FileTools::readAscii(file);
 	const char* codeString = code.c_str();
@@ -136,6 +137,8 @@ void Shader::reflect() {
 	// Bindings
 	for (uint32_t i = 0; i < descriptorSetCount; i++) {
 		const SpvReflectDescriptorSet& reflectSet = *descriptorSets[i];
+		Set set;
+		set.set = reflectSet.set;
 		for (uint32_t j = 0; j < reflectSet.binding_count; j++) {
 			const SpvReflectDescriptorBinding& reflectBinding = *reflectSet.bindings[j];
 			VkDescriptorSetLayoutBinding binding = {};
@@ -148,9 +151,10 @@ void Shader::reflect() {
 			}
 			binding.stageFlags = shaderTypeToVkShaderFlagBits();
 			binding.pImmutableSamplers = nullptr;
-			layoutBindings.push_back(binding);
+			set.bindings.push_back(binding);
 			layoutBindingsShaderTypes.push_back(type);
 		}
+		sets.push_back(set);
 	}
 	
 	// Push constants

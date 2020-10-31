@@ -1,6 +1,7 @@
 #include "ModelLoader.h"
 #define CGLTF_IMPLEMENTATION
 #include "../../external/cgltf/cgltf.h"
+#include "../../graphics/resources/RendererResources.h"
 
 void ModelLoader::load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Primitive>* primitives) {
 	std::string extension = FileTools::extension(filePath);
@@ -158,9 +159,103 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 							NEIGE_ERROR("Indices component type unknown for model file \"" + filePath + "\".");
 						}
 
+						// Textures
+						Material primitiveMaterial;
+
+						if (primitive->material->has_pbr_metallic_roughness) {
+							cgltf_pbr_metallic_roughness pbrMetallicRoughness = primitive->material->pbr_metallic_roughness;
+							cgltf_texture_view baseColorTextureView = pbrMetallicRoughness.base_color_texture;
+							cgltf_texture* baseColorTexture = baseColorTextureView.texture;
+							cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
+							if (baseColorTexture != NULL) {
+								cgltf_image* baseColorImage = baseColorTexture->image;
+
+								if (textures.find(baseColorImage->uri) == textures.end()) {
+									Image image;
+									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + baseColorImage->uri, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(baseColorImage->uri, image);
+								}
+								primitiveMaterial.diffuseKey = baseColorImage->uri;
+							}
+							else if (baseColorFactor != NULL) {
+								std::string mapKey = std::to_string(baseColorFactor[0]) + std::to_string(baseColorFactor[1]) + std::to_string(baseColorFactor[2]) + std::to_string(baseColorFactor[3]);
+
+								if (textures.find(mapKey) == textures.end()) {
+									Image image;
+									ImageTools::loadColor(baseColorFactor, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(mapKey, image);
+								}
+								primitiveMaterial.diffuseKey = mapKey;
+							}
+
+							cgltf_texture_view metallicRoughnessTextureView = pbrMetallicRoughness.metallic_roughness_texture;
+							cgltf_texture* metallicRoughnessTexture = metallicRoughnessTextureView.texture;
+							cgltf_float metallicFactor = pbrMetallicRoughness.metallic_factor;
+							cgltf_float roughnessFactor = pbrMetallicRoughness.roughness_factor;
+							if (metallicRoughnessTexture != NULL) {
+								cgltf_image* metallicRoughnessImage = metallicRoughnessTexture->image;
+
+								if (textures.find(metallicRoughnessImage->uri) == textures.end()) {
+									Image image;
+									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + metallicRoughnessImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(metallicRoughnessImage->uri, image);
+								}
+								primitiveMaterial.metallicKey = metallicRoughnessImage->uri;
+								primitiveMaterial.roughnessKey = metallicRoughnessImage->uri;
+							}
+							else {
+								std::string metallicMapKey = std::to_string(metallicFactor);
+								float metallicArray[4] = { metallicFactor, metallicFactor, metallicFactor, 1.0f };
+
+								if (textures.find(metallicMapKey) == textures.end()) {
+									Image image;
+									ImageTools::loadColor(metallicArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(metallicMapKey, image);
+								}
+								primitiveMaterial.metallicKey = metallicMapKey;
+
+								std::string roughnessMapKey = std::to_string(roughnessFactor);
+								float roughnessArray[4] = { roughnessFactor, roughnessFactor, roughnessFactor, 1.0f };
+
+								if (textures.find(roughnessMapKey) == textures.end()) {
+									Image image;
+									ImageTools::loadColor(roughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(roughnessMapKey, image);
+								}
+								primitiveMaterial.roughnessKey = roughnessMapKey;
+							}
+						}
+
+						cgltf_texture_view normalTextureView = primitive->material->normal_texture;
+						cgltf_texture* normalTexture = normalTextureView.texture;
+						if (normalTexture != NULL) {
+							cgltf_image* normalImage = normalTexture->image;
+
+							if (textures.find(normalImage->uri) == textures.end()) {
+								Image image;
+								ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + normalImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+								ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+								ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+								textures.emplace(normalImage->uri, image);
+							}
+							primitiveMaterial.normalKey = normalImage->uri;
+						}
+
+						materials.push_back(primitiveMaterial);
+
 						// Primitive
 						indexCount = static_cast<uint32_t>(accessor->count);
-						primitives->push_back({ firstIndex, indexCount });
+						primitives->push_back({ firstIndex, indexCount, static_cast<uint64_t>(materials.size() - 1) });
 					}
 				}
 			}

@@ -4,9 +4,8 @@
 void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse) {
 	viewport = viewportToUse;
 
-	layoutBindings.clear();
-	layoutBindings.shrink_to_fit();
-
+	sets.clear();
+	sets.shrink_to_fit();
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 
@@ -44,7 +43,18 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
-		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		for (size_t i = 0; i < shader.sets.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < sets.size(); j++) {
+				if (sets[j].set == shader.sets[i].set) {
+					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					found = true;
+				}
+			}
+			if (!found) {
+				sets.push_back(shader.sets[i]);
+			}
+		}
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -71,7 +81,18 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
 
-		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		for (size_t i = 0; i < shader.sets.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < sets.size(); j++) {
+				if (sets[j].set == shader.sets[i].set) {
+					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					found = true;
+				}
+			}
+			if (!found) {
+				sets.push_back(shader.sets[i]);
+			}
+		}
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -98,7 +119,18 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		tesselationControlShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationControlShaderCreateInfo);
 
-		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		for (size_t i = 0; i < shader.sets.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < sets.size(); j++) {
+				if (sets[j].set == shader.sets[i].set) {
+					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					found = true;
+				}
+			}
+			if (!found) {
+				sets.push_back(shader.sets[i]);
+			}
+		}
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -125,7 +157,18 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		tesselationEvaluationShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(tesselationEvaluationShaderCreateInfo);
 
-		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		for (size_t i = 0; i < shader.sets.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < sets.size(); j++) {
+				if (sets[j].set == shader.sets[i].set) {
+					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					found = true;
+				}
+			}
+			if (!found) {
+				sets.push_back(shader.sets[i]);
+			}
+		}
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
@@ -152,22 +195,36 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		geometryShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(geometryShaderCreateInfo);
 
-		layoutBindings.insert(layoutBindings.end(), shader.layoutBindings.begin(), shader.layoutBindings.end());
+		for (size_t i = 0; i < shader.sets.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < sets.size(); j++) {
+				if (sets[j].set == shader.sets[i].set) {
+					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					found = true;
+				}
+			}
+			if (!found) {
+				sets.push_back(shader.sets[i]);
+			}
+		}
 		pushConstantRanges.insert(pushConstantRanges.end(), shader.pushConstantRanges.begin(), shader.pushConstantRanges.end());
 		uniqueDescriptorTypes.insert(shader.uniqueDescriptorTypes.begin(), shader.uniqueDescriptorTypes.end());
 	}
 
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
 
-	// Descriptor set layout
-	if (descriptorSetLayout == VK_NULL_HANDLE) {
-		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-		descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptorSetLayoutCreateInfo.pNext = nullptr;
-		descriptorSetLayoutCreateInfo.flags = 0;
-		descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
-		descriptorSetLayoutCreateInfo.pBindings = layoutBindings.data();
-		NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout));
+	// Descriptor set layouts
+	descriptorSetLayouts.resize(sets.size());
+	for (size_t i = 0; i < sets.size(); i++) {
+		if (descriptorSetLayouts[i] == VK_NULL_HANDLE) {
+			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+			descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			descriptorSetLayoutCreateInfo.pNext = nullptr;
+			descriptorSetLayoutCreateInfo.flags = 0;
+			descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(sets[i].bindings.size());
+			descriptorSetLayoutCreateInfo.pBindings = sets[i].bindings.data();
+			NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[i]));
+		}
 	}
 
 	// Descriptor pool
@@ -197,8 +254,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutCreateInfo.pNext = nullptr;
 	pipelineLayoutCreateInfo.flags = 0;
-	pipelineLayoutCreateInfo.setLayoutCount = 1;
-	pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 	pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
 	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
 	NEIGE_VK_CHECK(vkCreatePipelineLayout(logicalDevice.device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
@@ -334,9 +391,11 @@ void GraphicsPipeline::destroy() {
 		vkDestroyDescriptorPool(logicalDevice.device, descriptorPool, nullptr);
 		descriptorPool = VK_NULL_HANDLE;
 	}
-	if (descriptorSetLayout != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(logicalDevice.device, descriptorSetLayout, nullptr);
-		descriptorSetLayout = VK_NULL_HANDLE;
+	for (VkDescriptorSetLayout descriptorSetLayout : descriptorSetLayouts) {
+		if (descriptorSetLayout != VK_NULL_HANDLE) {
+			vkDestroyDescriptorSetLayout(logicalDevice.device, descriptorSetLayout, nullptr);
+			descriptorSetLayout = VK_NULL_HANDLE;
+		}
 	}
 	destroyPipeline();
 }

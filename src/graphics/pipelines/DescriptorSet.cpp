@@ -1,7 +1,7 @@
 #include "DescriptorSet.h"
 #include "../resources/RendererResources.h"
 
-void DescriptorSet::init(GraphicsPipeline* associatedGraphicsPipeline) {
+void DescriptorSet::init(GraphicsPipeline* associatedGraphicsPipeline, uint32_t set) {
 	graphicsPipeline = associatedGraphicsPipeline;
 
 	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
@@ -9,7 +9,7 @@ void DescriptorSet::init(GraphicsPipeline* associatedGraphicsPipeline) {
 	descriptorSetAllocateInfo.pNext = nullptr;
 	descriptorSetAllocateInfo.descriptorPool = graphicsPipeline->descriptorPool;
 	descriptorSetAllocateInfo.descriptorSetCount = 1;
-	descriptorSetAllocateInfo.pSetLayouts = &graphicsPipeline->descriptorSetLayout;
+	descriptorSetAllocateInfo.pSetLayouts = &graphicsPipeline->descriptorSetLayouts[set];
 	NEIGE_VK_CHECK(vkAllocateDescriptorSets(logicalDevice.device, &descriptorSetAllocateInfo, &descriptorSet));
 }
 
@@ -21,6 +21,6 @@ void DescriptorSet::destroy() {
 	vkFreeDescriptorSets(logicalDevice.device, graphicsPipeline->descriptorPool, 1, &descriptorSet);
 }
 
-void DescriptorSet::bind(CommandBuffer* commandBuffer) {
-	vkCmdBindDescriptorSets(commandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+void DescriptorSet::bind(CommandBuffer* commandBuffer, uint32_t set) {
+	vkCmdBindDescriptorSets(commandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, set, 1, &descriptorSet, 0, nullptr);
 }

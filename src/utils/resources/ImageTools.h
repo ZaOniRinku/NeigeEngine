@@ -3,7 +3,6 @@
 #include "../NeigeDefines.h"
 #include "../structs/RendererStructs.h"
 #include "BufferTools.h"
-#include "../../graphics/resources/RendererResources.h"
 #include "../../graphics/resources/Buffer.h"
 #include "../../graphics/commands/CommandBuffer.h"
 #include "../../graphics/commands/CommandPool.h"
@@ -33,6 +32,12 @@ struct ImageTools {
 	static void loadImage(const std::string& filePath,
 		VkImage* imageDestination,
 		VkFormat format,
+		uint32_t* mipLevels,
+		VkDeviceSize* allocationId);
+	static void loadColor(float* color,
+		VkImage* imageDestination,
+		VkFormat format,
+		uint32_t* mipLevels,
 		VkDeviceSize* allocationId);
 	static void transitionLayout(VkImage image,
 		VkFormat format,

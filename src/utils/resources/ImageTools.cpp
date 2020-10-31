@@ -1,6 +1,7 @@
 #include "ImageTools.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../external/stb/stb_image.h"
+#include "../../graphics/resources/RendererResources.h"
 
 void ImageTools::createImage(VkImage* image,
 	uint32_t arrayLayers,
@@ -88,32 +89,60 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 void ImageTools::loadImage(const std::string& filePath,
 	VkImage* imageDestination,
 	VkFormat format,
+	uint32_t* mipLevels,
 	VkDeviceSize* allocationId) {
-	Buffer buffer;
 	int width;
 	int height;
 	int texChannels;
-	uint32_t mipLevels;
 	stbi_uc* pixels = stbi_load(filePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
 	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4;
 	if (!pixels) {
 		NEIGE_ERROR("Error with image file \"" + filePath + "\".");
 	}
 
-	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
+	*mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
 
-	BufferTools::createStagingBuffer(buffer.buffer, buffer.deviceMemory, size);
+	Buffer stagingBuffer;
+	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, size);
 	void* data;
-	buffer.map(0, size, &data);
+	stagingBuffer.map(0, size, &data);
 	memcpy(data, pixels, static_cast<size_t>(size));
-	buffer.unmap();
+	stagingBuffer.unmap();
 
-	createImage(imageDestination, 1, width, height, mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
-	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, 1);
-	BufferTools::copyToImage(buffer.buffer, *imageDestination, width, height, 1);
-	generateMipmaps(*imageDestination, format, width, height, mipLevels);
+	createImage(imageDestination, 1, width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1);
+	generateMipmaps(*imageDestination, format, width, height, *mipLevels);
 
-	buffer.destroy();
+	stagingBuffer.destroy();
+}
+
+void ImageTools::loadColor(float* color,
+	VkImage* imageDestination,
+	VkFormat format,
+	uint32_t* mipLevels,
+	VkDeviceSize* allocationId) {
+	uint8_t r = static_cast<uint8_t>(round(255.0f * color[0]));
+	uint8_t g = static_cast<uint8_t>(round(255.0f * color[1]));
+	uint8_t b = static_cast<uint8_t>(round(255.0f * color[2]));
+	uint8_t a = static_cast<uint8_t>(round(255.0f * color[3]));
+	std::array<uint8_t, 4> colorData = { r, g, b, a };
+
+	*mipLevels = 1;
+
+	Buffer stagingBuffer;
+	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, 4 * sizeof(uint8_t));
+	void* pixelData;
+	stagingBuffer.map(0, 4 * sizeof(uint8_t), &pixelData);
+	memcpy(pixelData, colorData.data(), 4 * sizeof(uint8_t));
+	stagingBuffer.unmap();
+
+	createImage(imageDestination, 1, 1, 1, 1, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, 1, 1, 1);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, 1);
+
+	stagingBuffer.destroy();
 }
 
 void ImageTools::transitionLayout(VkImage image,

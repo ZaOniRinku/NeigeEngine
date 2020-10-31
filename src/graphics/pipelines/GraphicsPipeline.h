@@ -13,13 +13,13 @@ struct GraphicsPipeline {
 	VkPipeline pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-	VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 	std::string vertexShaderPath;
 	std::string fragmentShaderPath;
 	std::string tesselationControlShaderPath;
 	std::string tesselationEvaluationShaderPath;
 	std::string geometryShaderPath;
-	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	std::vector<Set> sets;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	Viewport* viewport;
 	Topology topology;

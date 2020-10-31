@@ -35,3 +35,11 @@ std::string FileTools::extension(const std::string& filePath) {
     }
     return filePath.substr(dotPosition + 1);
 }
+
+std::string FileTools::fileGetDirectory(const std::string& filePath) {
+    std::size_t slashPosition = filePath.find_last_of('/');
+    if (slashPosition == std::string::npos) {
+        return filePath;
+    }
+    return filePath.substr(0, slashPosition + 1);
+}

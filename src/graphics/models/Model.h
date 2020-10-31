@@ -4,14 +4,19 @@
 #include "../../utils/structs/ShaderStructs.h"
 #include "../resources/Buffer.h"
 #include "../commands/CommandBuffer.h"
+#include "../../utils/resources/BufferTools.h"
+#include "../pipelines/DescriptorSet.h"
+#include "../pipelines/GraphicsPipeline.h"
 #include <vector>
 
 struct Model {
 	std::vector<Primitive> primitives;
 	Buffer vertexBuffer;
 	Buffer indexBuffer;
+	std::vector<DescriptorSet> descriptorSets;
 
 	void init(std::string filePath);
 	void destroy();
 	void draw(CommandBuffer* commandBuffer);
+	void createDescriptorSets(GraphicsPipeline* graphicsPipeline);
 };
