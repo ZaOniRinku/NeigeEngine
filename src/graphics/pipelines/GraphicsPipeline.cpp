@@ -231,7 +231,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	rasterizationCreateInfo.flags = 0;
 	rasterizationCreateInfo.depthClampEnable = VK_FALSE;
 	rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-	rasterizationCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizationCreateInfo.polygonMode = topology != Topology::WIREFRAME ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
 	rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterizationCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationCreateInfo.depthBiasClamp = VK_FALSE;
@@ -362,6 +362,8 @@ VkPrimitiveTopology GraphicsPipeline::topologyToVkTopology() {
 		return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
 	case Topology::POINT_LIST:
 		return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+	case Topology::WIREFRAME:
+		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	default:
 		NEIGE_ERROR("Unsupported primitive topology");
 	}

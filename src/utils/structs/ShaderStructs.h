@@ -18,7 +18,8 @@ enum struct Topology {
 	TRIANGLE_LIST,
 	TRIANGLE_STRIP,
 	LINE_STRIP,
-	POINT_LIST
+	POINT_LIST,
+	WIREFRAME
 };
 
 // Model primitive

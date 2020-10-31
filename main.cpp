@@ -37,13 +37,13 @@ int main(void) {
 
 	Entity rectangle2 = ecs.createEntity();
 	ecs.addComponent(rectangle2, Renderable{
-		"../models/Box.glb",
+		"../models/Box.gltf",
 		"../shaders/dummy_shader.vert",
 		"../shaders/dummy_shader.frag",
 		"",
 		"",
 		"",
-		Topology::TRIANGLE_LIST
+		Topology::WIREFRAME
 		});
 	ecs.addComponent(rectangle2, Transform{
 		glm::vec3(5.0f, 1.0f, 2.0f),

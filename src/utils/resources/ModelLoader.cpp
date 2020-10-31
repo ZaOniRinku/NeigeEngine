@@ -19,7 +19,7 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 	if (result == cgltf_result_success) {
 		result = cgltf_load_buffers(&options, data, filePath.c_str());
 		if (result != cgltf_result_success) {
-			NEIGE_ERROR("Cannot load buffer for model file \"" + filePath + "\".");
+			NEIGE_ERROR("Cannot load buffers for model file \"" + filePath + "\".");
 		}
 
 		uint32_t firstIndex = 0;
@@ -29,19 +29,22 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 				if (data->nodes[i].mesh != NULL) {
 					cgltf_mesh* mesh = data->nodes[i].mesh;
 
-					firstIndex += indexCount;
-					indexCount = 0;
 					for (size_t j = 0; j < mesh->primitives_count; j++) {
 						cgltf_primitive* primitive = &mesh->primitives[j];
+
+						firstIndex += indexCount;
+						indexCount = 0;
 
 						float* position;
 						float* normal;
 						float* uv;
+						float* color;
 						float* tangent;
 
 						size_t positionCount = 0;
 						size_t normalCount = 0;
 						size_t uvCount = 0;
+						size_t colorCount = 0;
 						size_t tangentCount = 0;
 
 						for (size_t k = 0; k < primitive->attributes_count; k++) {
@@ -68,6 +71,13 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 								uv = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 								uvCount = attribute->data->count;
 							}
+							else if (attributeName == "COLOR_0") {
+								cgltf_accessor* accessor = attribute->data;
+								cgltf_buffer_view* buffer_view = accessor->buffer_view;
+								char* buffer = static_cast<char*>(buffer_view->buffer->data);
+								color = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+								colorCount = attribute->data->count;
+							}
 							else if (attributeName == "TANGENT") {
 								cgltf_accessor* accessor = attribute->data;
 								cgltf_buffer_view* buffer_view = accessor->buffer_view;
@@ -83,7 +93,8 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 							Vertex vertex = {};
 							vertex.position = glm::vec3(position[l + 0], position[l + 1], position[l + 2]);
 							vertex.normal = normalCount != 0 ? glm::vec3(normal[l + 0], normal[l + 1], normal[l + 2]) : glm::vec3(0.0f);
-							vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.0f);
+							vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
+							vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
 							vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
 							vertices->push_back(vertex);
 							uvPos += 2;
@@ -150,9 +161,6 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 						// Primitive
 						indexCount = static_cast<uint32_t>(accessor->count);
 						primitives->push_back({ firstIndex, indexCount });
-
-						// Topology
-						cgltf_primitive_type type = primitive->type;
 					}
 				}
 			}

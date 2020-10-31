@@ -8,7 +8,7 @@ bool PhysicalDevice::isSuitable(const Surface* surface) {
 	if (queueFamilyIndices.isComplete()) {
 		if (extensionSupport()) {
 			SwapchainSupport deviceSwapchainSupport = swapchainSupport(surface->surface);
-			return !deviceSwapchainSupport.formats.empty() && !deviceSwapchainSupport.presentModes.empty() && features.samplerAnisotropy && features.sampleRateShading;
+			return !deviceSwapchainSupport.formats.empty() && !deviceSwapchainSupport.presentModes.empty() && features.fillModeNonSolid && features.samplerAnisotropy && features.sampleRateShading;
 		}
 	}
 	return false;

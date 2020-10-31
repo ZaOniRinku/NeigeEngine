@@ -21,6 +21,7 @@ void LogicalDevice::init() {
 
 	// Physical device features
 	VkPhysicalDeviceFeatures physicalDeviceFeatures = {};
+	physicalDeviceFeatures.fillModeNonSolid = VK_TRUE;
 	physicalDeviceFeatures.samplerAnisotropy = VK_TRUE;
 	physicalDeviceFeatures.sampleRateShading = VK_TRUE;
 
