@@ -21,7 +21,7 @@ int main(void) {
 
 	Entity rectangle = ecs.createEntity();
 	ecs.addComponent(rectangle, Renderable{
-		"../models/Box.gltf",
+		"../modelfiles/Box.gltf",
 		"../shaders/dummy_shader.vert",
 		"../shaders/dummy_shader.frag",
 		"",
@@ -37,7 +37,7 @@ int main(void) {
 
 	Entity rectangle2 = ecs.createEntity();
 	ecs.addComponent(rectangle2, Renderable{
-		"../models/Box.gltf",
+		"../modelfiles/Box.gltf",
 		"../shaders/dummy_shader.vert",
 		"../shaders/dummy_shader.frag",
 		"",

@@ -364,7 +364,7 @@ cmake/
 CMakeFiles/
 Debug/
 x64/
-models/
+modelfiles/
 textures/
 *.bin
 *.sln
