@@ -50,32 +50,41 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 	for (size_t i = 0; i < primitives.size(); i++) {
 		descriptorSets.at(i).init(graphicsPipeline, 1);
 
-		std::string diffuse = materials[primitives[i].materialIndex].diffuseKey;
-		if (diffuse == "") {
-			diffuse = "defaultDiffuse";
+		std::string diffuseKey = materials[primitives[i].materialIndex].diffuseKey;
+		if (diffuseKey == "") {
+			diffuseKey = "defaultDiffuse";
 		}
 		VkDescriptorImageInfo diffuseInfo = {};
-		diffuseInfo.sampler = textures.at(diffuse).imageSampler;
-		diffuseInfo.imageView = textures.at(diffuse).imageView;
+		diffuseInfo.sampler = textures.at(diffuseKey).imageSampler;
+		diffuseInfo.imageView = textures.at(diffuseKey).imageView;
 		diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-		std::string normal = materials[primitives[i].materialIndex].normalKey;
-		if (normal == "") {
-			normal = "defaultNormal";
+		std::string normalKey = materials[primitives[i].materialIndex].normalKey;
+		if (normalKey == "") {
+			normalKey = "defaultNormal";
 		}
 		VkDescriptorImageInfo normalInfo = {};
-		normalInfo.sampler = textures.at(normal).imageSampler;
-		normalInfo.imageView = textures.at(normal).imageView;
+		normalInfo.sampler = textures.at(normalKey).imageSampler;
+		normalInfo.imageView = textures.at(normalKey).imageView;
 		normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-		std::string metallicRoughness = materials[primitives[i].materialIndex].metallicRoughnessKey;
-		if (metallicRoughness == "") {
-			metallicRoughness = "defaultMetallicRoughness";
+		std::string metallicRoughnessKey = materials[primitives[i].materialIndex].metallicRoughnessKey;
+		if (metallicRoughnessKey == "") {
+			metallicRoughnessKey = "defaultMetallicRoughness";
 		}
 		VkDescriptorImageInfo metallicRoughnessInfo = {};
-		metallicRoughnessInfo.sampler = textures.at(metallicRoughness).imageSampler;
-		metallicRoughnessInfo.imageView = textures.at(metallicRoughness).imageView;
+		metallicRoughnessInfo.sampler = textures.at(metallicRoughnessKey).imageSampler;
+		metallicRoughnessInfo.imageView = textures.at(metallicRoughnessKey).imageView;
 		metallicRoughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		std::string occlusionKey = materials[primitives[i].materialIndex].occlusionKey;
+		if (occlusionKey == "") {
+			occlusionKey = "defaultOcclusion";
+		}
+		VkDescriptorImageInfo occlusionInfo = {};
+		occlusionInfo.sampler = textures.at(occlusionKey).imageSampler;
+		occlusionInfo.imageView = textures.at(occlusionKey).imageView;
+		occlusionInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 		std::vector<VkWriteDescriptorSet> writesDescriptorSet;
 
@@ -117,6 +126,19 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 		metallicRoughnessWriteDescriptorSet.pBufferInfo = nullptr;
 		metallicRoughnessWriteDescriptorSet.pTexelBufferView = nullptr;
 		writesDescriptorSet.push_back(metallicRoughnessWriteDescriptorSet);
+
+		VkWriteDescriptorSet occlusionWriteDescriptorSet = {};
+		occlusionWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		occlusionWriteDescriptorSet.pNext = nullptr;
+		occlusionWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+		occlusionWriteDescriptorSet.dstBinding = 3;
+		occlusionWriteDescriptorSet.dstArrayElement = 0;
+		occlusionWriteDescriptorSet.descriptorCount = 1;
+		occlusionWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		occlusionWriteDescriptorSet.pImageInfo = &occlusionInfo;
+		occlusionWriteDescriptorSet.pBufferInfo = nullptr;
+		occlusionWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(occlusionWriteDescriptorSet);
 
 		descriptorSets[i].update(writesDescriptorSet);
 	}

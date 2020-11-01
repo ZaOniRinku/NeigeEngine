@@ -103,7 +103,14 @@ void Renderer::init() {
 	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 	textures.emplace("defaultMetallicRoughness", defaultMetallicRoughnessImage);
 
-	Material defaultMaterial = { "defaultDiffuse", "defaultNormal", "defaultMetallicRoughness" };
+	float defaultOcclusion[4] = { 1.0, 1.0, 1.0, 0.0 };
+	Image defaultOcclusionImage;
+	ImageTools::loadColor(defaultOcclusion, &defaultOcclusionImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultOcclusionImage.mipmapLevels, &defaultOcclusionImage.allocationId);
+	ImageTools::createImageView(&defaultOcclusionImage.imageView, defaultOcclusionImage.image, 1, defaultOcclusionImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&defaultOcclusionImage.imageSampler, defaultOcclusionImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+	textures.emplace("defaultOcclusion", defaultOcclusionImage);
+
+	Material defaultMaterial = { "defaultDiffuse", "defaultNormal", "defaultMetallicRoughness", "defaultOcclusion" };
 	materials.push_back(defaultMaterial);
 
 	// Descriptors

@@ -270,6 +270,21 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 								primitiveMaterial.normalKey = normalImage->uri;
 							}
 
+							cgltf_texture_view occlusionTextureView = primitive->material->occlusion_texture;
+							cgltf_texture* occlusionTexture = occlusionTextureView.texture;
+							if (occlusionTexture != NULL) {
+								cgltf_image* occlusionImage = occlusionTexture->image;
+
+								if (textures.find(occlusionImage->uri) == textures.end()) {
+									Image image;
+									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + occlusionImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+									textures.emplace(occlusionImage->uri, image);
+								}
+								primitiveMaterial.occlusionKey = occlusionImage->uri;
+							}
+
 							materials.push_back(primitiveMaterial);
 
 							materialID = static_cast<uint64_t>(materials.size() - 1);

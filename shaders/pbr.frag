@@ -3,6 +3,7 @@
 layout(set = 1, binding = 0) uniform sampler2D colorMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
 layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessMap;
+layout(set = 1, binding = 3) uniform sampler2D occlusionMap;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -86,6 +87,7 @@ void main() {
 	vec3 normalSample = texture(normalMap, uv).xyz;
 	float metallicSample = texture(metallicRoughnessMap, uv).g;
 	float roughnessSample = texture(metallicRoughnessMap, uv).b;
+	float occlusionSample = texture(occlusionMap, uv).r;
 
 	vec3 d = vec3(colorSample);
 	vec3 n = normalSample * 2.0 - 1.0;
@@ -96,7 +98,7 @@ void main() {
 	l = normalize(-l);
 	
 	vec3 tmpColor = shade(n, v, l, vec3(1.0), d, metallicSample, roughnessSample);
-	vec3 ambient = vec3(0.03) * d;
+	vec3 ambient = vec3(0.03) * d * occlusionSample;
 	tmpColor += ambient;
 
 	tmpColor = tmpColor / (tmpColor + vec3(1.0));

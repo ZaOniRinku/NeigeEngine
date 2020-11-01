@@ -34,6 +34,7 @@ struct Material {
 	std::string diffuseKey = "";
 	std::string normalKey = "";
 	std::string metallicRoughnessKey = "";
+	std::string occlusionKey = "";
 };
 
 // Vertex
