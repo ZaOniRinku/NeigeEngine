@@ -92,7 +92,7 @@ void main() {
 	n = normalize(TBN * n);
 	vec3 v = normalize(cameraPos - fragmentPos);
 
-	vec3 l = vec3(0.0, -1.0, 0.0);
+	vec3 l = vec3(1.0, -1.0, 0.0);
 	l = normalize(-l);
 	
 	vec3 tmpColor = shade(n, v, l, vec3(1.0), d, metallicSample, roughnessSample);

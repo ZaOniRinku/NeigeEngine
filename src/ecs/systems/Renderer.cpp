@@ -82,14 +82,14 @@ void Renderer::init() {
 	fullscreenViewport.init(window->extent.width, window->extent.height);
 
 	// Default textures
-	float defaultDiffuse[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float defaultDiffuse[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	Image defaultDiffuseImage;
 	ImageTools::loadColor(defaultDiffuse, &defaultDiffuseImage.image, VK_FORMAT_R8G8B8A8_SRGB, &defaultDiffuseImage.mipmapLevels, &defaultDiffuseImage.allocationId);
 	ImageTools::createImageView(&defaultDiffuseImage.imageView, defaultDiffuseImage.image, 1, defaultDiffuseImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultDiffuseImage.imageSampler, defaultDiffuseImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 	textures.emplace("defaultDiffuse", defaultDiffuseImage);
 
-	float defaultNormal[4] = { 0.5f, 0.5f, 1.0f, 1.0f };
+	float defaultNormal[4] = { 0.5f, 0.5f, 1.0f, 0.0f };
 	Image defaultNormalImage;
 	ImageTools::loadColor(defaultNormal, &defaultNormalImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultNormalImage.mipmapLevels, &defaultNormalImage.allocationId);
 	ImageTools::createImageView(&defaultNormalImage.imageView, defaultNormalImage.image, 1, defaultNormalImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -102,6 +102,9 @@ void Renderer::init() {
 	ImageTools::createImageView(&defaultMetallicRoughnessImage.imageView, defaultMetallicRoughnessImage.image, 1, defaultMetallicRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
 	textures.emplace("defaultMetallicRoughness", defaultMetallicRoughnessImage);
+
+	Material defaultMaterial = { "defaultDiffuse", "defaultNormal", "defaultMetallicRoughness" };
+	materials.push_back(defaultMaterial);
 
 	// Descriptors
 	for (Entity entity : entities) {

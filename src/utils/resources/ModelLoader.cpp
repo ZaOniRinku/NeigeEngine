@@ -189,88 +189,94 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 						}
 
 						// Textures
-						Material primitiveMaterial;
+						uint64_t materialID = 0;
 
-						if (primitive->material->has_pbr_metallic_roughness) {
-							cgltf_pbr_metallic_roughness pbrMetallicRoughness = primitive->material->pbr_metallic_roughness;
-							cgltf_texture_view baseColorTextureView = pbrMetallicRoughness.base_color_texture;
-							cgltf_texture* baseColorTexture = baseColorTextureView.texture;
-							cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
-							if (baseColorTexture != NULL) {
-								cgltf_image* baseColorImage = baseColorTexture->image;
+						if (primitive->material != NULL) {
+							Material primitiveMaterial;
 
-								if (textures.find(baseColorImage->uri) == textures.end()) {
-									Image image;
-									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + baseColorImage->uri, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
-									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(baseColorImage->uri, image);
+							if (primitive->material->has_pbr_metallic_roughness) {
+								cgltf_pbr_metallic_roughness pbrMetallicRoughness = primitive->material->pbr_metallic_roughness;
+								cgltf_texture_view baseColorTextureView = pbrMetallicRoughness.base_color_texture;
+								cgltf_texture* baseColorTexture = baseColorTextureView.texture;
+								cgltf_float* baseColorFactor = pbrMetallicRoughness.base_color_factor;
+								if (baseColorTexture != NULL) {
+									cgltf_image* baseColorImage = baseColorTexture->image;
+
+									if (textures.find(baseColorImage->uri) == textures.end()) {
+										Image image;
+										ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + baseColorImage->uri, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
+										ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+										ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+										textures.emplace(baseColorImage->uri, image);
+									}
+									primitiveMaterial.diffuseKey = baseColorImage->uri;
 								}
-								primitiveMaterial.diffuseKey = baseColorImage->uri;
-							}
-							else if (baseColorFactor != NULL) {
-								std::string mapKey = std::to_string(baseColorFactor[0]) + std::to_string(baseColorFactor[1]) + std::to_string(baseColorFactor[2]) + std::to_string(baseColorFactor[3]);
+								else if (baseColorFactor != NULL) {
+									std::string mapKey = std::to_string(baseColorFactor[0]) + std::to_string(baseColorFactor[1]) + std::to_string(baseColorFactor[2]) + std::to_string(baseColorFactor[3]);
 
-								if (textures.find(mapKey) == textures.end()) {
-									Image image;
-									ImageTools::loadColor(baseColorFactor, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
-									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(mapKey, image);
+									if (textures.find(mapKey) == textures.end()) {
+										Image image;
+										ImageTools::loadColor(baseColorFactor, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
+										ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+										ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+										textures.emplace(mapKey, image);
+									}
+									primitiveMaterial.diffuseKey = mapKey;
 								}
-								primitiveMaterial.diffuseKey = mapKey;
+
+								cgltf_texture_view metallicRoughnessTextureView = pbrMetallicRoughness.metallic_roughness_texture;
+								cgltf_texture* metallicRoughnessTexture = metallicRoughnessTextureView.texture;
+								cgltf_float metallicFactor = pbrMetallicRoughness.metallic_factor;
+								cgltf_float roughnessFactor = pbrMetallicRoughness.roughness_factor;
+								if (metallicRoughnessTexture != NULL) {
+									cgltf_image* metallicRoughnessImage = metallicRoughnessTexture->image;
+
+									if (textures.find(metallicRoughnessImage->uri) == textures.end()) {
+										Image image;
+										ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + metallicRoughnessImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+										ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+										ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+										textures.emplace(metallicRoughnessImage->uri, image);
+									}
+									primitiveMaterial.metallicRoughnessKey = metallicRoughnessImage->uri;
+								}
+								else {
+									std::string metallicRoughnessMapKey = std::to_string(metallicFactor) + std::to_string(roughnessFactor);
+									float metallicRoughnessArray[4] = { 0.0f, metallicFactor, roughnessFactor, 1.0f };
+
+									if (textures.find(metallicRoughnessMapKey) == textures.end()) {
+										Image image;
+										ImageTools::loadColor(metallicRoughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+										ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+										ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
+										textures.emplace(metallicRoughnessMapKey, image);
+									}
+									primitiveMaterial.metallicRoughnessKey = metallicRoughnessMapKey;
+								}
 							}
 
-							cgltf_texture_view metallicRoughnessTextureView = pbrMetallicRoughness.metallic_roughness_texture;
-							cgltf_texture* metallicRoughnessTexture = metallicRoughnessTextureView.texture;
-							cgltf_float metallicFactor = pbrMetallicRoughness.metallic_factor;
-							cgltf_float roughnessFactor = pbrMetallicRoughness.roughness_factor;
-							if (metallicRoughnessTexture != NULL) {
-								cgltf_image* metallicRoughnessImage = metallicRoughnessTexture->image;
+							cgltf_texture_view normalTextureView = primitive->material->normal_texture;
+							cgltf_texture* normalTexture = normalTextureView.texture;
+							if (normalTexture != NULL) {
+								cgltf_image* normalImage = normalTexture->image;
 
-								if (textures.find(metallicRoughnessImage->uri) == textures.end()) {
+								if (textures.find(normalImage->uri) == textures.end()) {
 									Image image;
-									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + metallicRoughnessImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+									ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + normalImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(metallicRoughnessImage->uri, image);
+									textures.emplace(normalImage->uri, image);
 								}
-								primitiveMaterial.metallicRoughnessKey = metallicRoughnessImage->uri;
+								primitiveMaterial.normalKey = normalImage->uri;
 							}
-							else {
-								std::string metallicRoughnessMapKey = std::to_string(metallicFactor) + std::to_string(roughnessFactor);
-								float metallicRoughnessArray[4] = { 0.0f, metallicFactor, roughnessFactor, 1.0f };
 
-								if (textures.find(metallicRoughnessMapKey) == textures.end()) {
-									Image image;
-									ImageTools::loadColor(metallicRoughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
-									ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-									ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-									textures.emplace(metallicRoughnessMapKey, image);
-								}
-								primitiveMaterial.metallicRoughnessKey = metallicRoughnessMapKey;
-							}
+							materials.push_back(primitiveMaterial);
+
+							materialID = static_cast<uint64_t>(materials.size() - 1);
 						}
-
-						cgltf_texture_view normalTextureView = primitive->material->normal_texture;
-						cgltf_texture* normalTexture = normalTextureView.texture;
-						if (normalTexture != NULL) {
-							cgltf_image* normalImage = normalTexture->image;
-
-							if (textures.find(normalImage->uri) == textures.end()) {
-								Image image;
-								ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + normalImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
-								ImageTools::createImageView(&image.imageView, image.image, 1, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-								ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT);
-								textures.emplace(normalImage->uri, image);
-							}
-							primitiveMaterial.normalKey = normalImage->uri;
-						}
-
-						materials.push_back(primitiveMaterial);
 
 						// Primitive
-						primitives->push_back({ firstIndex, indexCount, static_cast<uint64_t>(materials.size() - 1) });
+						primitives->push_back({ firstIndex, indexCount, materialID });
 
 						vertices->insert(vertices->end(), primitiveVertices.begin(), primitiveVertices.end());
 						indices->insert(indices->end(), primitiveIndices.begin(), primitiveIndices.end());

@@ -19,8 +19,8 @@ int main(void) {
 	g.window = &w;
 	g.init();
 
-	Entity rectangle = ecs.createEntity();
-	ecs.addComponent(rectangle, Renderable{
+	Entity entity1 = ecs.createEntity();
+	ecs.addComponent(entity1, Renderable{
 		"../modelfiles/BoomBox.gltf",
 		"../shaders/pbr.vert",
 		"../shaders/pbr.frag",
@@ -29,14 +29,14 @@ int main(void) {
 		"",
 		Topology::TRIANGLE_LIST
 		});
-	ecs.addComponent(rectangle, Transform{
+	ecs.addComponent(entity1, Transform{
 		glm::vec3(5.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 90.0f, 0.0f),
 		glm::vec3(100.0f, 100.0f, 100.0f)
 		});
 
-	Entity rectangle2 = ecs.createEntity();
-	ecs.addComponent(rectangle2, Renderable{
+	Entity entity2 = ecs.createEntity();
+	ecs.addComponent(entity2, Renderable{
 		"../modelfiles/Duck2.gltf",
 		"../shaders/pbr.vert",
 		"../shaders/pbr.frag",
@@ -45,14 +45,14 @@ int main(void) {
 		"",
 		Topology::TRIANGLE_LIST
 		});
-	ecs.addComponent(rectangle2, Transform{
+	ecs.addComponent(entity2, Transform{
 		glm::vec3(5.0f, 1.0f, 2.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(0.01f, 0.01f, 0.01f)
 		});
 
-	Entity rectangle3 = ecs.createEntity();
-	ecs.addComponent(rectangle3, Renderable{
+	Entity entity3 = ecs.createEntity();
+	ecs.addComponent(entity3, Renderable{
 		"../modelfiles/DamagedHelmet.gltf",
 		"../shaders/pbr.vert",
 		"../shaders/pbr.frag",
@@ -61,8 +61,24 @@ int main(void) {
 		"",
 		Topology::TRIANGLE_LIST
 		});
-	ecs.addComponent(rectangle3, Transform{
+	ecs.addComponent(entity3, Transform{
 		glm::vec3(5.0f, 1.0f, -2.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f)
+		});
+
+	Entity entity4 = ecs.createEntity();
+	ecs.addComponent(entity4, Renderable{
+		"../modelfiles/sphere.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/pbr.frag",
+		"",
+		"",
+		"",
+		Topology::TRIANGLE_LIST
+		});
+	ecs.addComponent(entity4, Transform{
+		glm::vec3(5.0f, 1.0f, -4.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
