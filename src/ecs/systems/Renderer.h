@@ -25,7 +25,7 @@
 #include <string>
 #include <map>
 
-#define MAX_FRAMES_IN_FLIGHT 2
+#define MAX_FRAMES_IN_FLIGHT 3
 
 struct Renderer : public System {
 	Window* window;
@@ -51,7 +51,7 @@ struct Renderer : public System {
 	// Render passes
 	std::vector<Image> colorImages;
 	std::vector<Image> depthImages;
-	std::vector<RenderPass> renderPasses;
+	std::unordered_map<std::string, RenderPass> renderPasses;
 	std::vector<Framebuffer> framebuffers;
 
 	// Command buffers

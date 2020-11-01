@@ -12,6 +12,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
+	std::vector<std::string> inputVariablesNames;
 
 	if (vertexShaderPath != "") {
 		Shader shader;
@@ -44,6 +45,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
+		inputVariablesNames.insert(inputVariablesNames.end(), shader.inputVariablesNames.begin(), shader.inputVariablesNames.end());
 		for (size_t i = 0; i < shader.sets.size(); i++) {
 			bool found = false;
 			for (size_t j = 0; j < sets.size(); j++) {
@@ -270,7 +272,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 
 	// Vertex input
 	VkVertexInputBindingDescription inputBindingDescription = Vertex::getInputBindingDescription();
-	std::vector<VkVertexInputAttributeDescription> inputAttributionDescriptions = Vertex::getInputAttributeDescriptions();
+	std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions = Vertex::getInputAttributeDescriptions(inputVariablesNames);
 
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -278,8 +280,8 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	vertexInputCreateInfo.flags = 0;
 	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
 	vertexInputCreateInfo.pVertexBindingDescriptions = &inputBindingDescription;
-	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(inputAttributionDescriptions.size());
-	vertexInputCreateInfo.pVertexAttributeDescriptions = inputAttributionDescriptions.data();
+	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(inputAttributeDescriptions.size());
+	vertexInputCreateInfo.pVertexAttributeDescriptions = inputAttributeDescriptions.data();
 
 	// Assembly
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo = {};

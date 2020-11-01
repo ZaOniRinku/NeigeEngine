@@ -116,6 +116,8 @@ bool Shader::compile() {
 }
 
 void Shader::reflect() {
+	inputVariablesNames.clear();
+	inputVariablesNames.shrink_to_fit();
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 	uniqueDescriptorTypes.clear();
@@ -124,15 +126,28 @@ void Shader::reflect() {
 	SpvReflectResult result = spvReflectCreateShaderModule(spvCode.size() * sizeof(uint32_t), spvCode.data(), &spvShaderModule);
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" shader reflection failed.");
 
-	uint32_t descriptorSetCount;
-	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetCount, nullptr);
+	if (type == ShaderType::VERTEX) {
+		uint32_t inputVariablesCount;
+		result = spvReflectEnumerateInputVariables(&spvShaderModule, &inputVariablesCount, nullptr);
+		NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count input variables.");
+		std::vector<SpvReflectInterfaceVariable*> inputVariables(inputVariablesCount);
+		result = spvReflectEnumerateInputVariables(&spvShaderModule, &inputVariablesCount, inputVariables.data());
+		NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find input variables.");
+		
+		for (uint32_t i = 0; i < inputVariablesCount; i++) {
+			inputVariablesNames.push_back(inputVariables[i]->name);
+		}
+	}
+
+	uint32_t descriptorSetsCount;
+	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetsCount, nullptr);
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count descriptors sets.");
-	std::vector<SpvReflectDescriptorSet*> descriptorSets(descriptorSetCount);
-	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetCount, descriptorSets.data());
+	std::vector<SpvReflectDescriptorSet*> descriptorSets(descriptorSetsCount);
+	result = spvReflectEnumerateDescriptorSets(&spvShaderModule, &descriptorSetsCount, descriptorSets.data());
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find descriptors sets.");
 
 	// Bindings
-	for (uint32_t i = 0; i < descriptorSetCount; i++) {
+	for (uint32_t i = 0; i < descriptorSetsCount; i++) {
 		const SpvReflectDescriptorSet& reflectSet = *descriptorSets[i];
 		Set set;
 		set.set = reflectSet.set;
@@ -155,14 +170,14 @@ void Shader::reflect() {
 	}
 	
 	// Push constants
-	uint32_t pushConstantCount;
-	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantCount, nullptr);
+	uint32_t pushConstantsCount;
+	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantsCount, nullptr);
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count push constants.");
-	std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantCount);
-	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantCount, pushConstants.data());
+	std::vector<SpvReflectBlockVariable*> pushConstants(pushConstantsCount);
+	result = spvReflectEnumeratePushConstantBlocks(&spvShaderModule, &pushConstantsCount, pushConstants.data());
 	NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find push constants.");
 	
-	for (uint32_t i = 0; i < pushConstantCount; i++) {
+	for (uint32_t i = 0; i < pushConstantsCount; i++) {
 		VkPushConstantRange pushConstantRange = {};
 		pushConstantRange.offset = pushConstants[i]->offset;
 		pushConstantRange.size = pushConstants[i]->size;

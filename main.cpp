@@ -39,8 +39,8 @@ int main(void) {
 	Entity entity2 = ecs.createEntity();
 	ecs.addComponent(entity2, Renderable{
 		"../modelfiles/Duck2.gltf",
-		"../shaders/pbr.vert",
-		"../shaders/pbr.frag",
+		"../shaders/color.vert",
+		"../shaders/color.frag",
 		"",
 		"",
 		"",
@@ -104,7 +104,7 @@ int main(void) {
 	ecs.addComponent(light1, Light{
 		LightType::DIRECTIONAL,
 		glm::vec3(0.0f),
-		glm::vec3(1.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, -1.0f, 1.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f),
 		glm::vec2(0.0f)
 		});

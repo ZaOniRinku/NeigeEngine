@@ -50,36 +50,52 @@ void Renderer::init() {
 	}
 
 	// Render passes
-	std::vector<RenderPassAttachment> attachments;
-	attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
-	attachments.push_back(RenderPassAttachment(AttachmentType::SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+	{
+		std::vector<RenderPassAttachment> attachments;
+		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, swapchain.surfaceFormat.format, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+		attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+		attachments.push_back(RenderPassAttachment(AttachmentType::SWAPCHAIN, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
 
-	std::vector<SubpassDependency> dependencies;
-	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
-	RenderPass renderPass;
-	renderPass.init(attachments, dependencies);
-	renderPasses.push_back(renderPass);
+		std::vector<SubpassDependency> dependencies;
+		dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
+		RenderPass renderPass;
+		renderPass.init(attachments, dependencies);
+		renderPasses.emplace("scene", renderPass);
+	}
+
+	{
+		std::vector<RenderPassAttachment> attachments;
+		attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, physicalDevice.maxUsableSampleCount, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE));
+
+		std::vector<SubpassDependency> dependencies;
+		dependencies.push_back({ VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_DEPENDENCY_BY_REGION_BIT });
+		dependencies.push_back({ VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
+		RenderPass renderPass;
+		renderPass.init(attachments, dependencies);
+		renderPasses.emplace("shadow", renderPass);
+	}
 
 	// Framebuffers
-	Image colorAttachment;
-	ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
-	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
-	colorImages.push_back(colorAttachment);
-	Image depthAttachment;
-	ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
-	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
-	depthImages.push_back(depthAttachment);
-	std::vector<std::vector<VkImageView>> framebufferAttachments;
-	framebufferAttachments.resize(swapchainSize);
-	framebuffers.resize(swapchainSize);
-	for (size_t i = 0; i < framebufferAttachments.size(); i++) {
-		framebufferAttachments[i].push_back(colorAttachment.imageView);
-		framebufferAttachments[i].push_back(depthAttachment.imageView);
-		framebufferAttachments[i].push_back(swapchain.imageViews[i]);
-		framebuffers[i].init(&renderPasses[0], framebufferAttachments[i], window->extent.width, window->extent.height);
+	{
+		Image colorAttachment;
+		ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
+		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+		ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
+		colorImages.push_back(colorAttachment);
+		Image depthAttachment;
+		ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
+		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
+		depthImages.push_back(depthAttachment);
+		std::vector<std::vector<VkImageView>> framebufferAttachments;
+		framebufferAttachments.resize(swapchainSize);
+		framebuffers.resize(swapchainSize);
+		for (size_t i = 0; i < framebufferAttachments.size(); i++) {
+			framebufferAttachments[i].push_back(colorAttachment.imageView);
+			framebufferAttachments[i].push_back(depthAttachment.imageView);
+			framebufferAttachments[i].push_back(swapchain.imageViews[i]);
+			framebuffers[i].init(&renderPasses.at("scene"), framebufferAttachments[i], window->extent.width, window->extent.height);
+		}
 	}
 
 	// Fullscreen viewport
@@ -132,7 +148,7 @@ void Renderer::init() {
 			graphicsPipeline.tesselationEvaluationShaderPath = renderable.tesselationEvaluationShaderPath;
 			graphicsPipeline.geometryShaderPath = renderable.geometryShaderPath;
 			graphicsPipeline.topology = renderable.topology;
-			graphicsPipeline.init(true, &renderPasses[0], &fullscreenViewport);
+			graphicsPipeline.init(true, &renderPasses.at("scene"), &fullscreenViewport);
 			graphicsPipelines.emplace(mapKey, graphicsPipeline);
 		}
 
@@ -251,7 +267,7 @@ void Renderer::update() {
 			for (std::unordered_map<std::string, GraphicsPipeline>::iterator it = graphicsPipelines.begin(); it != graphicsPipelines.end(); it++) {
 				GraphicsPipeline* graphicsPipeline = &it->second;
 				graphicsPipeline->destroyPipeline();
-				graphicsPipeline->init(true, &renderPasses[0], &fullscreenViewport);
+				graphicsPipeline->init(true, &renderPasses.at("scene"), &fullscreenViewport);
 			}
 		}
 	}
@@ -351,8 +367,9 @@ void Renderer::destroy() {
 	for (CommandPool& renderingCommandPool : renderingCommandPools) {
 		renderingCommandPool.destroy();
 	}
-	for (RenderPass& renderPass : renderPasses) {
-		renderPass.destroy();
+	for (std::unordered_map<std::string, RenderPass>::iterator it = renderPasses.begin(); it != renderPasses.end(); it++) {
+		RenderPass* renderPass = &it->second;
+		renderPass->destroy();
 	}
 	for (Buffer& buffer : cameraBuffers) {
 		buffer.destroy();
@@ -472,7 +489,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	renderingCommandPools[frameInFlightIndex].reset();
 	renderingCommandBuffers[frameInFlightIndex].begin();
 
-	renderPasses[0].begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
+	renderPasses.at("scene").begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
 
 	for (Entity entity : entities) {
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
@@ -489,7 +506,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 		models.at(renderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex]);
 	}
 
-	renderPasses[0].end(&renderingCommandBuffers[frameInFlightIndex]);
+	renderPasses.at("scene").end(&renderingCommandBuffers[frameInFlightIndex]);
 
 	renderingCommandBuffers[frameInFlightIndex].end();
 }
@@ -499,24 +516,26 @@ void Renderer::createResources() {
 	swapchain.init(window, &swapchainSize);
 
 	// Framebuffers
-	Image colorAttachment;
-	ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
-	ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
-	ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
-	colorImages.push_back(colorAttachment);
-	Image depthAttachment;
-	ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
-	ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
-	ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-	depthImages.push_back(depthAttachment);
-	std::vector<std::vector<VkImageView>> framebufferAttachments;
-	framebufferAttachments.resize(swapchainSize);
-	framebuffers.resize(swapchainSize);
-	for (int i = 0; i < framebufferAttachments.size(); i++) {
-		framebufferAttachments[i].push_back(colorAttachment.imageView);
-		framebufferAttachments[i].push_back(depthAttachment.imageView);
-		framebufferAttachments[i].push_back(swapchain.imageViews[i]);
-		framebuffers[i].init(&renderPasses[0], framebufferAttachments[i], window->extent.width, window->extent.height);
+	{
+		Image colorAttachment;
+		ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
+		ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
+		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+		colorImages.push_back(colorAttachment);
+		Image depthAttachment;
+		ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
+		ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
+		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		depthImages.push_back(depthAttachment);
+		std::vector<std::vector<VkImageView>> framebufferAttachments;
+		framebufferAttachments.resize(swapchainSize);
+		framebuffers.resize(swapchainSize);
+		for (int i = 0; i < framebufferAttachments.size(); i++) {
+			framebufferAttachments[i].push_back(colorAttachment.imageView);
+			framebufferAttachments[i].push_back(depthAttachment.imageView);
+			framebufferAttachments[i].push_back(swapchain.imageViews[i]);
+			framebuffers[i].init(&renderPasses.at("scene"), framebufferAttachments[i], window->extent.width, window->extent.height);
+		}
 	}
 }
 

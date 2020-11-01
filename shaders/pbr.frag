@@ -149,5 +149,5 @@ void main() {
 	tmpColor = tmpColor / (tmpColor + vec3(1.0));
 	tmpColor = pow(tmpColor, vec3(1.0 / 2.4));
 
-	outColor = vec4(tmpColor, 1.0);
+	outColor = vec4(vec3(tmpColor), 1.0);
 }
