@@ -14,4 +14,5 @@ void Lighting::update() {
 	for (Entity entity : entities) {
 		lights.emplace(entity);
 	}
+	entities.clear();
 }
