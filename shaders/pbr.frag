@@ -85,8 +85,8 @@ vec3 shade(vec3 n, vec3 v, vec3 l, vec3 lc, vec3 diffuse, float metallic, float 
 void main() {
 	vec4 colorSample = texture(colorMap, uv);
 	vec3 normalSample = texture(normalMap, uv).xyz;
-	float metallicSample = texture(metallicRoughnessMap, uv).g;
-	float roughnessSample = texture(metallicRoughnessMap, uv).b;
+	float metallicSample = texture(metallicRoughnessMap, uv).b;
+	float roughnessSample = texture(metallicRoughnessMap, uv).g;
 	float occlusionSample = texture(occlusionMap, uv).r;
 
 	vec3 d = vec3(colorSample);

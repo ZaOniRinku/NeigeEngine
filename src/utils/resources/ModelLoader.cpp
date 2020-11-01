@@ -242,7 +242,7 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 								}
 								else {
 									std::string metallicRoughnessMapKey = std::to_string(metallicFactor) + std::to_string(roughnessFactor);
-									float metallicRoughnessArray[4] = { 0.0f, metallicFactor, roughnessFactor, 1.0f };
+									float metallicRoughnessArray[4] = { 0.0f, roughnessFactor, metallicFactor, 1.0f };
 
 									if (textures.find(metallicRoughnessMapKey) == textures.end()) {
 										Image image;
