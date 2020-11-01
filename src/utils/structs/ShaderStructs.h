@@ -22,6 +22,12 @@ enum struct Topology {
 	WIREFRAME
 };
 
+enum struct LightType {
+	DIRECTIONAL,
+	POINT,
+	SPOT
+};
+
 // Model primitive
 struct Primitive {
 	uint32_t firstIndex;
@@ -104,4 +110,17 @@ struct ObjectUniformBufferObject {
 struct CameraUniformBufferObject {
 	glm::mat4 viewProj;
 	glm::vec3 position;
+};
+
+// Lights Uniform Buffer Object
+struct LightingUniformBufferObject {
+	glm::vec4 numLights;
+	glm::vec4 dirLightsDirection[10];
+	glm::vec4 dirLightsColor[10];
+	glm::vec4 pointLightsPosition[10];
+	glm::vec4 pointLightsColor[10];
+	glm::vec4 spotLightsPosition[10];
+	glm::vec4 spotLightsDirection[10];
+	glm::vec4 spotLightsColor[10];
+	glm::vec4 spotLightsCutoffs[10];
 };

@@ -1,32 +1,30 @@
 #include "CameraControls.h"
 #include "../components/Camera.h"
-#include "../components/Transform.h"
 #include "../../inputs/Inputs.h"
 
 extern ECS ecs;
 
 void CameraControls::update(double deltaTime) {
 	for (Entity entity : entities) {
-		auto& transform = ecs.getComponent<Transform>(entity);
-		auto& camera = ecs.getComponent<Camera>(entity);
+		auto& cameraCamera = ecs.getComponent<Camera>(entity);
 
 		if (keyboardInputs.wKey == KeyState::HELD) {
-			transform.position += camera.to * static_cast<float>(speed * deltaTime);
+			cameraCamera.position += cameraCamera.to * static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.aKey == KeyState::HELD) {
-			transform.position -= glm::normalize(glm::cross(camera.to, glm::vec3(0.0f, 1.0f, 0.0f))) * static_cast<float>(speed * deltaTime);
+			cameraCamera.position -= glm::normalize(glm::cross(cameraCamera.to, glm::vec3(0.0f, 1.0f, 0.0f))) * static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.sKey == KeyState::HELD) {
-			transform.position -= camera.to * static_cast<float>(speed * deltaTime);
+			cameraCamera.position -= cameraCamera.to * static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.dKey == KeyState::HELD) {
-			transform.position += glm::normalize(glm::cross(camera.to, glm::vec3(0.0f, 1.0f, 0.0f))) * static_cast<float>(speed * deltaTime);
+			cameraCamera.position += glm::normalize(glm::cross(cameraCamera.to, glm::vec3(0.0f, 1.0f, 0.0f))) * static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.spaceKey == KeyState::HELD) {
-			transform.position.y += static_cast<float>(speed * deltaTime);
+			cameraCamera.position.y += static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.shiftKey == KeyState::HELD) {
-			transform.position.y -= static_cast<float>(speed * deltaTime);
+			cameraCamera.position.y -= static_cast<float>(speed * deltaTime);
 		}
 		if (keyboardInputs.leftKey == KeyState::HELD) {
 			yaw -= static_cast<float>(sensitivity * deltaTime * 100.0f);
@@ -44,9 +42,9 @@ void CameraControls::update(double deltaTime) {
 			pitch += static_cast<float>(sensitivity * deltaTime * 100.0f);
 			pitch = std::clamp(pitch, -89.0f, 89.0f);
 		}
-		camera.to.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-		camera.to.y = -sin(glm::radians(pitch));
-		camera.to.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-		camera.to = glm::normalize(camera.to);
+		cameraCamera.to.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		cameraCamera.to.y = -sin(glm::radians(pitch));
+		cameraCamera.to.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+		cameraCamera.to = glm::normalize(cameraCamera.to);
 	}
 }

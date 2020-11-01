@@ -58,7 +58,6 @@ bool Shader::compile() {
 	spvCode.clear();
 	spvCode.shrink_to_fit();
 
-	const TBuiltInResource DefaultTBuiltInResource = {};
 	std::string code = FileTools::readAscii(file);
 	const char* codeString = code.c_str();
 	EShLanguage shaderType = shaderTypeToGlslangShaderType();
@@ -71,8 +70,6 @@ bool Shader::compile() {
 	shader.setEnvInput(glslang::EShSourceGlsl, shaderType, glslang::EShClientVulkan, clientInputSemanticsVersion);
 	shader.setEnvClient(glslang::EShClientVulkan, vulkanClientVersion);
 	shader.setEnvTarget(glslang::EShTargetSpv, languageVersion);
-	TBuiltInResource resource = DefaultTBuiltInResource;
-	resource.maxDrawBuffers = 32;
 	EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
 	int defaultVersion = 450;
 
@@ -80,7 +77,7 @@ bool Shader::compile() {
 	DirStackFileIncluder includer;
 	includer.pushExternalLocalDirectory(file);
 	std::string preprocess;
-	if (!shader.preprocess(&resource, defaultVersion, ENoProfile, false, false, messages, &preprocess, includer)) {
+	if (!shader.preprocess(&defaultTBuiltInResource, defaultVersion, ENoProfile, false, false, messages, &preprocess, includer)) {
 		NEIGE_SHADER_ERROR("\"" + file + "\" shader preprocessing failed.\n" + "\"" + shader.getInfoLog() + "\n" + shader.getInfoDebugLog());
 		if (module != VK_NULL_HANDLE) {
 			return false;
@@ -91,7 +88,7 @@ bool Shader::compile() {
 	// Parse
 	const char* preprocessString = preprocess.c_str();
 	shader.setStrings(&preprocessString, 1);
-	if (!shader.parse(&resource, defaultVersion, false, messages)) {
+	if (!shader.parse(&defaultTBuiltInResource, defaultVersion, false, messages)) {
 		NEIGE_SHADER_ERROR("\"" + file + "\" shader parsing failed.\n" + "\"" + shader.getInfoLog() + "\n" + shader.getInfoDebugLog());
 		if (module != VK_NULL_HANDLE) {
 			return false;

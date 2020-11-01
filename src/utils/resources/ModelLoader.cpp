@@ -2,6 +2,7 @@
 #define CGLTF_IMPLEMENTATION
 #include "../../external/cgltf/cgltf.h"
 #include "../../graphics/resources/RendererResources.h"
+#include "../../graphics/resources/ShaderResources.h"
 
 void ModelLoader::load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Primitive>* primitives) {
 	std::string extension = FileTools::extension(filePath);

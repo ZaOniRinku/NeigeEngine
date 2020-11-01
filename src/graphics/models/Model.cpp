@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "../resources/RendererResources.h"
+#include "../resources/ShaderResources.h"
 
 void Model::init(std::string filePath) {
 	std::vector<Vertex> vertices;

@@ -1,5 +1,6 @@
 #include "GraphicsPipeline.h"
 #include "../resources/RendererResources.h"
+#include "../resources/ShaderResources.h"
 
 void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse) {
 	viewport = viewportToUse;
@@ -212,6 +213,13 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	}
 
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
+
+	// Sort sets
+	std::sort(sets.begin(), sets.end(), [](Set a, Set b) { return a.set < b.set; });
+	for (size_t i = 0; i < sets.size(); i++) {
+		// Sort bindings
+		std::sort(sets[i].bindings.begin(), sets[i].bindings.end(), [](VkDescriptorSetLayoutBinding a, VkDescriptorSetLayoutBinding b) { return a.binding < b.binding; });
+	}
 
 	// Descriptor set layouts
 	descriptorSetLayouts.resize(sets.size());

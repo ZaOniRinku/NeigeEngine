@@ -5,6 +5,7 @@
 #include "../../../external/glm/glm/gtc/matrix_transform.hpp"
 
 struct Camera {
+	glm::vec3 position;
 	glm::vec3 to;
 	glm::mat4 projection;
 

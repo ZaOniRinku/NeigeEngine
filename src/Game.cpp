@@ -7,6 +7,7 @@ void Game::init() {
 	ecs.registerComponent<Transform>();
 	ecs.registerComponent<Camera>();
 	ecs.registerComponent<Renderable>();
+	ecs.registerComponent<Light>();
 
 	// Register systems
 	renderer = ecs.registerSystem<Renderer>();
@@ -16,9 +17,13 @@ void Game::init() {
 	ecs.setSystemComponents<Renderer>(rendererMask);
 	renderer->window = window;
 
+	lighting = ecs.registerSystem<Lighting>();
+	ComponentMask lightingMask;
+	lightingMask.set(ecs.getComponentId<Light>());
+	ecs.setSystemComponents<Lighting>(lightingMask);
+
 	cameraControls = ecs.registerSystem<CameraControls>();
 	ComponentMask cameraControlsMask;
-	cameraControlsMask.set(ecs.getComponentId<Transform>());
 	cameraControlsMask.set(ecs.getComponentId<Camera>());
 	ecs.setSystemComponents<CameraControls>(cameraControlsMask);
 }
@@ -34,6 +39,8 @@ void Game::launch() {
 		double deltaTime = currentTime - lastFrame;
 
 		cameraControls->update(deltaTime);
+
+		lighting->update();
 
 		renderer->update();
 

@@ -1,7 +1,9 @@
 #include "Renderer.h"
 #include "../../graphics/resources/RendererResources.h"
+#include "../../graphics/resources/ShaderResources.h"
 #include "../../inputs/Inputs.h"
 #include "../components/Transform.h"
+#include "../components/Light.h"
 #include "../components/Camera.h"
 #include "../components/Renderable.h"
 
@@ -31,18 +33,20 @@ void Renderer::init() {
 
 	// Camera
 	camera = ecs.createEntity();
-	ecs.addComponent(camera, Transform{
-		glm::vec3(0.0f),
-		glm::vec3(0.0f),
-		glm::vec3(0.0f)
-		});
 	ecs.addComponent(camera, Camera{
+		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f)
 		});
 	cameraBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	for (Buffer& buffer : cameraBuffers) {
 		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(CameraUniformBufferObject));
+	}
+
+	// Lights
+	lightingBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	for (Buffer& buffer : lightingBuffers) {
+		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(LightingUniformBufferObject));
 	}
 
 	// Render passes
@@ -156,6 +160,11 @@ void Renderer::init() {
 				cameraInfo.offset = 0;
 				cameraInfo.range = sizeof(CameraUniformBufferObject);
 
+				VkDescriptorBufferInfo lightingInfo = {};
+				lightingInfo.buffer = lightingBuffers.at(i).buffer;
+				lightingInfo.offset = 0;
+				lightingInfo.range = sizeof(LightingUniformBufferObject);
+
 				std::vector<VkWriteDescriptorSet> writesDescriptorSet;
 
 				VkWriteDescriptorSet objectWriteDescriptorSet = {};
@@ -183,6 +192,19 @@ void Renderer::init() {
 				cameraWriteDescriptorSet.pBufferInfo = &cameraInfo;
 				cameraWriteDescriptorSet.pTexelBufferView = nullptr;
 				writesDescriptorSet.push_back(cameraWriteDescriptorSet);
+
+				VkWriteDescriptorSet lightingWriteDescriptorSet = {};
+				lightingWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				lightingWriteDescriptorSet.pNext = nullptr;
+				lightingWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+				lightingWriteDescriptorSet.dstBinding = 2;
+				lightingWriteDescriptorSet.dstArrayElement = 0;
+				lightingWriteDescriptorSet.descriptorCount = 1;
+				lightingWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				lightingWriteDescriptorSet.pImageInfo = nullptr;
+				lightingWriteDescriptorSet.pBufferInfo = &lightingInfo;
+				lightingWriteDescriptorSet.pTexelBufferView = nullptr;
+				writesDescriptorSet.push_back(lightingWriteDescriptorSet);
 
 				descriptorSets[i].update(writesDescriptorSet);
 			}
@@ -335,6 +357,9 @@ void Renderer::destroy() {
 	for (Buffer& buffer : cameraBuffers) {
 		buffer.destroy();
 	}
+	for (Buffer& buffer : lightingBuffers) {
+		buffer.destroy();
+	}
 	for (std::unordered_map<Entity, std::vector<Buffer>>::iterator it = entityBuffers.begin(); it != entityBuffers.end(); it++) {
 		for (Buffer& buffer : it->second) {
 			buffer.destroy();
@@ -374,20 +399,55 @@ void Renderer::destroy() {
 void Renderer::updateData(uint32_t frameInFlightIndex) {
 	void* data;
 
-	const auto& cameraTransform = ecs.getComponent<Transform>(camera);
+	// Camera
 	const auto& cameraCamera = ecs.getComponent<Camera>(camera);
 
 	CameraUniformBufferObject cubo = {};
-	glm::mat4 view = Camera::createLookAtView(cameraTransform.position, cameraTransform.position + cameraCamera.to, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = Camera::createLookAtView(cameraCamera.position, cameraCamera.position + cameraCamera.to, glm::vec3(0.0f, 1.0f, 0.0f));
 	cubo.viewProj = cameraCamera.projection * view;
-	cubo.position = cameraTransform.position;
+	cubo.position = cameraCamera.position;
 
 	cameraBuffers.at(frameInFlightIndex).map(0, sizeof(CameraUniformBufferObject), &data);
 	memcpy(data, &cubo, sizeof(CameraUniformBufferObject));
 	cameraBuffers.at(frameInFlightIndex).unmap();
 
+	// Lights
+	int dirLightCount = 0;
+	int pointLightCount = 0;
+	int spotLightCount = 0;
+	LightingUniformBufferObject lubo = {};
+	for (Entity entity : lights) {
+		auto const& lightLight = ecs.getComponent<Light>(entity);
+
+		if (lightLight.type == LightType::DIRECTIONAL) {
+			lubo.numLights.x += 1.0f;
+			lubo.dirLightsDirection[dirLightCount] = glm::vec4(lightLight.direction, 0.0f);
+			lubo.dirLightsColor[dirLightCount] = glm::vec4(lightLight.color, 0.0f);
+			dirLightCount++;
+		}
+		else if (lightLight.type == LightType::POINT) {
+			lubo.numLights.y += 1.0f;
+			lubo.pointLightsPosition[pointLightCount] = glm::vec4(lightLight.position, 0.0f);
+			lubo.pointLightsColor[pointLightCount] = glm::vec4(lightLight.color, 0.0f);
+			pointLightCount++;
+		}
+		else if (lightLight.type == LightType::SPOT) {
+			lubo.numLights.z += 1.0f;
+			lubo.spotLightsPosition[spotLightCount] = glm::vec4(lightLight.position, 0.0f);
+			lubo.spotLightsDirection[spotLightCount] = glm::vec4(lightLight.direction, 0.0f);
+			lubo.spotLightsColor[spotLightCount] = glm::vec4(lightLight.color, 0.0f);
+			lubo.spotLightsCutoffs[spotLightCount] = glm::vec4(glm::radians(lightLight.cutoffs.x), glm::radians(lightLight.cutoffs.y), 0.0f, 0.0f);
+			spotLightCount++;
+		}
+	}
+
+	lightingBuffers.at(frameInFlightIndex).map(0, sizeof(LightingUniformBufferObject), &data);
+	memcpy(data, &lubo, sizeof(LightingUniformBufferObject));
+	lightingBuffers.at(frameInFlightIndex).unmap();
+
+	// Renderables
 	for (Entity entity : entities) {
-		const auto& objectTransform = ecs.getComponent<Transform>(entity);
+		auto const& objectTransform = ecs.getComponent<Transform>(entity);
 		auto const& renderable = ecs.getComponent<Renderable>(entity);
 
 		std::string mapKey = renderable.vertexShaderPath + renderable.fragmentShaderPath + renderable.tesselationControlShaderPath + renderable.tesselationEvaluationShaderPath + renderable.geometryShaderPath + std::to_string(static_cast<int>(renderable.topology));

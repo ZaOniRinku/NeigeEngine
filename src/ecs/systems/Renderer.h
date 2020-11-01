@@ -34,6 +34,9 @@ struct Renderer : public System {
 	Entity camera;
 	std::vector<Buffer> cameraBuffers;
 
+	// Lights
+	std::vector<Buffer> lightingBuffers;
+
 	// Sync
 	std::vector<Fence> fences;
 	std::vector<Semaphore> IAsemaphores;

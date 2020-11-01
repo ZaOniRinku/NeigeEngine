@@ -1,5 +1,21 @@
 #version 450
 
+#define MAX_DIR_LIGHTS 10
+#define MAX_POINT_LIGHTS 10
+#define MAX_SPOT_LIGHTS 10
+
+layout(set = 0, binding = 2) uniform Lighting {
+	vec3 numLights;
+	vec3 dirLightsDirection[MAX_DIR_LIGHTS];
+	vec3 dirLightsColor[MAX_DIR_LIGHTS];
+	vec3 pointLightsPosition[MAX_POINT_LIGHTS];
+	vec3 pointLightsColor[MAX_POINT_LIGHTS];
+	vec3 spotLightsPosition[MAX_SPOT_LIGHTS];
+	vec3 spotLightsDirection[MAX_SPOT_LIGHTS];
+	vec3 spotLightsColor[MAX_SPOT_LIGHTS];
+	vec2 spotLightsCutoffs[MAX_SPOT_LIGHTS];
+} lights;
+
 layout(set = 1, binding = 0) uniform sampler2D colorMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
 layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessMap;
@@ -94,10 +110,39 @@ void main() {
 	n = normalize(TBN * n);
 	vec3 v = normalize(cameraPos - fragmentPos);
 
-	vec3 l = vec3(1.0, -1.0, 0.0);
-	l = normalize(-l);
+	vec3 l;
+
+	vec3 tmpColor = vec3(0.0);
+	int numDirLights = int(lights.numLights.x);
+	int numPointLights = int(lights.numLights.y);
+	int numSpotLights = int(lights.numLights.z);
 	
-	vec3 tmpColor = shade(n, v, l, vec3(1.0), d, metallicSample, roughnessSample);
+	for (int i = 0; i < numDirLights; i++) {
+		l = normalize(-lights.dirLightsDirection[i]);
+		tmpColor += shade(n, v, l, lights.dirLightsColor[i], d, metallicSample, roughnessSample);
+	}
+
+	for (int i = 0; i < numPointLights; i++) {
+		l = normalize(lights.pointLightsPosition[i] - fragmentPos);
+		float distance = length(lights.pointLightsPosition[i] - fragmentPos);
+		float attenuation = 1.0 / (distance * distance);
+		vec3 radiance = lights.pointLightsColor[i] * attenuation;
+		tmpColor += shade(n, v, l, radiance, d, metallicSample, roughnessSample);
+	}
+
+	for (int i = 0; i < numSpotLights; i++) {
+		l = normalize(lights.spotLightsPosition[i] - fragmentPos);
+		float theta = dot(l, normalize(-lights.spotLightsDirection[i]));
+		if (theta > lights.spotLightsCutoffs[i].x) {
+			tmpColor += shade(n, v, l, lights.spotLightsColor[i], d, metallicSample, roughnessSample);
+		}
+		else if (theta > lights.spotLightsCutoffs[i].y) {
+			float epsilon = lights.spotLightsCutoffs[i].x - lights.spotLightsCutoffs[i].y;
+			float intensity = clamp((theta - lights.spotLightsCutoffs[i].y) / epsilon, 0.0, 1.0);
+			tmpColor += shade(n, v, l, lights.spotLightsColor[i] * intensity, d * intensity, metallicSample, roughnessSample);
+		}
+	}
+
 	vec3 ambient = vec3(0.03) * d * occlusionSample;
 	tmpColor += ambient;
 
