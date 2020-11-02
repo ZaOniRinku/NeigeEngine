@@ -13,9 +13,9 @@ struct Camera {
 		return glm::lookAt(eye, center, up);
 	}
 
-	static glm::mat4 createPerspectiveProjection(float FOV, float aspectRatio, float nearPlane, float farPlane) {
+	static glm::mat4 createPerspectiveProjection(float FOV, float aspectRatio, float nearPlane, float farPlane, bool reverse) {
 		glm::mat4 projection = glm::perspective(glm::radians(FOV), aspectRatio, nearPlane, farPlane);
-		projection[1][1] *= -1;
+		projection[1][1] *= reverse ? -1 : 1;
 		return projection;
 	}
 

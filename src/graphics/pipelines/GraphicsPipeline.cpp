@@ -2,9 +2,7 @@
 #include "../resources/RendererResources.h"
 #include "../resources/ShaderResources.h"
 
-void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse) {
-	viewport = viewportToUse;
-
+void GraphicsPipeline::init() {
 	sets.clear();
 	sets.shrink_to_fit();
 	pushConstantRanges.clear();
@@ -312,7 +310,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	multisampleCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisampleCreateInfo.pNext = nullptr;
 	multisampleCreateInfo.flags = 0;
-	multisampleCreateInfo.rasterizationSamples = physicalDevice.maxUsableSampleCount;
+	multisampleCreateInfo.rasterizationSamples = multiSample ? physicalDevice.maxUsableSampleCount : VK_SAMPLE_COUNT_1_BIT;
 	multisampleCreateInfo.sampleShadingEnable = VK_TRUE;
 	multisampleCreateInfo.minSampleShading = 0.1f;
 	multisampleCreateInfo.pSampleMask = nullptr;
@@ -335,33 +333,31 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	depthStencilCreateInfo.maxDepthBounds = 1.0f;
 
 	// Color blend
+	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+	colorBlendAttachment.blendEnable = colorBlend ? VK_TRUE : VK_FALSE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.colorWriteMask = { VK_COLOR_COMPONENT_R_BIT |
+		VK_COLOR_COMPONENT_G_BIT |
+		VK_COLOR_COMPONENT_B_BIT |
+		VK_COLOR_COMPONENT_A_BIT };
+
 	VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo = {};
 	colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	if (colorBlend) {
-		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-		colorBlendAttachment.blendEnable = VK_TRUE;
-		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachment.colorWriteMask = { VK_COLOR_COMPONENT_R_BIT |
-			VK_COLOR_COMPONENT_G_BIT |
-			VK_COLOR_COMPONENT_B_BIT |
-			VK_COLOR_COMPONENT_A_BIT };
-
-		colorBlendCreateInfo.pNext = nullptr;
-		colorBlendCreateInfo.flags = 0;
-		colorBlendCreateInfo.logicOpEnable = VK_FALSE;
-		colorBlendCreateInfo.logicOp = VK_LOGIC_OP_COPY;
-		colorBlendCreateInfo.attachmentCount = 1;
-		colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
-		colorBlendCreateInfo.blendConstants[0] = 0.0f;
-		colorBlendCreateInfo.blendConstants[1] = 0.0f;
-		colorBlendCreateInfo.blendConstants[2] = 0.0f;
-		colorBlendCreateInfo.blendConstants[3] = 0.0f;
-	}
+	colorBlendCreateInfo.pNext = nullptr;
+	colorBlendCreateInfo.flags = 0;
+	colorBlendCreateInfo.logicOpEnable = VK_FALSE;
+	colorBlendCreateInfo.logicOp = VK_LOGIC_OP_COPY;
+	colorBlendCreateInfo.attachmentCount = 1;
+	colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
+	colorBlendCreateInfo.blendConstants[0] = 0.0f;
+	colorBlendCreateInfo.blendConstants[1] = 0.0f;
+	colorBlendCreateInfo.blendConstants[2] = 0.0f;
+	colorBlendCreateInfo.blendConstants[3] = 0.0f;
 
 	// Dynamic states
 	VkPipelineDynamicStateCreateInfo dynamicCreateInfo = {};
@@ -386,7 +382,7 @@ void GraphicsPipeline::init(bool colorBlend, RenderPass* renderPass, Viewport* v
 	graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
 	graphicsPipelineCreateInfo.pMultisampleState = &multisampleCreateInfo;
 	graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilCreateInfo;
-	graphicsPipelineCreateInfo.pColorBlendState = colorBlend ? &colorBlendCreateInfo : nullptr;
+	graphicsPipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;
 	graphicsPipelineCreateInfo.pDynamicState = &dynamicCreateInfo;
 	graphicsPipelineCreateInfo.layout = pipelineLayout;
 	graphicsPipelineCreateInfo.renderPass = renderPass->renderPass;
@@ -414,6 +410,10 @@ void GraphicsPipeline::bind(CommandBuffer* commandBuffer) {
 	vkCmdBindPipeline(commandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	viewport->setViewport(commandBuffer);
 	viewport->setScissor(commandBuffer);
+}
+
+void GraphicsPipeline::pushConstant(CommandBuffer* commandBuffer, VkShaderStageFlags stages, uint32_t offset, uint32_t size, const void* data) {
+	vkCmdPushConstants(commandBuffer->commandBuffer, pipelineLayout, stages, offset, size, data);
 }
 
 void GraphicsPipeline::destroyPipeline() {

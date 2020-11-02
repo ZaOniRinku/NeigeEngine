@@ -17,5 +17,6 @@ struct RenderPassAttachment {
 		VkAttachmentLoadOp loadOp,
 		VkAttachmentStoreOp storeOp,
 		VkAttachmentLoadOp stencilLoadOp,
-		VkAttachmentStoreOp stencilStoreOp);
+		VkAttachmentStoreOp stencilStoreOp,
+		VkImageLayout finalLayout);
 };

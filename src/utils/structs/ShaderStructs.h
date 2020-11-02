@@ -5,6 +5,10 @@
 #include "../../external/glm/glm/glm.hpp"
 #include "../NeigeDefines.h"
 
+#define MAX_DIR_LIGHTS 10
+#define MAX_POINT_LIGHTS 10
+#define MAX_SPOT_LIGHTS 10
+
 enum struct ShaderType {
 	VERTEX,
 	FRAGMENT,
@@ -124,12 +128,19 @@ struct CameraUniformBufferObject {
 // Lights Uniform Buffer Object
 struct LightingUniformBufferObject {
 	glm::vec4 numLights;
-	glm::vec4 dirLightsDirection[10];
-	glm::vec4 dirLightsColor[10];
-	glm::vec4 pointLightsPosition[10];
-	glm::vec4 pointLightsColor[10];
-	glm::vec4 spotLightsPosition[10];
-	glm::vec4 spotLightsDirection[10];
-	glm::vec4 spotLightsColor[10];
-	glm::vec4 spotLightsCutoffs[10];
+	glm::vec4 dirLightsDirection[MAX_DIR_LIGHTS];
+	glm::vec4 dirLightsColor[MAX_DIR_LIGHTS];
+	glm::vec4 pointLightsPosition[MAX_POINT_LIGHTS];
+	glm::vec4 pointLightsColor[MAX_POINT_LIGHTS];
+	glm::vec4 spotLightsPosition[MAX_SPOT_LIGHTS];
+	glm::vec4 spotLightsDirection[MAX_SPOT_LIGHTS];
+	glm::vec4 spotLightsColor[MAX_SPOT_LIGHTS];
+	glm::vec4 spotLightsCutoffs[MAX_SPOT_LIGHTS];
+};
+
+// Shadow Uniform Buffer Object
+struct ShadowUniformBufferObject {
+	glm::vec4 numLights;
+	glm::mat4 dirLightSpaces[MAX_DIR_LIGHTS];
+	glm::mat4 spotLightSpaces[MAX_SPOT_LIGHTS];
 };

@@ -19,14 +19,18 @@ struct GraphicsPipeline {
 	std::string tesselationControlShaderPath;
 	std::string tesselationEvaluationShaderPath;
 	std::string geometryShaderPath;
-	std::vector<Set> sets;
-	std::vector<VkPushConstantRange> pushConstantRanges;
+	RenderPass* renderPass;
 	Viewport* viewport;
 	Topology topology;
+	bool colorBlend = true;
+	bool multiSample = true;
+	std::vector<Set> sets;
+	std::vector<VkPushConstantRange> pushConstantRanges;
 
-	void init(bool colorBlend, RenderPass* renderPass, Viewport* viewportToUse);
+	void init();
 	void destroy();
 	void bind(CommandBuffer* commandBuffer);
+	void pushConstant(CommandBuffer* commandBuffer, VkShaderStageFlags stages, uint32_t offset, uint32_t size, const void* data);
 	void destroyPipeline();
 	VkPrimitiveTopology topologyToVkTopology();
 };

@@ -17,6 +17,6 @@ struct Model {
 
 	void init(std::string filePath);
 	void destroy();
-	void draw(CommandBuffer* commandBuffer);
+	void draw(CommandBuffer* commandBuffer, bool bindTextures);
 	void createDescriptorSets(GraphicsPipeline* graphicsPipeline);
 };

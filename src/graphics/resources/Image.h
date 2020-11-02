@@ -23,6 +23,7 @@ struct Image {
 		VkFilter filter,
 		VkImageAspectFlags imageViewAspectFlags,
 		VkSamplerAddressMode imageViewAddressMode,
-		VkMemoryPropertyFlags imageMemoryProperties);
+		VkMemoryPropertyFlags imageMemoryProperties,
+		VkBorderColor borderColor);
 	void destroy();
 };

@@ -27,6 +27,9 @@
 
 #define MAX_FRAMES_IN_FLIGHT 3
 
+#define SHADOWMAP_WIDTH 2048
+#define SHADOWMAP_HEIGHT 2048
+
 struct Renderer : public System {
 	Window* window;
 
@@ -37,6 +40,10 @@ struct Renderer : public System {
 	// Lights
 	std::vector<Buffer> lightingBuffers;
 
+	// Shadow
+	std::vector<Buffer> shadowBuffers;
+	Image defaultShadow;
+
 	// Sync
 	std::vector<Fence> fences;
 	std::vector<Semaphore> IAsemaphores;
@@ -44,15 +51,20 @@ struct Renderer : public System {
 
 	// Pipelines
 	Viewport fullscreenViewport;
+	Viewport shadowViewport;
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
+	GraphicsPipeline shadowGraphicsPipeline;
 	std::unordered_map<Entity, std::vector<DescriptorSet>> entityDescriptorSets;
+	std::unordered_map<Entity, std::vector<DescriptorSet>> entityShadowDescriptorSets;
 	std::unordered_map<Entity, std::vector<Buffer>> entityBuffers;
 
 	// Render passes
 	std::vector<Image> colorImages;
 	std::vector<Image> depthImages;
+	std::vector<Image> shadowImages;
 	std::unordered_map<std::string, RenderPass> renderPasses;
 	std::vector<Framebuffer> framebuffers;
+	std::vector<std::vector<Framebuffer>> shadowFramebuffers;
 
 	// Command buffers
 	std::vector<CommandPool> renderingCommandPools;

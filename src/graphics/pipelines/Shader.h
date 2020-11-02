@@ -16,8 +16,8 @@ struct Shader {
 	std::string file;
 	ShaderType type;
 	std::vector<uint32_t> spvCode;
-    std::vector<std::string> inputVariablesNames;
 	std::vector<Set> sets;
+	std::vector<std::string> inputVariablesNames;
 	std::vector<ShaderType> layoutBindingsShaderTypes;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;

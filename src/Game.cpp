@@ -30,6 +30,7 @@ void Game::init() {
 
 void Game::launch() {
 	window->init();
+	lighting->init();
 	renderer->init();
 
 	while (!window->windowGotClosed()) {

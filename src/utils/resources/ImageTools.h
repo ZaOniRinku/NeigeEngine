@@ -28,7 +28,8 @@ struct ImageTools {
 	static void createImageSampler(VkSampler* sampler,
 		uint32_t mipLevels,
 		VkFilter filter,
-		VkSamplerAddressMode addressMode);
+		VkSamplerAddressMode addressMode,
+		VkBorderColor borderColor);
 	static void loadImage(const std::string& filePath,
 		VkImage* imageDestination,
 		VkFormat format,

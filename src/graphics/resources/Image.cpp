@@ -12,11 +12,12 @@ void Image::init(uint32_t arrayLayers,
 	VkFilter filter,
 	VkImageAspectFlags imageViewAspectFlags,
 	VkSamplerAddressMode imageViewAddressMode,
-	VkMemoryPropertyFlags imageMemoryProperties) {
+	VkMemoryPropertyFlags imageMemoryProperties,
+	VkBorderColor borderColor) {
 	ImageTools::createImage(&image, arrayLayers, imageWidth, imageHeight, mipLevels, msaaSamples, format, imageUsage, imageMemoryProperties, &allocationId);
 	VkImageViewType imageViewType = arrayLayers == 6 ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
 	ImageTools::createImageView(&imageView, image, arrayLayers, mipLevels, imageViewType, format, imageViewAspectFlags);
-	ImageTools::createImageSampler(&imageSampler, mipLevels, filter, imageViewAddressMode);
+	ImageTools::createImageSampler(&imageSampler, mipLevels, filter, imageViewAddressMode, borderColor);
 	width = imageWidth;
 	height = imageHeight;
 	mipmapLevels = mipLevels;

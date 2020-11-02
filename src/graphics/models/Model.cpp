@@ -36,12 +36,14 @@ void Model::destroy() {
 	indexBuffer.destroy();
 }
 
-void Model::draw(CommandBuffer* commandBuffer) {
+void Model::draw(CommandBuffer* commandBuffer, bool bindTextures) {
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(commandBuffer->commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 	vkCmdBindIndexBuffer(commandBuffer->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	for (size_t i = 0; i < primitives.size(); i++) {
-		descriptorSets.at(i).bind(commandBuffer, 1);
+		if (bindTextures) {
+			descriptorSets.at(i).bind(commandBuffer, 1);
+		}
 		vkCmdDrawIndexed(commandBuffer->commandBuffer, primitives[i].indexCount, 1, primitives[i].firstIndex, 0, 0);
 	}
 }
