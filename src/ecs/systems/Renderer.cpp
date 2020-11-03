@@ -201,6 +201,7 @@ void Renderer::init() {
 			graphicsPipeline.renderPass = &renderPasses.at("scene");
 			graphicsPipeline.viewport = &fullscreenViewport;
 			graphicsPipeline.topology = objectRenderable.topology;
+			graphicsPipeline.colorBlend = false;
 			graphicsPipeline.init();
 			graphicsPipelines.emplace(mapKey, graphicsPipeline);
 		}
@@ -675,6 +676,8 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 }
 
 void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex) {
+	currentPipeline = "";
+
 	RenderPass* sceneRenderPass = &renderPasses.at("scene");
 	RenderPass* shadowRenderPass = &renderPasses.at("shadow");
 
@@ -713,7 +716,11 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 		std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
 		GraphicsPipeline* graphicsPipeline = &graphicsPipelines.at(mapKey);
 
-		graphicsPipeline->bind(&renderingCommandBuffers[frameInFlightIndex]);
+		if (currentPipeline != mapKey) {
+			graphicsPipeline->bind(&renderingCommandBuffers[frameInFlightIndex]);
+
+			currentPipeline = mapKey;
+		}
 
 		if (graphicsPipeline->sets.size() != 0) {
 			entityDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);

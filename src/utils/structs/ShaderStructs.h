@@ -32,13 +32,6 @@ enum struct LightType {
 	SPOT
 };
 
-// Model primitive
-struct Primitive {
-	uint32_t firstIndex;
-	uint32_t indexCount;
-	uint64_t materialIndex;
-};
-
 // Material
 struct Material {
 	std::string diffuseKey = "";

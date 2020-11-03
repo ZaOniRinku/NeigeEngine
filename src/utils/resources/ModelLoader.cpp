@@ -4,32 +4,80 @@
 #include "../../graphics/resources/RendererResources.h"
 #include "../../graphics/resources/ShaderResources.h"
 
-void ModelLoader::load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Primitive>* primitives) {
+void ModelLoader::load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes) {
 	std::string extension = FileTools::extension(filePath);
 	if (extension == "gltf" || extension == "glb") {
-		loadglTF(filePath, vertices, indices, primitives);
+		loadglTF(filePath, vertices, indices, meshes);
 	}
 	else {
 		NEIGE_ERROR("\"." + extension + "\" model extension not supported.");
 	}
 }
 
-void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Primitive>* primitives) {
+void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes) {
 	cgltf_options options = {};
 	cgltf_data* data = NULL;
 	cgltf_result result = cgltf_parse_file(&options, filePath.c_str(), &data);
 	if (result == cgltf_result_success) {
 		result = cgltf_load_buffers(&options, data, filePath.c_str());
+
 		if (result != cgltf_result_success) {
 			NEIGE_ERROR("Cannot load buffers for model file \"" + filePath + "\".");
 		}
 
-		uint32_t firstIndex = 0;
-		uint32_t indexCount = 0;
 		if (result == cgltf_result_success) {
+			uint32_t indexOffset = 0;
+			int32_t modelVertexOffset = 0;
+
 			for (size_t i = 0; i < data->nodes_count; i++) {
-				if (data->nodes[i].mesh != NULL) {
-					cgltf_mesh* mesh = data->nodes[i].mesh;
+				cgltf_node* node = &data->nodes[i];
+
+				if (node->mesh != NULL) {
+					cgltf_mesh* mesh = node->mesh;
+
+					glm::mat4 meshMatrix = glm::mat4(1.0f);
+					if (node->has_matrix) {
+						cgltf_float* matrix = node->matrix;
+						meshMatrix = glm::transpose(glm::make_mat4(matrix));
+					}
+					else {
+						if (node->has_translation) {
+							cgltf_float* translation = node->translation;
+							glm::mat4 meshTranslation = glm::mat4(1.0f);
+							meshTranslation[3][1] = translation[0];
+							meshTranslation[3][2] = translation[1];
+							meshTranslation[3][3] = translation[2];
+							meshMatrix = meshMatrix * meshTranslation;
+						}
+						
+						if (node->has_rotation) {
+							cgltf_float* rotation = node->rotation;
+							glm::quat rotationQuaternion = glm::quat(rotation[0], rotation[1], rotation[2], rotation[3]);
+							glm::mat4 meshRotation = glm::toMat4(rotationQuaternion);
+							meshMatrix = meshMatrix * meshRotation;
+						}
+						
+						if (node->has_scale) {
+							cgltf_float* scale = node->scale;
+							glm::mat4 meshScale = glm::mat4(1.0f);
+							meshScale[0][0] = scale[0];
+							meshScale[1][1] = scale[1];
+							meshScale[2][2] = scale[2];
+							meshMatrix = meshMatrix * meshScale;
+						}
+					}
+					
+					Mesh modelMesh;
+
+					modelMesh.indexOffset = indexOffset;
+					modelMesh.vertexOffset = modelVertexOffset;
+
+					std::vector<Primitive> primitives;
+
+					uint32_t firstIndex = 0;
+					uint32_t indexCount = 0;
+					int32_t vertexOffset = 0;
+					int32_t vertexCount = 0;
 
 					for (size_t j = 0; j < mesh->primitives_count; j++) {
 						cgltf_primitive* primitive = &mesh->primitives[j];
@@ -39,6 +87,8 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 
 						firstIndex += indexCount;
 						indexCount = 0;
+						vertexOffset += vertexCount;
+						vertexCount = 0;
 
 						float* position;
 						float* normal;
@@ -97,13 +147,16 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 						for (size_t l = 0; l < positionCount * 3; l += 3) {
 							Vertex vertex = {};
 							vertex.position = glm::vec3(position[l + 0], position[l + 1], position[l + 2]);
+							vertex.position = glm::vec3(meshMatrix * glm::vec4(vertex.position, 1.0f));
 							vertex.normal = normalCount != 0 ? glm::vec3(normal[l + 0], normal[l + 1], normal[l + 2]) : glm::vec3(0.0f);
+							vertex.normal = glm::normalize(glm::transpose(glm::inverse(glm::mat3(meshMatrix))) * vertex.normal);
 							vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
 							vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
 							vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
 							primitiveVertices.push_back(vertex);
 							uvPos += 2;
 						}
+						vertexCount += static_cast<int32_t>(primitiveVertices.size());
 
 						// Indices
 						cgltf_accessor* accessor = primitive->indices;
@@ -292,10 +345,13 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 						}
 
 						// Primitive
-						primitives->push_back({ firstIndex, indexCount, materialID });
+						primitives.push_back({ firstIndex, indexCount, vertexOffset, materialID });
 
 						vertices->insert(vertices->end(), primitiveVertices.begin(), primitiveVertices.end());
 						indices->insert(indices->end(), primitiveIndices.begin(), primitiveIndices.end());
+
+						indexOffset += indexCount;
+						modelVertexOffset += vertexCount;
 					}
 
 					for (size_t l = 0; l < vertices->size(); l++) {
@@ -303,6 +359,10 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 
 						vertex->tangent = glm::normalize(vertex->tangent);
 					}
+
+					modelMesh.primitives = primitives;
+
+					meshes->push_back(modelMesh);
 				}
 			}
 		}

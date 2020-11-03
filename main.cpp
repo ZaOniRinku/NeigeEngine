@@ -31,11 +31,11 @@ int main(void) {
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity1, Transform{
-		glm::vec3(5.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 90.0f, 0.0f),
+		glm::vec3(4.0f, 0.0f, 0.0f),
+		glm::vec3(180.0f, 0.0f, 0.0f),
 		glm::vec3(100.0f, 100.0f, 100.0f)
 		});
-
+	
 	Entity entity2 = ecs.createEntity();
 	ecs.addComponent(entity2, Renderable{
 		"../modelfiles/Duck2.gltf",
@@ -63,8 +63,8 @@ int main(void) {
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity3, Transform{
-		glm::vec3(5.0f, 1.0f, -2.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(4.0f, 1.0f, -2.0f),
+		glm::vec3(90.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
 
@@ -104,7 +104,7 @@ int main(void) {
 	ecs.addComponent(light1, Light{
 		LightType::DIRECTIONAL,
 		glm::vec3(0.0f),
-		glm::vec3(1.0f, -1.0f, 0.0f),
+		glm::vec3(0.0f, -1.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f),
 		glm::vec2(0.0f)
 		});
@@ -116,6 +116,15 @@ int main(void) {
 		glm::vec3(0.0f, -1.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		glm::vec2(40.0f, 50.0f)
+		});
+
+	Entity light3 = ecs.createEntity();
+	ecs.addComponent(light3, Light{
+		LightType::POINT,
+		glm::vec3(2.0f, 0.0f, 2.0f),
+		glm::vec3(0.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+		glm::vec2(0.0f)
 		});
 
 	g.launch();

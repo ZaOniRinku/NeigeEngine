@@ -50,6 +50,7 @@ struct Renderer : public System {
 	std::vector<Semaphore> RFsemaphores;
 
 	// Pipelines
+	std::string currentPipeline;
 	Viewport fullscreenViewport;
 	Viewport shadowViewport;
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;

@@ -65,7 +65,7 @@ SET(UTILS_MEMORYALLOCATOR_SOURCES src/utils/memoryallocator/MemoryAllocator.cpp)
 SET(UTILS_MEMORYALLOCATOR_HEADERS src/utils/memoryallocator/MemoryAllocator.h)
 SET(UTILS_RESOURCES_SOURCES src/utils/resources/BufferTools.cpp src/utils/resources/FileTools.cpp src/utils/resources/ImageTools.cpp src/utils/resources/ModelLoader.cpp)
 SET(UTILS_RESOURCES_HEADERS src/utils/resources/BufferTools.h src/utils/resources/FileTools.h src/utils/resources/ImageTools.h src/utils/resources/ModelLoader.h)
-SET(UTILS_STRUCTS_HEADERS src/utils/structs/RendererStructs.h src/utils/structs/ShaderStructs.h)
+SET(UTILS_STRUCTS_HEADERS src/utils/structs/ModelStructs.h src/utils/structs/RendererStructs.h src/utils/structs/ShaderStructs.h)
 SET(UTILS_SOURCES src/utils/NeigeVKTranslate.cpp ${UTILS_MEMORYALLOCATOR_SOURCES} ${UTILS_RESOURCES_SOURCES})
 SET(UTILS_HEADERS src/utils/NeigeDefines.h src/utils/NeigeVKTranslate.h ${UTILS_MEMORYALLOCATOR_HEADERS} ${UTILS_RESOURCES_HEADERS} ${UTILS_STRUCTS_HEADERS})
 
