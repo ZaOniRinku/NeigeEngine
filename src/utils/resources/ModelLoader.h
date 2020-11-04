@@ -8,6 +8,8 @@
 #include "../../../external/glm/glm/gtx/quaternion.hpp"
 #include "FileTools.h"
 #include "ImageTools.h"
+#include <vector>
+#include <numeric>
 
 struct ModelLoader {
 	static void load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes);

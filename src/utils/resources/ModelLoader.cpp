@@ -218,6 +218,11 @@ void ModelLoader::loadglTF(const std::string& filePath, std::vector<Vertex>* ver
 							}
 							indexCount = static_cast<uint32_t>(accessor->count);
 						}
+						else {
+							primitiveIndices.resize(primitiveVertices.size());
+							std::iota(primitiveIndices.begin(), primitiveIndices.end(), 0);
+							indexCount = static_cast<uint32_t>(primitiveIndices.size());
+						}
 
 						// Tangents
 						if (tangentCount == 0) {

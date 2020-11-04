@@ -22,7 +22,7 @@ int main(void) {
 
 	Entity entity1 = ecs.createEntity();
 	ecs.addComponent(entity1, Renderable{
-		"../modelfiles/BoomBox.gltf",
+		"../modelfiles/Fox.gltf",
 		"../shaders/pbr.vert",
 		"../shaders/pbr.frag",
 		"",
@@ -31,9 +31,9 @@ int main(void) {
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity1, Transform{
-		glm::vec3(4.0f, 0.0f, 0.0f),
-		glm::vec3(180.0f, 0.0f, 0.0f),
-		glm::vec3(100.0f, 100.0f, 100.0f)
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.01f, 0.01f, 0.01f)
 		});
 	
 	Entity entity2 = ecs.createEntity();
