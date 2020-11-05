@@ -114,7 +114,8 @@ struct ObjectUniformBufferObject {
 
 // Camera Uniform Buffer Object
 struct CameraUniformBufferObject {
-	glm::mat4 viewProj;
+	glm::mat4 view;
+	glm::mat4 projection;
 	glm::vec3 position;
 };
 

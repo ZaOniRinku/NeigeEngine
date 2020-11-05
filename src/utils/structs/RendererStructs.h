@@ -3,6 +3,14 @@
 #include "../NeigeDefines.h"
 #include <optional>
 
+#define MAX_FRAMES_IN_FLIGHT 3
+
+#define SHADOWMAP_WIDTH 2048
+#define SHADOWMAP_HEIGHT 2048
+
+#define ENVMAP_WIDTH 2048
+#define ENVMAP_HEIGHT 2048
+
 // Layers
 const std::vector<const char*> layers = {
 	"VK_LAYER_KHRONOS_validation",

@@ -9,7 +9,8 @@ layout(set = 0, binding = 0) uniform Object {
 } object;
 
 layout(set = 0, binding = 1) uniform Camera {
-	mat4 viewProj;
+	mat4 view;
+	mat4 projection;
 	vec3 pos;
 } camera;
 
@@ -63,5 +64,5 @@ void main() {
 		outSpotLightSpaces[i] = shadow.spotLightSpaces[i] * vec4(outFragmentPos, 1.0);
 	}
 	
-	gl_Position = camera.viewProj * vec4(outFragmentPos, 1.0);
+	gl_Position = camera.projection * camera.view * vec4(outFragmentPos, 1.0);
 }

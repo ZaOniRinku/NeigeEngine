@@ -3,6 +3,7 @@
 #include "../NeigeDefines.h"
 #include "../structs/RendererStructs.h"
 #include "BufferTools.h"
+#include "FileTools.h"
 #include "../../graphics/resources/Buffer.h"
 #include "../../graphics/commands/CommandBuffer.h"
 #include "../../graphics/commands/CommandPool.h"
@@ -20,6 +21,7 @@ struct ImageTools {
 		VkDeviceSize* allocationId);
 	static void createImageView(VkImageView* imageView,
 		VkImage image,
+		uint32_t baseArrayLayer,
 		uint32_t arrayLayers,
 		uint32_t mipLevels,
 		VkImageViewType viewType,
@@ -35,7 +37,16 @@ struct ImageTools {
 		VkFormat format,
 		uint32_t* mipLevels,
 		VkDeviceSize* allocationId);
+	static void loadHDREnvmap(const std::string& filePath,
+		VkImage* imageDestination,
+		VkFormat format,
+		VkDeviceSize* allocationId);
 	static void loadColor(float* color,
+		VkImage* imageDestination,
+		VkFormat format,
+		uint32_t* mipLevels,
+		VkDeviceSize* allocationId);
+	static void loadColorForEnvmap(float* color,
 		VkImage* imageDestination,
 		VkFormat format,
 		uint32_t* mipLevels,

@@ -89,7 +89,8 @@ void BufferTools::copyToImage(VkBuffer srcBuffer,
 	VkImage dstImage,
 	uint32_t width,
 	uint32_t height,
-	uint32_t arrayLayers) {
+	uint32_t arrayLayers,
+	uint64_t stride) {
 	CommandPool commandPool;
 	commandPool.init();
 	CommandBuffer commandBuffer;
@@ -99,7 +100,7 @@ void BufferTools::copyToImage(VkBuffer srcBuffer,
 	std::vector<VkBufferImageCopy> bufferImageCopies;
 	for (uint32_t i = 0; i < arrayLayers; i++) {
 		VkBufferImageCopy bufferImageCopy = {};
-		bufferImageCopy.bufferOffset = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * i * 4;
+		bufferImageCopy.bufferOffset = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * i * 4 * stride;
 		bufferImageCopy.bufferRowLength = 0;
 		bufferImageCopy.bufferImageHeight = 0;
 		bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

@@ -9,6 +9,7 @@
 #include "../../graphics/devices/PhysicalDevicePicker.h"
 #include "../../graphics/commands/CommandBuffer.h"
 #include "../../graphics/commands/CommandPool.h"
+#include "../../graphics/envmap/Envmap.h"
 #include "../../graphics/pipelines/GraphicsPipeline.h"
 #include "../../graphics/pipelines/DescriptorSet.h"
 #include "../../graphics/pipelines/Shader.h"
@@ -16,6 +17,7 @@
 #include "../../graphics/resources/Image.h"
 #include "../../graphics/renderpasses/Framebuffer.h"
 #include "../../graphics/renderpasses/RenderPass.h"
+#include "../../graphics/shadowmapping/Shadow.h"
 #include "../../graphics/sync/Fence.h"
 #include "../../graphics/sync/Semaphore.h"
 #include "../../window/Window.h"
@@ -25,24 +27,22 @@
 #include <string>
 #include <map>
 
-#define MAX_FRAMES_IN_FLIGHT 3
-
-#define SHADOWMAP_WIDTH 2048
-#define SHADOWMAP_HEIGHT 2048
-
 struct Renderer : public System {
 	Window* window;
 
 	// Camera
-	Entity camera;
 	std::vector<Buffer> cameraBuffers;
 
 	// Lights
 	std::vector<Buffer> lightingBuffers;
 
 	// Shadow
-	std::vector<Buffer> shadowBuffers;
-	Image defaultShadow;
+	Shadow shadow;
+
+	// Envmap
+	Envmap envmap;
+	GraphicsPipeline skyboxGraphicsPipeline;
+	std::vector<DescriptorSet> skyboxDescriptorSets;
 
 	// Sync
 	std::vector<Fence> fences;
@@ -51,21 +51,23 @@ struct Renderer : public System {
 
 	// Pipelines
 	std::string currentPipeline;
+
 	Viewport fullscreenViewport;
-	Viewport shadowViewport;
+
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
-	GraphicsPipeline shadowGraphicsPipeline;
+
 	std::unordered_map<Entity, std::vector<DescriptorSet>> entityDescriptorSets;
 	std::unordered_map<Entity, std::vector<DescriptorSet>> entityShadowDescriptorSets;
+
 	std::unordered_map<Entity, std::vector<Buffer>> entityBuffers;
 
 	// Render passes
 	std::vector<Image> colorImages;
 	std::vector<Image> depthImages;
-	std::vector<Image> shadowImages;
+
 	std::unordered_map<std::string, RenderPass> renderPasses;
+
 	std::vector<Framebuffer> framebuffers;
-	std::vector<std::vector<Framebuffer>> shadowFramebuffers;
 
 	// Command buffers
 	std::vector<CommandPool> renderingCommandPools;

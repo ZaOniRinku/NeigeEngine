@@ -4,7 +4,6 @@
 #include "src/ecs/components/Camera.h"
 #include "src/ecs/components/Renderable.h"
 #include "src/ecs/components/Light.h"
-#include "src/utils/resources/ModelLoader.h"
 
 ECS ecs;
 
@@ -20,6 +19,14 @@ int main(void) {
 	g.window = &w;
 	g.init();
 
+	Entity camera = ecs.createEntity();
+	ecs.addComponent(camera, Camera{
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
+		"../modelfiles/wide_street_01_2k.hdr"
+		});
+
 	Entity entity1 = ecs.createEntity();
 	ecs.addComponent(entity1, Renderable{
 		"../modelfiles/Fox.gltf",
@@ -31,9 +38,9 @@ int main(void) {
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity1, Transform{
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.01f, 0.01f, 0.01f)
+		glm::vec3(0.0f, -0.5f, 0.0f),
+		glm::vec3(0.0f, 120.0f, 0.0f),
+		glm::vec3(0.005f, 0.005f, 0.005f)
 		});
 	
 	Entity entity2 = ecs.createEntity();

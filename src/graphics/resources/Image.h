@@ -13,17 +13,5 @@ struct Image {
 
 	VkDeviceSize allocationId;
 
-	void init(uint32_t arrayLayers,
-		uint32_t imageWidth,
-		uint32_t imageHeight,
-		uint32_t mipLevels,
-		VkSampleCountFlagBits msaaSamples,
-		VkFormat format,
-		VkImageUsageFlags imageUsage,
-		VkFilter filter,
-		VkImageAspectFlags imageViewAspectFlags,
-		VkSamplerAddressMode imageViewAddressMode,
-		VkMemoryPropertyFlags imageMemoryProperties,
-		VkBorderColor borderColor);
 	void destroy();
 };

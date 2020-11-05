@@ -324,7 +324,7 @@ void GraphicsPipeline::init() {
 	depthStencilCreateInfo.flags = 0;
 	depthStencilCreateInfo.depthTestEnable = VK_TRUE;
 	depthStencilCreateInfo.depthWriteEnable = VK_TRUE;
-	depthStencilCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+	depthStencilCreateInfo.depthCompareOp = !depthFail ? VK_COMPARE_OP_LESS : VK_COMPARE_OP_LESS_OR_EQUAL;
 	depthStencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	depthStencilCreateInfo.stencilTestEnable = VK_FALSE;
 	depthStencilCreateInfo.front = {};

@@ -24,6 +24,7 @@ struct GraphicsPipeline {
 	Topology topology;
 	bool colorBlend = true;
 	bool multiSample = true;
+	bool depthFail = false;
 	std::vector<Set> sets;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 

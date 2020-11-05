@@ -22,14 +22,19 @@ void Game::init() {
 	lightingMask.set(ecs.getComponentId<Light>());
 	ecs.setSystemComponents<Lighting>(lightingMask);
 
+	ComponentMask cameraMask;
+	cameraMask.set(ecs.getComponentId<Camera>());
+
+	cameraSystem = ecs.registerSystem<CameraSystem>();
+	ecs.setSystemComponents<CameraSystem>(cameraMask);
+
 	cameraControls = ecs.registerSystem<CameraControls>();
-	ComponentMask cameraControlsMask;
-	cameraControlsMask.set(ecs.getComponentId<Camera>());
-	ecs.setSystemComponents<CameraControls>(cameraControlsMask);
+	ecs.setSystemComponents<CameraControls>(cameraMask);
 }
 
 void Game::launch() {
 	window->init();
+	cameraSystem->init();
 	lighting->init();
 	renderer->init();
 

@@ -11,4 +11,5 @@ inline std::unordered_map<std::string, Model> models;
 inline std::unordered_map<std::string, Image> textures;
 inline std::vector<Material> materials;
 inline std::unordered_map<std::string, Shader> shaders;
+inline Entity camera;
 inline std::set<Entity> lights;

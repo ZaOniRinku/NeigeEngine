@@ -36,6 +36,7 @@ void ImageTools::createImage(VkImage* image,
 
 void ImageTools::createImageView(VkImageView* imageView,
 	VkImage image,
+	uint32_t baseArrayLayer,
 	uint32_t arrayLayers,
 	uint32_t mipLevels,
 	VkImageViewType viewType,
@@ -55,7 +56,7 @@ void ImageTools::createImageView(VkImageView* imageView,
 	imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
 	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 	imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
-	imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+	imageViewCreateInfo.subresourceRange.baseArrayLayer = baseArrayLayer;
 	imageViewCreateInfo.subresourceRange.layerCount = arrayLayers;
 	NEIGE_VK_CHECK(vkCreateImageView(logicalDevice.device, &imageViewCreateInfo, nullptr, imageView));
 }
@@ -95,8 +96,9 @@ void ImageTools::loadImage(const std::string& filePath,
 	int width;
 	int height;
 	int texChannels;
+
 	stbi_uc* pixels = stbi_load(filePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
-	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4;
+	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4 * sizeof(uint8_t);
 	if (!pixels) {
 		NEIGE_ERROR("Error with image file \"" + filePath + "\".");
 	}
@@ -107,15 +109,52 @@ void ImageTools::loadImage(const std::string& filePath,
 	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, size);
 	void* data;
 	stagingBuffer.map(0, size, &data);
-	memcpy(data, pixels, static_cast<size_t>(size));
+	memcpy(data, pixels, size);
 	stagingBuffer.unmap();
 
 	createImage(imageDestination, 1, width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
 	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, 1);
-	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1, sizeof(uint8_t));
 	generateMipmaps(*imageDestination, format, width, height, *mipLevels);
 
 	stagingBuffer.destroy();
+	stbi_image_free(pixels);
+}
+
+void ImageTools::loadHDREnvmap(const std::string& filePath,
+	VkImage* imageDestination,
+	VkFormat format,
+	VkDeviceSize* allocationId) {
+	if (FileTools::extension(filePath) != "hdr") {
+		NEIGE_ERROR("Envmap file must be a \".hdr\" picture.");
+	}
+
+	int width;
+	int height;
+	int texChannels;
+
+	stbi_set_flip_vertically_on_load(true);
+	float* pixels = stbi_loadf(filePath.c_str(), &width, &height, &texChannels, STBI_rgb_alpha);
+	stbi_set_flip_vertically_on_load(false);
+	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4 * sizeof(float);
+	if (!pixels) {
+		NEIGE_ERROR("Error with hdr image file \"" + filePath + "\".");
+	}
+
+	Buffer stagingBuffer;
+	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, size);
+	void* data;
+	stagingBuffer.map(0, size, &data);
+	memcpy(data, pixels, size);
+	stagingBuffer.unmap();
+
+	createImage(imageDestination, 1, width, height, 1, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1, sizeof(float));
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, 1);
+
+	stagingBuffer.destroy();
+	stbi_image_free(pixels);
 }
 
 void ImageTools::loadColor(float* color,
@@ -140,7 +179,29 @@ void ImageTools::loadColor(float* color,
 
 	createImage(imageDestination, 1, 1, 1, 1, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
 	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 1);
-	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, 1, 1, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, 1, 1, 1, sizeof(uint8_t));
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, 1);
+
+	stagingBuffer.destroy();
+}
+
+void ImageTools::loadColorForEnvmap(float* color,
+	VkImage* imageDestination,
+	VkFormat format,
+	uint32_t* mipLevels,
+	VkDeviceSize* allocationId) {
+	*mipLevels = 1;
+
+	Buffer stagingBuffer;
+	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, 4 * sizeof(float));
+	void* pixelData;
+	stagingBuffer.map(0, 4 * sizeof(float), &pixelData);
+	memcpy(pixelData, color, 4 * sizeof(float));
+	stagingBuffer.unmap();
+
+	createImage(imageDestination, 1, 1, 1, 1, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, 1, 1, 1, sizeof(float));
 	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, 1);
 
 	stagingBuffer.destroy();
@@ -186,6 +247,12 @@ void ImageTools::transitionLayout(VkImage image,
 		imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		srcPipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		dstPipelineStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+		imageMemoryBarrier.srcAccessMask = 0;
+		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		srcPipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dstPipelineStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
 		imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;

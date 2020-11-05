@@ -1,6 +1,7 @@
 #include "CameraControls.h"
 #include "../components/Camera.h"
 #include "../../inputs/Inputs.h"
+#include "../../graphics/resources/ShaderResources.h"
 
 extern ECS ecs;
 
