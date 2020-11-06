@@ -38,6 +38,7 @@ void ImageTools::createImageView(VkImageView* imageView,
 	VkImage image,
 	uint32_t baseArrayLayer,
 	uint32_t arrayLayers,
+	uint32_t baseMipLevel,
 	uint32_t mipLevels,
 	VkImageViewType viewType,
 	VkFormat format,
@@ -54,7 +55,7 @@ void ImageTools::createImageView(VkImageView* imageView,
 	imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
 	imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
 	imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
-	imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+	imageViewCreateInfo.subresourceRange.baseMipLevel = baseMipLevel;
 	imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
 	imageViewCreateInfo.subresourceRange.baseArrayLayer = baseArrayLayer;
 	imageViewCreateInfo.subresourceRange.layerCount = arrayLayers;
@@ -115,7 +116,7 @@ void ImageTools::loadImage(const std::string& filePath,
 	createImage(imageDestination, 1, width, height, *mipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
 	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, *mipLevels, 1);
 	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1, sizeof(uint8_t));
-	generateMipmaps(*imageDestination, format, width, height, *mipLevels);
+	generateMipmaps(*imageDestination, format, width, height, *mipLevels, 1);
 
 	stagingBuffer.destroy();
 	stbi_image_free(pixels);
@@ -291,7 +292,8 @@ void ImageTools::generateMipmaps(VkImage image,
 	VkFormat format,
 	int32_t texelWidth,
 	int32_t texelHeight,
-	uint32_t mipLevels) {
+	uint32_t mipLevels,
+	uint32_t layers) {
 	VkFormatProperties formatProperties;
 	vkGetPhysicalDeviceFormatProperties(physicalDevice.device, format, &formatProperties);
 	if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
@@ -312,7 +314,7 @@ void ImageTools::generateMipmaps(VkImage image,
 	imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	imageMemoryBarrier.subresourceRange.levelCount = 1;
 	imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-	imageMemoryBarrier.subresourceRange.layerCount = 1;
+	imageMemoryBarrier.subresourceRange.layerCount = layers;
 	int mipWidth = texelWidth;
 	int mipHeight = texelHeight;
 	for (uint32_t i = 1; i < mipLevels; i++) {

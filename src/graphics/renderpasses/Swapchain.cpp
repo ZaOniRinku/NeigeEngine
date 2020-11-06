@@ -47,7 +47,7 @@ void Swapchain::init(const Window* window, uint32_t* swapchainSize) {
 	imageViews.resize(imageNumber);
 	NEIGE_VK_CHECK(vkGetSwapchainImagesKHR(logicalDevice.device, swapchain, &imageNumber, images.data()));
 	for (uint32_t i = 0; i < imageNumber; i++) {
-		ImageTools::createImageView(&imageViews[i], images[i], 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+		ImageTools::createImageView(&imageViews[i], images[i], 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 }
 

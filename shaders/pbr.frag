@@ -4,6 +4,8 @@
 #define MAX_POINT_LIGHTS 10
 #define MAX_SPOT_LIGHTS 10
 
+#define MAX_REFLECTION_LOD 4.0
+
 layout(set = 0, binding = 3) uniform Lighting {
 	vec3 numLights;
 	vec3 dirLightsDirection[MAX_DIR_LIGHTS];
@@ -16,7 +18,11 @@ layout(set = 0, binding = 3) uniform Lighting {
 	vec2 spotLightsCutoffs[MAX_SPOT_LIGHTS];
 } lights;
 
-layout(set = 0, binding = 4) uniform sampler2D shadowMaps[MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
+layout(set = 0, binding = 4) uniform samplerCube irradianceMap;
+layout(set = 0, binding = 5) uniform samplerCube prefilterMap;
+layout(set = 0, binding = 6) uniform sampler2D brdfLUT;
+
+layout(set = 0, binding = 7) uniform sampler2D shadowMaps[MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
 
 layout(set = 1, binding = 0) uniform sampler2D colorMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
@@ -49,6 +55,10 @@ float distribution(float NdotH, float roughness) {
 
 vec3 fresnel(float costheta, vec3 f0) {
 	return f0 + (1.0 - f0) * pow(1.0 - costheta, 5.0);
+}
+
+vec3 fresnelRoughness(float costheta, vec3 f0, float roughness) {
+	return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - costheta, 5.0);
 }
 
 float g(float NdotV, float roughness) {
@@ -134,6 +144,8 @@ void main() {
 	vec3 n = normalSample * 2.0 - 1.0;
 	n = normalize(TBN * n);
 	vec3 v = normalize(cameraPos - fragmentPos);
+	vec3 r = reflect(-v, n);
+	
 	vec3 l;
 
 	vec3 tmpColor = vec3(0.0);
@@ -175,7 +187,16 @@ void main() {
 		shadowMapIndex++;
 	}
 
-	vec3 ambient = vec3(0.03) * d * occlusionSample;
+	vec3 fRoughness = fresnelRoughness(max(dot(n, v), 0.0), mix(vec3(0.04), d, metallicSample), roughnessSample);
+	vec3 irradianceDiffuse = 1.0 - fRoughness;
+	irradianceDiffuse *= 1.0 - metallicSample;
+	vec3 irradianceSample = vec3(texture(irradianceMap, n));
+	
+	vec3 prefilterSample = vec3(textureLod(prefilterMap, r, roughnessSample * MAX_REFLECTION_LOD));
+	vec2 envBrdf = vec2(texture(brdfLUT, vec2(max(dot(n, v), 0.0), roughnessSample)));
+	vec3 specular = prefilterSample * (fRoughness * envBrdf.x + envBrdf.y);
+	
+	vec3 ambient = (irradianceSample * d + specular) * occlusionSample;
 	tmpColor += ambient;
 
 	tmpColor = tmpColor / (tmpColor + vec3(1.0));

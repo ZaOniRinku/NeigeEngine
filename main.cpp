@@ -24,12 +24,12 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
-		"../modelfiles/wide_street_01_2k.hdr"
+		"../modelfiles/shanghai_bund_2k.hdr"
 		});
 
 	Entity entity1 = ecs.createEntity();
 	ecs.addComponent(entity1, Renderable{
-		"../modelfiles/Fox.gltf",
+		"../modelfiles/BoomBox.gltf",
 		"../shaders/pbr.vert",
 		"../shaders/pbr.frag",
 		"",
@@ -38,9 +38,9 @@ int main(void) {
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity1, Transform{
-		glm::vec3(0.0f, -0.5f, 0.0f),
-		glm::vec3(0.0f, 120.0f, 0.0f),
-		glm::vec3(0.005f, 0.005f, 0.005f)
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(180.0f, 0.0f, 0.0f),
+		glm::vec3(100.0f, 100.0f, 100.0f)
 		});
 	
 	Entity entity2 = ecs.createEntity();
@@ -107,7 +107,7 @@ int main(void) {
 		glm::vec3(10.0f, 1.0f, 10.0f)
 		});
 
-	Entity light1 = ecs.createEntity();
+	/*Entity light1 = ecs.createEntity();
 	ecs.addComponent(light1, Light{
 		LightType::DIRECTIONAL,
 		glm::vec3(0.0f),
@@ -132,7 +132,7 @@ int main(void) {
 		glm::vec3(0.0f),
 		glm::vec3(1.0f, 0.0f, 1.0f),
 		glm::vec2(0.0f)
-		});
+		});*/
 
 	g.launch();
 }

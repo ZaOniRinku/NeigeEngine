@@ -417,8 +417,14 @@ void GraphicsPipeline::pushConstant(CommandBuffer* commandBuffer, VkShaderStageF
 }
 
 void GraphicsPipeline::destroyPipeline() {
-	vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
-	vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
+	if (pipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(logicalDevice.device, pipelineLayout, nullptr);
+		pipelineLayout = VK_NULL_HANDLE;
+	}
+	if (pipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(logicalDevice.device, pipeline, nullptr);
+		pipeline = VK_NULL_HANDLE;
+	}
 }
 
 VkPrimitiveTopology GraphicsPipeline::topologyToVkTopology() {

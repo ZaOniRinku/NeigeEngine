@@ -8,8 +8,8 @@
 #define SHADOWMAP_WIDTH 2048
 #define SHADOWMAP_HEIGHT 2048
 
-#define ENVMAP_WIDTH 2048
-#define ENVMAP_HEIGHT 2048
+#define ENVMAP_WIDTH 512
+#define ENVMAP_HEIGHT 512
 
 // Layers
 const std::vector<const char*> layers = {

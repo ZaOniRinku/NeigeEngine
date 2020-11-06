@@ -128,13 +128,13 @@ void Renderer::init() {
 	{
 		Image colorAttachment;
 		ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
-		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 		ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
 		colorImages.push_back(colorAttachment);
 
 		Image depthAttachment;
 		ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
-		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 		ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
 		depthImages.push_back(depthAttachment);
 
@@ -159,7 +159,7 @@ void Renderer::init() {
 
 				Image depthAttachment;
 				ImageTools::createImage(&depthAttachment.image, 1, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 1, VK_SAMPLE_COUNT_1_BIT, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
-				ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+				ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 				shadow.images.push_back(depthAttachment);
 
 				std::vector<std::vector<VkImageView>> framebufferAttachments;
@@ -179,28 +179,28 @@ void Renderer::init() {
 	float defaultDiffuse[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	Image defaultDiffuseImage;
 	ImageTools::loadColor(defaultDiffuse, &defaultDiffuseImage.image, VK_FORMAT_R8G8B8A8_SRGB, &defaultDiffuseImage.mipmapLevels, &defaultDiffuseImage.allocationId);
-	ImageTools::createImageView(&defaultDiffuseImage.imageView, defaultDiffuseImage.image, 0, 1, defaultDiffuseImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageView(&defaultDiffuseImage.imageView, defaultDiffuseImage.image, 0, 1, 0, defaultDiffuseImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultDiffuseImage.imageSampler, defaultDiffuseImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 	textures.emplace("defaultDiffuse", defaultDiffuseImage);
 
 	float defaultNormal[4] = { 0.5f, 0.5f, 1.0f, 0.0f };
 	Image defaultNormalImage;
 	ImageTools::loadColor(defaultNormal, &defaultNormalImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultNormalImage.mipmapLevels, &defaultNormalImage.allocationId);
-	ImageTools::createImageView(&defaultNormalImage.imageView, defaultNormalImage.image, 0, 1, defaultNormalImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageView(&defaultNormalImage.imageView, defaultNormalImage.image, 0, 1, 0, defaultNormalImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultNormalImage.imageSampler, defaultNormalImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 	textures.emplace("defaultNormal", defaultNormalImage);
 
 	float defaultMetallicRoughness[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	Image defaultMetallicRoughnessImage;
 	ImageTools::loadColor(defaultMetallicRoughness, &defaultMetallicRoughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultMetallicRoughnessImage.mipmapLevels, &defaultMetallicRoughnessImage.allocationId);
-	ImageTools::createImageView(&defaultMetallicRoughnessImage.imageView, defaultMetallicRoughnessImage.image, 0, 1, defaultMetallicRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageView(&defaultMetallicRoughnessImage.imageView, defaultMetallicRoughnessImage.image, 0, 1, 0, defaultMetallicRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 	textures.emplace("defaultMetallicRoughness", defaultMetallicRoughnessImage);
 
 	float defaultOcclusion[4] = { 1.0, 1.0, 1.0, 0.0 };
 	Image defaultOcclusionImage;
 	ImageTools::loadColor(defaultOcclusion, &defaultOcclusionImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultOcclusionImage.mipmapLevels, &defaultOcclusionImage.allocationId);
-	ImageTools::createImageView(&defaultOcclusionImage.imageView, defaultOcclusionImage.image, 0, 1, defaultOcclusionImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageView(&defaultOcclusionImage.imageView, defaultOcclusionImage.image, 0, 1, 0, defaultOcclusionImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultOcclusionImage.imageSampler, defaultOcclusionImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 	textures.emplace("defaultOcclusion", defaultOcclusionImage);
 
@@ -267,6 +267,21 @@ void Renderer::init() {
 					lightingInfo.offset = 0;
 					lightingInfo.range = sizeof(LightingUniformBufferObject);
 
+					VkDescriptorImageInfo irradianceInfo = {};
+					irradianceInfo.sampler = envmap.diffuseIradianceImage.imageSampler;
+					irradianceInfo.imageView = envmap.diffuseIradianceImage.imageView;
+					irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+					VkDescriptorImageInfo prefilterInfo = {};
+					prefilterInfo.sampler = envmap.prefilterImage.imageSampler;
+					prefilterInfo.imageView = envmap.prefilterImage.imageView;
+					prefilterInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+					VkDescriptorImageInfo brdfLUTInfo = {};
+					brdfLUTInfo.sampler = envmap.brdfConvolutionImage.imageSampler;
+					brdfLUTInfo.imageView = envmap.brdfConvolutionImage.imageView;
+					brdfLUTInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
 					std::vector<VkDescriptorImageInfo> shadowMapsInfos;
 					shadowMapsInfos.resize(MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS);
 
@@ -330,11 +345,50 @@ void Renderer::init() {
 					lightingWriteDescriptorSet.pTexelBufferView = nullptr;
 					writesDescriptorSet.push_back(lightingWriteDescriptorSet);
 
+					VkWriteDescriptorSet irradianceWriteDescriptorSet = {};
+					irradianceWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					irradianceWriteDescriptorSet.pNext = nullptr;
+					irradianceWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+					irradianceWriteDescriptorSet.dstBinding = 4;
+					irradianceWriteDescriptorSet.dstArrayElement = 0;
+					irradianceWriteDescriptorSet.descriptorCount = 1;
+					irradianceWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					irradianceWriteDescriptorSet.pImageInfo = &irradianceInfo;
+					irradianceWriteDescriptorSet.pBufferInfo = nullptr;
+					irradianceWriteDescriptorSet.pTexelBufferView = nullptr;
+					writesDescriptorSet.push_back(irradianceWriteDescriptorSet);
+
+					VkWriteDescriptorSet prefilterWriteDescriptorSet = {};
+					prefilterWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					prefilterWriteDescriptorSet.pNext = nullptr;
+					prefilterWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+					prefilterWriteDescriptorSet.dstBinding = 5;
+					prefilterWriteDescriptorSet.dstArrayElement = 0;
+					prefilterWriteDescriptorSet.descriptorCount = 1;
+					prefilterWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					prefilterWriteDescriptorSet.pImageInfo = &prefilterInfo;
+					prefilterWriteDescriptorSet.pBufferInfo = nullptr;
+					prefilterWriteDescriptorSet.pTexelBufferView = nullptr;
+					writesDescriptorSet.push_back(prefilterWriteDescriptorSet);
+
+					VkWriteDescriptorSet brdfLUTWriteDescriptorSet = {};
+					brdfLUTWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					brdfLUTWriteDescriptorSet.pNext = nullptr;
+					brdfLUTWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
+					brdfLUTWriteDescriptorSet.dstBinding = 6;
+					brdfLUTWriteDescriptorSet.dstArrayElement = 0;
+					brdfLUTWriteDescriptorSet.descriptorCount = 1;
+					brdfLUTWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					brdfLUTWriteDescriptorSet.pImageInfo = &brdfLUTInfo;
+					brdfLUTWriteDescriptorSet.pBufferInfo = nullptr;
+					brdfLUTWriteDescriptorSet.pTexelBufferView = nullptr;
+					writesDescriptorSet.push_back(brdfLUTWriteDescriptorSet);
+
 					VkWriteDescriptorSet shadowMapsWriteDescriptorSet = {};
 					shadowMapsWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 					shadowMapsWriteDescriptorSet.pNext = nullptr;
 					shadowMapsWriteDescriptorSet.dstSet = descriptorSets[i].descriptorSet;
-					shadowMapsWriteDescriptorSet.dstBinding = 4;
+					shadowMapsWriteDescriptorSet.dstBinding = 7;
 					shadowMapsWriteDescriptorSet.dstArrayElement = 0;
 					shadowMapsWriteDescriptorSet.descriptorCount = static_cast<uint32_t>(shadowMapsInfos.size());
 					shadowMapsWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -765,13 +819,13 @@ void Renderer::createResources() {
 		Image colorAttachment;
 		ImageTools::createImage(&colorAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, swapchain.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &colorAttachment.allocationId);
 		ImageTools::transitionLayout(colorAttachment.image, swapchain.surfaceFormat.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
-		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+		ImageTools::createImageView(&colorAttachment.imageView, colorAttachment.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, swapchain.surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
 		colorImages.push_back(colorAttachment);
 
 		Image depthAttachment;
 		ImageTools::createImage(&depthAttachment.image, 1, window->extent.width, window->extent.height, 1, physicalDevice.maxUsableSampleCount, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthAttachment.allocationId);
 		ImageTools::transitionLayout(depthAttachment.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
-		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		ImageTools::createImageView(&depthAttachment.imageView, depthAttachment.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 		depthImages.push_back(depthAttachment);
 
 		std::vector<std::vector<VkImageView>> framebufferAttachments;

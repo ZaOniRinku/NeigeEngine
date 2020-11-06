@@ -23,6 +23,7 @@ struct ImageTools {
 		VkImage image,
 		uint32_t baseArrayLayer,
 		uint32_t arrayLayers,
+		uint32_t baseMipLevel,
 		uint32_t mipLevels,
 		VkImageViewType viewType,
 		VkFormat format,
@@ -61,5 +62,6 @@ struct ImageTools {
 		VkFormat format,
 		int32_t texelWidth,
 		int32_t texelHeight,
-		uint32_t mipLevels);
+		uint32_t mipLevels,
+		uint32_t layers);
 };
