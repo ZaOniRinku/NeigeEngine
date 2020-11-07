@@ -14,7 +14,7 @@ void Envmap::init(std::string filePath) {
 	ImageTools::createImageView(&skyboxImage.imageView, skyboxImage.image, 0, 6, 0, 1, VK_IMAGE_VIEW_TYPE_CUBE, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&skyboxImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 
-	float defaultSkyboxColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float defaultSkyboxColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	ImageTools::loadColorForEnvmap(defaultSkyboxColor, &defaultSkybox.image, physicalDevice.colorFormat, &defaultSkybox.mipmapLevels, &defaultSkybox.allocationId);
 	ImageTools::createImageView(&defaultSkybox.imageView, defaultSkybox.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&defaultSkybox.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
@@ -76,14 +76,6 @@ void Envmap::init(std::string filePath) {
 }
 
 void Envmap::destroy() {
-	equiRecToCubemapRenderPass.destroy();
-	convolveRenderPass.destroy();
-	prefilterRenderPass.destroy();
-	brdfConvolutionRenderPass.destroy();
-	equiRecToCubemapGraphicsPipeline.destroy();
-	convolveGraphicsPipeline.destroy();
-	prefilterGraphicsPipeline.destroy();
-	brdfConvolutionGraphicsPipeline.destroy();
 	cubeVertexBuffer.destroy();
 	cubeIndexBuffer.destroy();
 	quadVertexBuffer.destroy();
@@ -94,19 +86,6 @@ void Envmap::destroy() {
 	diffuseIradianceImage.destroy();
 	prefilterImage.destroy();
 	brdfConvolutionImage.destroy();
-	for (int i = 0; i < 6; i++) {
-		equiRecToCubemapFramebuffers[i].destroy();
-		diffuseIradianceFramebuffers[i].destroy();
-		vkDestroyImageView(logicalDevice.device, equiRecToCubemapImageViews[i], nullptr);
-		vkDestroyImageView(logicalDevice.device, diffuseIradianceImageViews[i], nullptr);
-	}
-	for (int i = 0; i < 30; i++) {
-		prefilterFramebuffers[i].destroy();
-		vkDestroyImageView(logicalDevice.device, prefilterImageViews[i], nullptr);
-	}
-	brdfConvolutionFramebuffer.destroy();
-	vkDestroyImageView(logicalDevice.device, brdfConvolutionImageView, nullptr);
-	roughnessBuffer.destroy();
 }
 
 void Envmap::draw(CommandBuffer* commandBuffer) {
@@ -119,6 +98,7 @@ void Envmap::draw(CommandBuffer* commandBuffer) {
 }
 
 void Envmap::equilateralRectangleToCubemap() {
+	Viewport equiRecToCubemapViewport;
 	equiRecToCubemapViewport.init(ENVMAP_WIDTH, ENVMAP_HEIGHT);
 
 	std::vector<RenderPassAttachment> attachments;
@@ -127,8 +107,11 @@ void Envmap::equilateralRectangleToCubemap() {
 	std::vector<SubpassDependency> dependencies;
 	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
 
+	RenderPass equiRecToCubemapRenderPass;
 	equiRecToCubemapRenderPass.init(attachments, dependencies);
 
+	std::array<Framebuffer, 6> equiRecToCubemapFramebuffers;
+	std::array<VkImageView, 6> equiRecToCubemapImageViews;
 	for (int face = 0; face < 6; face++) {
 		ImageTools::createImageView(&equiRecToCubemapImageViews[face], skyboxImage.image, face, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 		std::vector<VkImageView> framebufferAttachments;
@@ -136,6 +119,7 @@ void Envmap::equilateralRectangleToCubemap() {
 		equiRecToCubemapFramebuffers[face].init(&equiRecToCubemapRenderPass, framebufferAttachments, ENVMAP_WIDTH, ENVMAP_HEIGHT, 1);
 	}
 
+	GraphicsPipeline equiRecToCubemapGraphicsPipeline;
 	equiRecToCubemapGraphicsPipeline.vertexShaderPath = "../shaders/equiRecToCubemap.vert";
 	equiRecToCubemapGraphicsPipeline.fragmentShaderPath = "../shaders/equiRecToCubemap.frag";
 	equiRecToCubemapGraphicsPipeline.renderPass = &equiRecToCubemapRenderPass;
@@ -144,6 +128,7 @@ void Envmap::equilateralRectangleToCubemap() {
 	equiRecToCubemapGraphicsPipeline.multiSample = false;
 	equiRecToCubemapGraphicsPipeline.init();
 	
+	DescriptorSet equiRecToCubemapDescriptorSet;
 	equiRecToCubemapDescriptorSet.init(&equiRecToCubemapGraphicsPipeline, 0);
 
 	VkDescriptorImageInfo skyboxInfo = {};
@@ -205,6 +190,13 @@ void Envmap::equilateralRectangleToCubemap() {
 	
 	commandBuffer.endAndSubmit();
 	commandPool.destroy();
+
+	equiRecToCubemapRenderPass.destroy();
+	equiRecToCubemapGraphicsPipeline.destroy();
+	for (int i = 0; i < 6; i++) {
+		equiRecToCubemapFramebuffers[i].destroy();
+		vkDestroyImageView(logicalDevice.device, equiRecToCubemapImageViews[i], nullptr);
+	}
 }
 
 void Envmap::createDiffuseIradiance() {
@@ -212,6 +204,7 @@ void Envmap::createDiffuseIradiance() {
 	ImageTools::createImageView(&diffuseIradianceImage.imageView, diffuseIradianceImage.image, 0, 6, 0, 1, VK_IMAGE_VIEW_TYPE_CUBE, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&diffuseIradianceImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 
+	Viewport diffuseIradianceViewport;
 	diffuseIradianceViewport.init(CONVOLVE_WIDTH, CONVOLVE_HEIGHT);
 
 	std::vector<RenderPassAttachment> attachments;
@@ -220,8 +213,11 @@ void Envmap::createDiffuseIradiance() {
 	std::vector<SubpassDependency> dependencies;
 	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
 
+	RenderPass convolveRenderPass;
 	convolveRenderPass.init(attachments, dependencies);
 
+	std::array<Framebuffer, 6> diffuseIradianceFramebuffers;
+	std::array<VkImageView, 6> diffuseIradianceImageViews;
 	for (int face = 0; face < 6; face++) {
 		ImageTools::createImageView(&diffuseIradianceImageViews[face], diffuseIradianceImage.image, face, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 		std::vector<VkImageView> framebufferAttachments;
@@ -229,6 +225,7 @@ void Envmap::createDiffuseIradiance() {
 		diffuseIradianceFramebuffers[face].init(&convolveRenderPass, framebufferAttachments, CONVOLVE_WIDTH, CONVOLVE_HEIGHT, 1);
 	}
 
+	GraphicsPipeline convolveGraphicsPipeline;
 	convolveGraphicsPipeline.vertexShaderPath = "../shaders/projectToCube.vert";
 	convolveGraphicsPipeline.fragmentShaderPath = "../shaders/convolve.frag";
 	convolveGraphicsPipeline.renderPass = &convolveRenderPass;
@@ -237,6 +234,7 @@ void Envmap::createDiffuseIradiance() {
 	convolveGraphicsPipeline.multiSample = false;
 	convolveGraphicsPipeline.init();
 
+	DescriptorSet convolveDescriptorSet;
 	convolveDescriptorSet.init(&convolveGraphicsPipeline, 0);
 
 	VkDescriptorImageInfo skyboxInfo = {};
@@ -298,6 +296,13 @@ void Envmap::createDiffuseIradiance() {
 
 	commandBuffer.endAndSubmit();
 	commandPool.destroy();
+
+	convolveRenderPass.destroy();
+	convolveGraphicsPipeline.destroy();
+	for (int i = 0; i < 6; i++) {
+		diffuseIradianceFramebuffers[i].destroy();
+		vkDestroyImageView(logicalDevice.device, diffuseIradianceImageViews[i], nullptr);
+	}
 }
 
 void Envmap::createPrefilter() {
@@ -311,20 +316,27 @@ void Envmap::createPrefilter() {
 	std::vector<SubpassDependency> dependencies;
 	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
 
+	RenderPass prefilterRenderPass;
 	prefilterRenderPass.init(attachments, dependencies);
 
+	GraphicsPipeline prefilterGraphicsPipeline;
 	prefilterGraphicsPipeline.vertexShaderPath = "../shaders/projectToCube.vert";
 	prefilterGraphicsPipeline.fragmentShaderPath = "../shaders/prefilter.frag";
 	prefilterGraphicsPipeline.renderPass = &prefilterRenderPass;
 	prefilterGraphicsPipeline.colorBlend = false;
 	prefilterGraphicsPipeline.multiSample = false;
 
+	std::array<Framebuffer, 30> prefilterFramebuffers;
+	std::array<VkImageView, 30> prefilterImageViews;
+
+	Buffer roughnessBuffer;
 	BufferTools::createUniformBuffer(roughnessBuffer.buffer, roughnessBuffer.deviceMemory, sizeof(float));
 
 	for (int mipLevel = 0; mipLevel < 5; mipLevel++) {
 		uint32_t mipWidth = static_cast<uint32_t>(PREFILTER_WIDTH * std::pow(0.5f, mipLevel));
 		uint32_t mipHeight = static_cast<uint32_t>(PREFILTER_HEIGHT * std::pow(0.5f, mipLevel));
 
+		Viewport prefilterViewport;
 		prefilterViewport.init(mipWidth, mipHeight);
 
 		for (int face = 0; face < 6; face++) {
@@ -345,6 +357,7 @@ void Envmap::createPrefilter() {
 		prefilterGraphicsPipeline.viewport = &prefilterViewport;
 		prefilterGraphicsPipeline.init();
 
+		DescriptorSet prefilterDescriptorSet;
 		prefilterDescriptorSet.init(&prefilterGraphicsPipeline, 0);
 
 		VkDescriptorImageInfo skyboxInfo = {};
@@ -427,6 +440,14 @@ void Envmap::createPrefilter() {
 
 		prefilterGraphicsPipeline.destroyPipeline();
 	}
+
+	prefilterRenderPass.destroy();
+	prefilterGraphicsPipeline.destroy();
+	for (int i = 0; i < 30; i++) {
+		prefilterFramebuffers[i].destroy();
+		vkDestroyImageView(logicalDevice.device, prefilterImageViews[i], nullptr);
+	}
+	roughnessBuffer.destroy();
 }
 
 void Envmap::createBRDFConvolution() {
@@ -434,6 +455,7 @@ void Envmap::createBRDFConvolution() {
 	ImageTools::createImageView(&brdfConvolutionImage.imageView, brdfConvolutionImage.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32G32_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&brdfConvolutionImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 
+	Viewport brdfConvolutionViewport;
 	brdfConvolutionViewport.init(BRDFCONVOLUTION_WIDTH, BRDFCONVOLUTION_HEIGHT);
 
 	std::vector<RenderPassAttachment> attachments;
@@ -442,12 +464,15 @@ void Envmap::createBRDFConvolution() {
 	std::vector<SubpassDependency> dependencies;
 	dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
 
+	RenderPass brdfConvolutionRenderPass;
 	brdfConvolutionRenderPass.init(attachments, dependencies);
 
+	Framebuffer brdfConvolutionFramebuffer;
 	std::vector<VkImageView> framebufferAttachments;
 	framebufferAttachments.push_back(brdfConvolutionImage.imageView);
 	brdfConvolutionFramebuffer.init(&brdfConvolutionRenderPass, framebufferAttachments, BRDFCONVOLUTION_WIDTH, BRDFCONVOLUTION_HEIGHT, 1);
 
+	GraphicsPipeline brdfConvolutionGraphicsPipeline;
 	brdfConvolutionGraphicsPipeline.vertexShaderPath = "../shaders/brdfConvolution.vert";
 	brdfConvolutionGraphicsPipeline.fragmentShaderPath = "../shaders/brdfConvolution.frag";
 	brdfConvolutionGraphicsPipeline.renderPass = &brdfConvolutionRenderPass;
@@ -478,4 +503,8 @@ void Envmap::createBRDFConvolution() {
 
 	commandBuffer.endAndSubmit();
 	commandPool.destroy();
+
+	brdfConvolutionRenderPass.destroy();
+	brdfConvolutionGraphicsPipeline.destroy();
+	brdfConvolutionFramebuffer.destroy();
 }

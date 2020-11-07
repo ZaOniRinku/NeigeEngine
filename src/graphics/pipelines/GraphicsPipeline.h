@@ -21,7 +21,7 @@ struct GraphicsPipeline {
 	std::string geometryShaderPath;
 	RenderPass* renderPass;
 	Viewport* viewport;
-	Topology topology;
+	Topology topology = Topology::TRIANGLE_LIST;
 	bool colorBlend = true;
 	bool multiSample = true;
 	bool depthFail = false;

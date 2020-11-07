@@ -191,12 +191,13 @@ void main() {
 	vec3 irradianceDiffuse = 1.0 - fRoughness;
 	irradianceDiffuse *= 1.0 - metallicSample;
 	vec3 irradianceSample = vec3(texture(irradianceMap, n));
+	vec3 diffuse = irradianceSample * d;
 	
 	vec3 prefilterSample = vec3(textureLod(prefilterMap, r, roughnessSample * MAX_REFLECTION_LOD));
 	vec2 envBrdf = vec2(texture(brdfLUT, vec2(max(dot(n, v), 0.0), roughnessSample)));
 	vec3 specular = prefilterSample * (fRoughness * envBrdf.x + envBrdf.y);
 	
-	vec3 ambient = (irradianceSample * d + specular) * occlusionSample;
+	vec3 ambient = (irradianceDiffuse * diffuse + specular) * occlusionSample;
 	tmpColor += ambient;
 
 	tmpColor = tmpColor / (tmpColor + vec3(1.0));

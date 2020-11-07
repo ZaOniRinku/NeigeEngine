@@ -22,8 +22,8 @@
 #define PREFILTER_WIDTH 128
 #define PREFILTER_HEIGHT 128
 
-#define BRDFCONVOLUTION_WIDTH 512
-#define BRDFCONVOLUTION_HEIGHT 512
+#define BRDFCONVOLUTION_WIDTH 1024
+#define BRDFCONVOLUTION_HEIGHT 1024
 
 struct Envmap {
 	// Unit cube
@@ -34,44 +34,12 @@ struct Envmap {
 	Buffer quadVertexBuffer;
 	Buffer quadIndexBuffer;
 
-	// Equilateral rectangle to Cubemap
-	Viewport equiRecToCubemapViewport;
-	GraphicsPipeline equiRecToCubemapGraphicsPipeline;
-	RenderPass equiRecToCubemapRenderPass;
-	std::array<Framebuffer, 6> equiRecToCubemapFramebuffers;
-	DescriptorSet equiRecToCubemapDescriptorSet;
-	std::array<VkImageView, 6> equiRecToCubemapImageViews;
-
-	// Diffuse irradiance map
-	Image diffuseIradianceImage;
-	Viewport diffuseIradianceViewport;
-	GraphicsPipeline convolveGraphicsPipeline;
-	RenderPass convolveRenderPass;
-	std::array<Framebuffer, 6> diffuseIradianceFramebuffers;
-	DescriptorSet convolveDescriptorSet;
-	std::array<VkImageView, 6> diffuseIradianceImageViews;
-
-	// Prefilter
-	Image prefilterImage;
-	Viewport prefilterViewport;
-	GraphicsPipeline prefilterGraphicsPipeline;
-	RenderPass prefilterRenderPass;
-	std::array<Framebuffer, 30> prefilterFramebuffers;
-	DescriptorSet prefilterDescriptorSet;
-	std::array<VkImageView, 30> prefilterImageViews;
-	Buffer roughnessBuffer;
-
-	// BRDF convolution
-	Image brdfConvolutionImage;
-	Viewport brdfConvolutionViewport;
-	GraphicsPipeline brdfConvolutionGraphicsPipeline;
-	RenderPass brdfConvolutionRenderPass;
-	Framebuffer brdfConvolutionFramebuffer;
-	VkImageView brdfConvolutionImageView;
-
 	Image defaultSkybox;
 	Image envmapImage;
 	Image skyboxImage;
+	Image diffuseIradianceImage;
+	Image prefilterImage;
+	Image brdfConvolutionImage;
 
 	std::vector<Vertex> cubeVertices = { Vertex { glm::vec3(-1.0f,  1.0f, -1.0f), glm::vec3(0.0f), glm::vec2(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) },
 		Vertex { glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0.0f), glm::vec2(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) },
