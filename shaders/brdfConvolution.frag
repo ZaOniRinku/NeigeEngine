@@ -1,6 +1,6 @@
 #version 450
 
-#define SAMPLES 1024
+#define SAMPLES 512
 
 layout(location = 0) in vec2 uv;
 

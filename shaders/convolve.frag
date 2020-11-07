@@ -17,7 +17,7 @@ void main() {
 	vec3 right = normalize(cross(up, normal));
 	up = normalize(cross(normal, right));
 	
-	float delta = 0.012;
+	float delta = 0.025;
 	float samples = 0.0;
 	
 	for (float phi = 0.0; phi < 2.0 * M_PI; phi += delta) {

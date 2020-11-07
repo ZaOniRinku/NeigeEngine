@@ -73,6 +73,8 @@ void Envmap::init(std::string filePath) {
 	createDiffuseIradiance();
 	createPrefilter();
 	createBRDFConvolution();
+
+	logicalDevice.wait();
 }
 
 void Envmap::destroy() {

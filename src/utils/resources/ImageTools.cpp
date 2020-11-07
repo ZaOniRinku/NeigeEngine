@@ -126,7 +126,8 @@ void ImageTools::loadHDREnvmap(const std::string& filePath,
 	VkImage* imageDestination,
 	VkFormat format,
 	VkDeviceSize* allocationId) {
-	if (FileTools::extension(filePath) != "hdr") {
+	std::string extension = FileTools::extension(filePath);
+	if (extension != "hdr") {
 		NEIGE_ERROR("Envmap file must be a \".hdr\" picture.");
 	}
 
