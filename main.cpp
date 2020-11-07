@@ -24,7 +24,7 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
-		"../modelfiles/shanghai_bund_2k.hdr"
+		"../modelfiles/Tokyo_BigSight_3k.hdr"
 		});
 
 	Entity entity1 = ecs.createEntity();
