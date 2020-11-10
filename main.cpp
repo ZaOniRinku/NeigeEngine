@@ -4,6 +4,7 @@
 #include "src/ecs/components/Camera.h"
 #include "src/ecs/components/Renderable.h"
 #include "src/ecs/components/Light.h"
+#include "src/ecs/components/Rigidbody.h"
 
 ECS ecs;
 
@@ -41,6 +42,11 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(180.0f, 0.0f, 0.0f),
 		glm::vec3(100.0f, 100.0f, 100.0f)
+		});
+	ecs.addComponent(entity1, Rigidbody{
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		false
 		});
 	
 	Entity entity2 = ecs.createEntity();

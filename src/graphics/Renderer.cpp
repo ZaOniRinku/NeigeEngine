@@ -1,11 +1,11 @@
 #include "Renderer.h"
-#include "../../graphics/resources/RendererResources.h"
-#include "../../graphics/resources/ShaderResources.h"
-#include "../../inputs/Inputs.h"
-#include "../components/Transform.h"
-#include "../components/Light.h"
-#include "../components/Camera.h"
-#include "../components/Renderable.h"
+#include "resources/RendererResources.h"
+#include "resources/ShaderResources.h"
+#include "../inputs/Inputs.h"
+#include "../ecs/components/Transform.h"
+#include "../ecs/components/Light.h"
+#include "../ecs/components/Camera.h"
+#include "../ecs/components/Renderable.h"
 
 extern ECS ecs;
 
