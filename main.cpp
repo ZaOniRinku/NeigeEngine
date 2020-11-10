@@ -24,7 +24,7 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
-		"../modelfiles/Tokyo_BigSight_3k.hdr"
+		"../modelfiles/wide_street_01_2k.hdr"
 		});
 
 	Entity entity1 = ecs.createEntity();
@@ -107,7 +107,7 @@ int main(void) {
 		glm::vec3(10.0f, 1.0f, 10.0f)
 		});
 
-	/*Entity light1 = ecs.createEntity();
+	Entity light1 = ecs.createEntity();
 	ecs.addComponent(light1, Light{
 		LightType::DIRECTIONAL,
 		glm::vec3(0.0f),
@@ -116,7 +116,7 @@ int main(void) {
 		glm::vec2(0.0f)
 		});
 
-	Entity light2 = ecs.createEntity();
+	/*Entity light2 = ecs.createEntity();
 	ecs.addComponent(light2, Light{
 		LightType::SPOT,
 		glm::vec3(5.0f, 2.0f, 0.0f),

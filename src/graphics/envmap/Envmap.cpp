@@ -122,7 +122,7 @@ void Envmap::equilateralRectangleToCubemap() {
 	}
 
 	GraphicsPipeline equiRecToCubemapGraphicsPipeline;
-	equiRecToCubemapGraphicsPipeline.vertexShaderPath = "../shaders/equiRecToCubemap.vert";
+	equiRecToCubemapGraphicsPipeline.vertexShaderPath = "../shaders/cubemap.vert";
 	equiRecToCubemapGraphicsPipeline.fragmentShaderPath = "../shaders/equiRecToCubemap.frag";
 	equiRecToCubemapGraphicsPipeline.renderPass = &equiRecToCubemapRenderPass;
 	equiRecToCubemapGraphicsPipeline.viewport = &equiRecToCubemapViewport;
@@ -206,8 +206,8 @@ void Envmap::createDiffuseIradiance() {
 	ImageTools::createImageView(&diffuseIradianceImage.imageView, diffuseIradianceImage.image, 0, 6, 0, 1, VK_IMAGE_VIEW_TYPE_CUBE, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	ImageTools::createImageSampler(&diffuseIradianceImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
 
-	Viewport diffuseIradianceViewport;
-	diffuseIradianceViewport.init(CONVOLVE_WIDTH, CONVOLVE_HEIGHT);
+	Viewport convolveViewport;
+	convolveViewport.init(CONVOLVE_WIDTH, CONVOLVE_HEIGHT);
 
 	std::vector<RenderPassAttachment> attachments;
 	attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, physicalDevice.colorFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
@@ -228,10 +228,10 @@ void Envmap::createDiffuseIradiance() {
 	}
 
 	GraphicsPipeline convolveGraphicsPipeline;
-	convolveGraphicsPipeline.vertexShaderPath = "../shaders/projectToCube.vert";
+	convolveGraphicsPipeline.vertexShaderPath = "../shaders/cubemap.vert";
 	convolveGraphicsPipeline.fragmentShaderPath = "../shaders/convolve.frag";
 	convolveGraphicsPipeline.renderPass = &convolveRenderPass;
-	convolveGraphicsPipeline.viewport = &diffuseIradianceViewport;
+	convolveGraphicsPipeline.viewport = &convolveViewport;
 	convolveGraphicsPipeline.colorBlend = false;
 	convolveGraphicsPipeline.multiSample = false;
 	convolveGraphicsPipeline.init();
@@ -322,7 +322,7 @@ void Envmap::createPrefilter() {
 	prefilterRenderPass.init(attachments, dependencies);
 
 	GraphicsPipeline prefilterGraphicsPipeline;
-	prefilterGraphicsPipeline.vertexShaderPath = "../shaders/projectToCube.vert";
+	prefilterGraphicsPipeline.vertexShaderPath = "../shaders/cubemap.vert";
 	prefilterGraphicsPipeline.fragmentShaderPath = "../shaders/prefilter.frag";
 	prefilterGraphicsPipeline.renderPass = &prefilterRenderPass;
 	prefilterGraphicsPipeline.colorBlend = false;
