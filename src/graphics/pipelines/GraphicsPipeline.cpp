@@ -49,6 +49,7 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -81,12 +82,13 @@ void GraphicsPipeline::init() {
 		fragmentShaderCreateInfo.pName = "main";
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
-
+		
 		for (size_t i = 0; i < shader.sets.size(); i++) {
 			bool found = false;
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -125,6 +127,7 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -163,6 +166,7 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -201,6 +205,7 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
+					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}

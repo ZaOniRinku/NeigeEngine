@@ -30,17 +30,7 @@
 struct Renderer : public System {
 	Window* window;
 
-	// Camera
-	std::vector<Buffer> cameraBuffers;
-
-	// Lights
-	std::vector<Buffer> lightingBuffers;
-
-	// Shadow
-	Shadow shadow;
-
 	// Envmap
-	Envmap envmap;
 	GraphicsPipeline skyboxGraphicsPipeline;
 	std::vector<DescriptorSet> skyboxDescriptorSets;
 
@@ -55,11 +45,6 @@ struct Renderer : public System {
 	Viewport fullscreenViewport;
 
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
-
-	std::unordered_map<Entity, std::vector<DescriptorSet>> entityDescriptorSets;
-	std::unordered_map<Entity, std::vector<DescriptorSet>> entityShadowDescriptorSets;
-
-	std::unordered_map<Entity, std::vector<Buffer>> entityBuffers;
 
 	// Render passes
 	std::vector<Image> colorImages;

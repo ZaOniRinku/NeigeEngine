@@ -154,6 +154,7 @@ void Shader::reflect() {
 		for (uint32_t j = 0; j < reflectSet.binding_count; j++) {
 			const SpvReflectDescriptorBinding& reflectBinding = *reflectSet.bindings[j];
 			VkDescriptorSetLayoutBinding binding = {};
+			std::string name = reflectBinding.name;
 			binding.binding = reflectBinding.binding;
 			binding.descriptorType = static_cast<VkDescriptorType>(reflectBinding.descriptor_type);
 			uniqueDescriptorTypes.insert(binding.descriptorType);
@@ -164,6 +165,7 @@ void Shader::reflect() {
 			binding.stageFlags = shaderTypeToVkShaderFlagBits();
 			binding.pImmutableSamplers = nullptr;
 			set.bindings.push_back(binding);
+			set.names.push_back(name);
 			layoutBindingsShaderTypes.push_back(type);
 		}
 		sets.push_back(set);
