@@ -63,6 +63,12 @@ void Renderer::init() {
 		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(LightingUniformBufferObject));
 	}
 
+	// Time
+	timeBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	for (Buffer& buffer : timeBuffers) {
+		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(double));
+	}
+
 	// Shadow
 	shadow.init();
 
@@ -462,6 +468,9 @@ void Renderer::destroy() {
 	for (Buffer& buffer : lightingBuffers) {
 		buffer.destroy();
 	}
+	for (Buffer& buffer : timeBuffers) {
+		buffer.destroy();
+	}
 	for (std::unordered_map<Entity, std::vector<Buffer>>::iterator it = entityBuffers.begin(); it != entityBuffers.end(); it++) {
 		for (Buffer& buffer : it->second) {
 			buffer.destroy();
@@ -574,6 +583,12 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 	shadow.buffers.at(frameInFlightIndex).map(0, sizeof(ShadowUniformBufferObject), &data);
 	memcpy(data, &subo, sizeof(ShadowUniformBufferObject));
 	shadow.buffers.at(frameInFlightIndex).unmap();
+
+	// Time
+	float time = static_cast<float>(glfwGetTime());
+	timeBuffers.at(frameInFlightIndex).map(0, sizeof(float), &data);
+	memcpy(data, &time, sizeof(double));
+	timeBuffers.at(frameInFlightIndex).unmap();
 
 	// Renderables
 	for (Entity object : entities) {

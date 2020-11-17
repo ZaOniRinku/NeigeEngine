@@ -11,6 +11,7 @@ void GraphicsPipeline::init() {
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
 	std::vector<std::string> inputVariablesNames;
+	std::vector<uint32_t> inputVariablesIndices;
 
 	if (vertexShaderPath != "") {
 		Shader shader;
@@ -44,6 +45,7 @@ void GraphicsPipeline::init() {
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
 		inputVariablesNames.insert(inputVariablesNames.end(), shader.inputVariablesNames.begin(), shader.inputVariablesNames.end());
+		inputVariablesIndices.insert(inputVariablesIndices.end(), shader.inputVariablesIndices.begin(), shader.inputVariablesIndices.end());
 		for (size_t i = 0; i < shader.sets.size(); i++) {
 			bool found = false;
 			for (size_t j = 0; j < sets.size(); j++) {
@@ -275,7 +277,7 @@ void GraphicsPipeline::init() {
 
 	// Vertex input
 	VkVertexInputBindingDescription inputBindingDescription = Vertex::getInputBindingDescription();
-	std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions = Vertex::getInputAttributeDescriptions(inputVariablesNames);
+	std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions = Vertex::getInputAttributeDescriptions(inputVariablesNames, inputVariablesIndices);
 
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

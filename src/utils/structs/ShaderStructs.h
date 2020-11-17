@@ -47,6 +47,8 @@ struct Vertex {
 	glm::vec2 uv;
 	glm::vec3 color;
 	glm::vec3 tangent;
+	glm::vec4 joints;
+	glm::vec4 weights;
 
 	static VkVertexInputBindingDescription getInputBindingDescription() {
 		VkVertexInputBindingDescription inputBindingDescription = {};
@@ -57,49 +59,65 @@ struct Vertex {
 		return inputBindingDescription;
 	}
 
-	static std::vector<VkVertexInputAttributeDescription> getInputAttributeDescriptions(std::vector<std::string> inputVariables) {
+	static std::vector<VkVertexInputAttributeDescription> getInputAttributeDescriptions(std::vector<std::string> inputVariablesNames, std::vector<uint32_t> inputVariablesIndices) {
 		std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions;
 
-		for (size_t i = 0; i < inputVariables.size(); i++) {
-			if (inputVariables[i] == "position") {
+		for (size_t i = 0; i < inputVariablesNames.size(); i++) {
+			if (inputVariablesNames[i] == "position") {
 				VkVertexInputAttributeDescription positionAttribute = {};
 				positionAttribute.binding = 0;
-				positionAttribute.location = 0;
+				positionAttribute.location = inputVariablesIndices[i];
 				positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				positionAttribute.offset = offsetof(Vertex, position);
 				inputAttributeDescriptions.push_back(positionAttribute);
 			}
-			else if (inputVariables[i] == "normal") {
+			else if (inputVariablesNames[i] == "normal") {
 				VkVertexInputAttributeDescription normalAttribute = {};
 				normalAttribute.binding = 0;
-				normalAttribute.location = 1;
+				normalAttribute.location = inputVariablesIndices[i];
 				normalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				normalAttribute.offset = offsetof(Vertex, normal);
 				inputAttributeDescriptions.push_back(normalAttribute);
 			}
-			else if (inputVariables[i] == "uv") {
+			else if (inputVariablesNames[i] == "uv") {
 				VkVertexInputAttributeDescription uvAttribute = {};
 				uvAttribute.binding = 0;
-				uvAttribute.location = 2;
+				uvAttribute.location = inputVariablesIndices[i];
 				uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
 				uvAttribute.offset = offsetof(Vertex, uv);
 				inputAttributeDescriptions.push_back(uvAttribute);
 			}
-			else if (inputVariables[i] == "color") {
+			else if (inputVariablesNames[i] == "color") {
 				VkVertexInputAttributeDescription colorAttribute = {};
 				colorAttribute.binding = 0;
-				colorAttribute.location = 3;
+				colorAttribute.location = inputVariablesIndices[i];
 				colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				colorAttribute.offset = offsetof(Vertex, color);
 				inputAttributeDescriptions.push_back(colorAttribute);
 			}
-			else if (inputVariables[i] == "tangent") {
+			else if (inputVariablesNames[i] == "tangent") {
 				VkVertexInputAttributeDescription tangentAttribute = {};
 				tangentAttribute.binding = 0;
-				tangentAttribute.location = 4;
+				tangentAttribute.location = inputVariablesIndices[i];
 				tangentAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				tangentAttribute.offset = offsetof(Vertex, tangent);
 				inputAttributeDescriptions.push_back(tangentAttribute);
+			}
+			else if (inputVariablesNames[i] == "joints") {
+				VkVertexInputAttributeDescription jointsAttribute = {};
+				jointsAttribute.binding = 0;
+				jointsAttribute.location = inputVariablesIndices[i];
+				jointsAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+				jointsAttribute.offset = offsetof(Vertex, joints);
+				inputAttributeDescriptions.push_back(jointsAttribute);
+			}
+			else if (inputVariablesNames[i] == "weights") {
+				VkVertexInputAttributeDescription weightsAttribute = {};
+				weightsAttribute.binding = 0;
+				weightsAttribute.location = inputVariablesIndices[i];
+				weightsAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+				weightsAttribute.offset = offsetof(Vertex, weights);
+				inputAttributeDescriptions.push_back(weightsAttribute);
 			}
 		}
 

@@ -118,6 +118,8 @@ bool Shader::compile() {
 void Shader::reflect() {
 	inputVariablesNames.clear();
 	inputVariablesNames.shrink_to_fit();
+	inputVariablesIndices.clear();
+	inputVariablesIndices.shrink_to_fit();
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 	uniqueDescriptorTypes.clear();
@@ -136,6 +138,7 @@ void Shader::reflect() {
 		
 		for (uint32_t i = 0; i < inputVariablesCount; i++) {
 			inputVariablesNames.push_back(inputVariables[i]->name);
+			inputVariablesIndices.push_back(inputVariables[i]->location);
 		}
 	}
 

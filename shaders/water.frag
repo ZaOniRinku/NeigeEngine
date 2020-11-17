@@ -18,6 +18,10 @@ layout(set = 0, binding = 3) uniform Lighting {
 	vec2 spotLightsCutoffs[MAX_SPOT_LIGHTS];
 } lights;
 
+layout(set = 0, binding = 8) uniform Time {
+	float time;
+} time;
+
 layout(set = 0, binding = 4) uniform samplerCube irradianceMap;
 layout(set = 0, binding = 5) uniform samplerCube prefilterMap;
 layout(set = 0, binding = 6) uniform sampler2D brdfLUT;
@@ -137,10 +141,10 @@ float shadowValue(vec4 lightSpace, int shadowMapIndex) {
 
 void main() {
 	vec4 colorSample = texture(colorMap, uv);
-	vec3 normalSample = texture(normalMap, uv).xyz;
-	float metallicSample = texture(metallicRoughnessMap, uv).b;
-	float roughnessSample = texture(metallicRoughnessMap, uv).g;
-	float occlusionSample = texture(occlusionMap, uv).r;
+	vec3 normalSample = texture(normalMap, uv + vec2(time.time / 4.0, sin(time.time) / 32.0)).xyz;
+	float metallicSample = 1.0;
+	float roughnessSample = 0.0;
+	float occlusionSample = 1.0;
 
 	vec3 d = vec3(colorSample);
 	vec3 n = normalSample * 2.0 - 1.0;

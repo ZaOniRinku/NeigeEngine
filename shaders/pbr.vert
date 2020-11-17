@@ -25,6 +25,8 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 layout(location = 3) in vec3 color;
 layout(location = 4) in vec3 tangent;
+layout(location = 5) in vec4 joints;
+layout(location = 6) in vec4 weights;
 
 layout(location = 0) out vec3 outPosition;
 layout(location = 1) out vec3 outNormal;
@@ -33,9 +35,11 @@ layout(location = 3) out vec3 outColor;
 layout(location = 4) out vec3 outTangent;
 layout(location = 5) out vec3 outCameraPos;
 layout(location = 6) out vec3 outFragmentPos;
-layout(location = 7) out vec4 outDirLightSpaces[MAX_DIR_LIGHTS];
-layout(location = MAX_DIR_LIGHTS + 7) out vec4 outSpotLightSpaces[MAX_SPOT_LIGHTS];
-layout(location = MAX_DIR_LIGHTS + MAX_SPOT_LIGHTS + 7) out mat3 outTBN;
+layout(location = 7) out vec4 outJoints;
+layout(location = 8) out vec4 outWeights;
+layout(location = 9) out vec4 outDirLightSpaces[MAX_DIR_LIGHTS];
+layout(location = MAX_DIR_LIGHTS + 9) out vec4 outSpotLightSpaces[MAX_SPOT_LIGHTS];
+layout(location = MAX_DIR_LIGHTS + MAX_SPOT_LIGHTS + 9) out mat3 outTBN;
 
 void main() {
 	mat3 normalMatrix = transpose(inverse(mat3(object.model)));
@@ -51,6 +55,8 @@ void main() {
 	outTBN = mat3(T, B, N);
 	outCameraPos = camera.pos;
 	outFragmentPos = vec3(object.model * vec4(position, 1.0));
+	outJoints = joints;
+	outWeights = weights;
 
 	int numDirLights = int(shadow.numLights.x);
 	int numPointLights = int(shadow.numLights.y);

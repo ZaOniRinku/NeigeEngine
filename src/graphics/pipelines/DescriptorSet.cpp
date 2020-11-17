@@ -196,6 +196,26 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 
 			writesDescriptorSet.push_back(shadowMapsWriteDescriptorSet);
 		}
+		else if (bindingName == "time") {
+			VkDescriptorBufferInfo timeInfo = {};
+			timeInfo.buffer = timeBuffers.at(frameInFlightIndex).buffer;
+			timeInfo.offset = 0;
+			timeInfo.range = sizeof(float);
+
+			VkWriteDescriptorSet timeWriteDescriptorSet = {};
+			timeWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			timeWriteDescriptorSet.pNext = nullptr;
+			timeWriteDescriptorSet.dstSet = descriptorSet;
+			timeWriteDescriptorSet.dstBinding = index++;
+			timeWriteDescriptorSet.dstArrayElement = 0;
+			timeWriteDescriptorSet.descriptorCount = 1;
+			timeWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			timeWriteDescriptorSet.pImageInfo = nullptr;
+			timeWriteDescriptorSet.pBufferInfo = &timeInfo;
+			timeWriteDescriptorSet.pTexelBufferView = nullptr;
+
+			writesDescriptorSet.push_back(timeWriteDescriptorSet);
+		}
 	}
 
 	update(writesDescriptorSet);

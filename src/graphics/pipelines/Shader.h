@@ -18,6 +18,7 @@ struct Shader {
 	std::vector<uint32_t> spvCode;
 	std::vector<Set> sets;
 	std::vector<std::string> inputVariablesNames;
+	std::vector<uint32_t> inputVariablesIndices;
 	std::vector<ShaderType> layoutBindingsShaderTypes;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
@@ -123,7 +124,7 @@ struct Shader {
         1,
         1,
         1,
-};
+    };
 
 	void init(const std::string& filePath);
 	void destroy();
