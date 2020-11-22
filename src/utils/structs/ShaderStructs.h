@@ -40,6 +40,19 @@ struct Material {
 	std::string occlusionKey = "";
 };
 
+// Input variable
+struct InputVariable {
+	uint32_t location;
+	std::string name;
+};
+
+// Set
+struct Set {
+	uint32_t set;
+	std::vector<VkDescriptorSetLayoutBinding> bindings;
+	std::vector<std::string> names;
+};
+
 // Vertex
 struct Vertex {
 	glm::vec3 position;
@@ -59,65 +72,68 @@ struct Vertex {
 		return inputBindingDescription;
 	}
 
-	static std::vector<VkVertexInputAttributeDescription> getInputAttributeDescriptions(std::vector<std::string> inputVariablesNames, std::vector<uint32_t> inputVariablesIndices) {
+	static std::vector<VkVertexInputAttributeDescription> getInputAttributeDescriptions(std::vector<InputVariable> inputVariables) {
 		std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions;
 
-		for (size_t i = 0; i < inputVariablesNames.size(); i++) {
-			if (inputVariablesNames[i] == "position") {
+		for (size_t i = 0; i < inputVariables.size(); i++) {
+			if (inputVariables[i].name == "position") {
 				VkVertexInputAttributeDescription positionAttribute = {};
 				positionAttribute.binding = 0;
-				positionAttribute.location = inputVariablesIndices[i];
+				positionAttribute.location = inputVariables[i].location;
 				positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				positionAttribute.offset = offsetof(Vertex, position);
 				inputAttributeDescriptions.push_back(positionAttribute);
 			}
-			else if (inputVariablesNames[i] == "normal") {
+			else if (inputVariables[i].name == "normal") {
 				VkVertexInputAttributeDescription normalAttribute = {};
 				normalAttribute.binding = 0;
-				normalAttribute.location = inputVariablesIndices[i];
+				normalAttribute.location = inputVariables[i].location;
 				normalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				normalAttribute.offset = offsetof(Vertex, normal);
 				inputAttributeDescriptions.push_back(normalAttribute);
 			}
-			else if (inputVariablesNames[i] == "uv") {
+			else if (inputVariables[i].name == "uv") {
 				VkVertexInputAttributeDescription uvAttribute = {};
 				uvAttribute.binding = 0;
-				uvAttribute.location = inputVariablesIndices[i];
+				uvAttribute.location = inputVariables[i].location;
 				uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
 				uvAttribute.offset = offsetof(Vertex, uv);
 				inputAttributeDescriptions.push_back(uvAttribute);
 			}
-			else if (inputVariablesNames[i] == "color") {
+			else if (inputVariables[i].name == "color") {
 				VkVertexInputAttributeDescription colorAttribute = {};
 				colorAttribute.binding = 0;
-				colorAttribute.location = inputVariablesIndices[i];
+				colorAttribute.location = inputVariables[i].location;
 				colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				colorAttribute.offset = offsetof(Vertex, color);
 				inputAttributeDescriptions.push_back(colorAttribute);
 			}
-			else if (inputVariablesNames[i] == "tangent") {
+			else if (inputVariables[i].name == "tangent") {
 				VkVertexInputAttributeDescription tangentAttribute = {};
 				tangentAttribute.binding = 0;
-				tangentAttribute.location = inputVariablesIndices[i];
+				tangentAttribute.location = inputVariables[i].location;
 				tangentAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 				tangentAttribute.offset = offsetof(Vertex, tangent);
 				inputAttributeDescriptions.push_back(tangentAttribute);
 			}
-			else if (inputVariablesNames[i] == "joints") {
+			else if (inputVariables[i].name == "joints") {
 				VkVertexInputAttributeDescription jointsAttribute = {};
 				jointsAttribute.binding = 0;
-				jointsAttribute.location = inputVariablesIndices[i];
+				jointsAttribute.location = inputVariables[i].location;
 				jointsAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 				jointsAttribute.offset = offsetof(Vertex, joints);
 				inputAttributeDescriptions.push_back(jointsAttribute);
 			}
-			else if (inputVariablesNames[i] == "weights") {
+			else if (inputVariables[i].name == "weights") {
 				VkVertexInputAttributeDescription weightsAttribute = {};
 				weightsAttribute.binding = 0;
-				weightsAttribute.location = inputVariablesIndices[i];
+				weightsAttribute.location = inputVariables[i].location;
 				weightsAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
 				weightsAttribute.offset = offsetof(Vertex, weights);
 				inputAttributeDescriptions.push_back(weightsAttribute);
+			}
+			else {
+				NEIGE_WARNING("Vertex shader input variable \"" + inputVariables[i].name + "\" at location " + std::to_string(inputVariables[i].location) + " is undefined.");
 			}
 		}
 

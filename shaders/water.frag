@@ -26,25 +26,19 @@ layout(set = 0, binding = 4) uniform samplerCube irradianceMap;
 layout(set = 0, binding = 5) uniform samplerCube prefilterMap;
 layout(set = 0, binding = 6) uniform sampler2D brdfLUT;
 
-layout(set = 0, binding = 7) uniform sampler2D shadowMaps[MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
+layout(set = 0, binding = 7) uniform sampler2DShadow shadowMaps[MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
 
 layout(set = 1, binding = 0) uniform sampler2D colorMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
 layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessMap;
 layout(set = 1, binding = 3) uniform sampler2D occlusionMap;
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 uv;
-layout(location = 3) in vec3 color;
-layout(location = 4) in vec3 tangent;
-layout(location = 5) in vec3 cameraPos;
-layout(location = 6) in vec3 fragmentPos;
-layout(location = 7) in vec4 joints;
-layout(location = 8) in vec4 weights;
-layout(location = 9) in vec4 dirLightSpaces[MAX_DIR_LIGHTS];
-layout(location = MAX_DIR_LIGHTS + 9) in vec4 spotLightSpaces[MAX_SPOT_LIGHTS];
-layout(location = MAX_DIR_LIGHTS + MAX_SPOT_LIGHTS + 9) in mat3 TBN;
+layout(location = 0) in vec2 uv;
+layout(location = 1) in vec3 cameraPos;
+layout(location = 2) in vec3 fragmentPos;
+layout(location = 3) in vec4 dirLightSpaces[MAX_DIR_LIGHTS];
+layout(location = MAX_DIR_LIGHTS + 3) in vec4 spotLightSpaces[MAX_SPOT_LIGHTS];
+layout(location = MAX_DIR_LIGHTS + MAX_SPOT_LIGHTS + 3) in mat3 TBN;
 
 layout(location = 0) out vec4 outColor;
 
@@ -131,8 +125,8 @@ float shadowValue(vec4 lightSpace, int shadowMapIndex) {
 	vec2 texelSize = 1.0 / textureSize(shadowMaps[shadowMapIndex], 0);
 	for (int x = -1; x <= 1; x++) {
 		for (int y = -1; y <= 1; y++) {
-			float shadowSample = texture(shadowMaps[shadowMapIndex], proj.xy + vec2(x, y) * texelSize).r;
-			shadow += curr > shadowSample ? 1.0 : 0.0;
+			vec3 shadowUvs = vec3(vec2(proj.xy) + vec2(x, y) * texelSize, curr);
+			shadow += texture(shadowMaps[shadowMapIndex], shadowUvs).r;
 		}
 	}
 	
@@ -165,7 +159,7 @@ void main() {
 	for (int i = 0; i < numDirLights; i++) {
 		l = normalize(-lights.dirLightsDirection[i]);
 		float shadow = shadowValue(dirLightSpaces[i], shadowMapIndex);
-		tmpColor += shade(n, v, l, lights.dirLightsColor[i], d, metallicSample, roughnessSample) * (1.0 - shadow);
+		tmpColor += shade(n, v, l, lights.dirLightsColor[i], d, metallicSample, roughnessSample) * shadow;
 		shadowMapIndex++;
 	}
 
@@ -182,13 +176,13 @@ void main() {
 		float theta = dot(l, normalize(-lights.spotLightsDirection[i]));
 		if (theta > lights.spotLightsCutoffs[i].x) {
 			float shadow = shadowValue(spotLightSpaces[i], shadowMapIndex);
-			tmpColor += shade(n, v, l, lights.spotLightsColor[i], d, metallicSample, roughnessSample) * (1.0 - shadow);
+			tmpColor += shade(n, v, l, lights.spotLightsColor[i], d, metallicSample, roughnessSample) * shadow;
 		}
 		else if (theta > lights.spotLightsCutoffs[i].y) {
 			float shadow = shadowValue(spotLightSpaces[i], shadowMapIndex);
 			float epsilon = lights.spotLightsCutoffs[i].x - lights.spotLightsCutoffs[i].y;
 			float intensity = clamp((theta - lights.spotLightsCutoffs[i].y) / epsilon, 0.0, 1.0);
-			tmpColor += shade(n, v, l, lights.spotLightsColor[i] * intensity, d * intensity, metallicSample, roughnessSample) * (1.0 - shadow);
+			tmpColor += shade(n, v, l, lights.spotLightsColor[i] * intensity, d * intensity, metallicSample, roughnessSample) * shadow;
 		}
 		shadowMapIndex++;
 	}

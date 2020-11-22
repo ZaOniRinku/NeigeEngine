@@ -10,8 +10,7 @@ void GraphicsPipeline::init() {
 
 	std::vector<VkPipelineShaderStageCreateInfo> pipelineStages;
 	std::set<VkDescriptorType> uniqueDescriptorTypes;
-	std::vector<std::string> inputVariablesNames;
-	std::vector<uint32_t> inputVariablesIndices;
+	std::vector<InputVariable> inputVariables;
 
 	if (vertexShaderPath != "") {
 		Shader shader;
@@ -44,8 +43,7 @@ void GraphicsPipeline::init() {
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;
 
-		inputVariablesNames.insert(inputVariablesNames.end(), shader.inputVariablesNames.begin(), shader.inputVariablesNames.end());
-		inputVariablesIndices.insert(inputVariablesIndices.end(), shader.inputVariablesIndices.begin(), shader.inputVariablesIndices.end());
+		inputVariables.insert(inputVariables.end(), shader.inputVariables.begin(), shader.inputVariables.end());
 		for (size_t i = 0; i < shader.sets.size(); i++) {
 			bool found = false;
 			for (size_t j = 0; j < sets.size(); j++) {
@@ -84,7 +82,7 @@ void GraphicsPipeline::init() {
 		fragmentShaderCreateInfo.pName = "main";
 		fragmentShaderCreateInfo.pSpecializationInfo = nullptr;
 		pipelineStages.push_back(fragmentShaderCreateInfo);
-		
+
 		for (size_t i = 0; i < shader.sets.size(); i++) {
 			bool found = false;
 			for (size_t j = 0; j < sets.size(); j++) {
@@ -221,6 +219,9 @@ void GraphicsPipeline::init() {
 
 	NEIGE_ASSERT(pipelineStages.size() != 0, "Graphics pipeline got no stage (no shader given).");
 
+	// Sort input variables
+	std::sort(inputVariables.begin(), inputVariables.end(), [](InputVariable a, InputVariable b) { return a.location < b.location; });
+
 	// Sort sets
 	std::sort(sets.begin(), sets.end(), [](Set a, Set b) { return a.set < b.set; });
 	for (size_t i = 0; i < sets.size(); i++) {
@@ -277,7 +278,7 @@ void GraphicsPipeline::init() {
 
 	// Vertex input
 	VkVertexInputBindingDescription inputBindingDescription = Vertex::getInputBindingDescription();
-	std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions = Vertex::getInputAttributeDescriptions(inputVariablesNames, inputVariablesIndices);
+	std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions = Vertex::getInputAttributeDescriptions(inputVariables);
 
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = {};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

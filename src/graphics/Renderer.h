@@ -66,6 +66,7 @@ struct Renderer : public System {
 	void init();
 	void update();
 	void destroy();
+	void loadObject(Entity object);
 	void updateData(uint32_t frameInFlightIndex);
 	void recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex);
 	void createResources();

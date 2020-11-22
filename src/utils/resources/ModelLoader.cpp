@@ -302,7 +302,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 							Image image;
 							ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + baseColorImage->uri, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
 							ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 							textures.emplace(baseColorImage->uri, image);
 						}
 						primitiveMaterial.diffuseKey = baseColorImage->uri;
@@ -314,7 +314,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 							Image image;
 							ImageTools::loadColor(baseColorFactor, &image.image, VK_FORMAT_R8G8B8A8_SRGB, &image.mipmapLevels, &image.allocationId);
 							ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 							textures.emplace(mapKey, image);
 						}
 						primitiveMaterial.diffuseKey = mapKey;
@@ -331,7 +331,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 							Image image;
 							ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + metallicRoughnessImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 							ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 							textures.emplace(metallicRoughnessImage->uri, image);
 						}
 						primitiveMaterial.metallicRoughnessKey = metallicRoughnessImage->uri;
@@ -344,7 +344,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 							Image image;
 							ImageTools::loadColor(metallicRoughnessArray, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 							ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+							ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 							textures.emplace(metallicRoughnessMapKey, image);
 						}
 						primitiveMaterial.metallicRoughnessKey = metallicRoughnessMapKey;
@@ -360,7 +360,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 						Image image;
 						ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + normalImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 						ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-						ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+						ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 						textures.emplace(normalImage->uri, image);
 					}
 					primitiveMaterial.normalKey = normalImage->uri;
@@ -375,7 +375,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 						Image image;
 						ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + occlusionImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
 						ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-						ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+						ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 						textures.emplace(occlusionImage->uri, image);
 					}
 					primitiveMaterial.occlusionKey = occlusionImage->uri;
@@ -405,6 +405,19 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 		modelMesh.primitives = primitives;
 
 		meshes->push_back(modelMesh);
+	}
+
+	if (node->skin != NULL) {
+		cgltf_skin* skin = node->skin;
+		
+		cgltf_accessor* accessor = skin->inverse_bind_matrices;
+		cgltf_buffer_view* buffer_view = accessor->buffer_view;
+		char* buffer = static_cast<char*>(buffer_view->buffer->data);
+		float* inverseBindMatrices = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+
+		for (size_t i = 0; i < skin->joints_count; i++) {
+			glm::mat4 inverseBindMatrix = glm::make_mat4(inverseBindMatrices + (i * 16));
+		}
 	}
 
 	for (size_t i = 0; i < node->children_count; i++) {

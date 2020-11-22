@@ -32,7 +32,8 @@ struct ImageTools {
 		uint32_t mipLevels,
 		VkFilter filter,
 		VkSamplerAddressMode addressMode,
-		VkBorderColor borderColor);
+		VkBorderColor borderColor,
+		VkCompareOp compareOp);
 	static void loadImage(const std::string& filePath,
 		VkImage* imageDestination,
 		VkFormat format,

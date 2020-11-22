@@ -66,7 +66,8 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 	uint32_t mipLevels,
 	VkFilter filter,
 	VkSamplerAddressMode addressMode,
-	VkBorderColor borderColor) {
+	VkBorderColor borderColor,
+	VkCompareOp compareOp) {
 	VkSamplerCreateInfo samplerCreateInfo = {};
 	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	samplerCreateInfo.pNext = nullptr;
@@ -80,8 +81,8 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 	samplerCreateInfo.mipLodBias = 0.0f;
 	samplerCreateInfo.anisotropyEnable = VK_TRUE;
 	samplerCreateInfo.maxAnisotropy = 16.0f;
-	samplerCreateInfo.compareEnable = VK_FALSE;
-	samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerCreateInfo.compareEnable = compareOp == VK_COMPARE_OP_ALWAYS ? VK_FALSE : VK_TRUE;
+	samplerCreateInfo.compareOp = compareOp;
 	samplerCreateInfo.minLod = 0.0f;
 	samplerCreateInfo.maxLod = static_cast<float>(mipLevels);
 	samplerCreateInfo.borderColor = borderColor;

@@ -116,10 +116,8 @@ bool Shader::compile() {
 }
 
 void Shader::reflect() {
-	inputVariablesNames.clear();
-	inputVariablesNames.shrink_to_fit();
-	inputVariablesIndices.clear();
-	inputVariablesIndices.shrink_to_fit();
+	inputVariables.clear();
+	inputVariables.shrink_to_fit();
 	pushConstantRanges.clear();
 	pushConstantRanges.shrink_to_fit();
 	uniqueDescriptorTypes.clear();
@@ -132,13 +130,16 @@ void Shader::reflect() {
 		uint32_t inputVariablesCount;
 		result = spvReflectEnumerateInputVariables(&spvShaderModule, &inputVariablesCount, nullptr);
 		NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to count input variables.");
-		std::vector<SpvReflectInterfaceVariable*> inputVariables(inputVariablesCount);
-		result = spvReflectEnumerateInputVariables(&spvShaderModule, &inputVariablesCount, inputVariables.data());
+		std::vector<SpvReflectInterfaceVariable*> reflectedInputVariables(inputVariablesCount);
+		result = spvReflectEnumerateInputVariables(&spvShaderModule, &inputVariablesCount, reflectedInputVariables.data());
 		NEIGE_ASSERT(result == SPV_REFLECT_RESULT_SUCCESS, "\"" + file + "\" : unable to find input variables.");
 		
 		for (uint32_t i = 0; i < inputVariablesCount; i++) {
-			inputVariablesNames.push_back(inputVariables[i]->name);
-			inputVariablesIndices.push_back(inputVariables[i]->location);
+			InputVariable inputVariable;
+			inputVariable.location = reflectedInputVariables[i]->location;
+			inputVariable.name = reflectedInputVariables[i]->name;
+
+			inputVariables.push_back(inputVariable);
 		}
 	}
 

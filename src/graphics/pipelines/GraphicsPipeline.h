@@ -1,7 +1,6 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "../../utils/NeigeDefines.h"
-#include "../../utils/structs/RendererStructs.h"
 #include "../../utils/structs/ShaderStructs.h"
 #include "../commands/CommandBuffer.h"
 #include "../renderpasses/RenderPass.h"

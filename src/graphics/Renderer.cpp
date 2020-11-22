@@ -186,28 +186,28 @@ void Renderer::init() {
 	Image defaultDiffuseImage;
 	ImageTools::loadColor(defaultDiffuse, &defaultDiffuseImage.image, VK_FORMAT_R8G8B8A8_SRGB, &defaultDiffuseImage.mipmapLevels, &defaultDiffuseImage.allocationId);
 	ImageTools::createImageView(&defaultDiffuseImage.imageView, defaultDiffuseImage.image, 0, 1, 0, defaultDiffuseImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultDiffuseImage.imageSampler, defaultDiffuseImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+	ImageTools::createImageSampler(&defaultDiffuseImage.imageSampler, defaultDiffuseImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 	textures.emplace("defaultDiffuse", defaultDiffuseImage);
 
 	float defaultNormal[4] = { 0.5f, 0.5f, 1.0f, 0.0f };
 	Image defaultNormalImage;
 	ImageTools::loadColor(defaultNormal, &defaultNormalImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultNormalImage.mipmapLevels, &defaultNormalImage.allocationId);
 	ImageTools::createImageView(&defaultNormalImage.imageView, defaultNormalImage.image, 0, 1, 0, defaultNormalImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultNormalImage.imageSampler, defaultNormalImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+	ImageTools::createImageSampler(&defaultNormalImage.imageSampler, defaultNormalImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 	textures.emplace("defaultNormal", defaultNormalImage);
 
 	float defaultMetallicRoughness[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	Image defaultMetallicRoughnessImage;
 	ImageTools::loadColor(defaultMetallicRoughness, &defaultMetallicRoughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultMetallicRoughnessImage.mipmapLevels, &defaultMetallicRoughnessImage.allocationId);
 	ImageTools::createImageView(&defaultMetallicRoughnessImage.imageView, defaultMetallicRoughnessImage.image, 0, 1, 0, defaultMetallicRoughnessImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+	ImageTools::createImageSampler(&defaultMetallicRoughnessImage.imageSampler, defaultMetallicRoughnessImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 	textures.emplace("defaultMetallicRoughness", defaultMetallicRoughnessImage);
 
 	float defaultOcclusion[4] = { 1.0, 1.0, 1.0, 0.0 };
 	Image defaultOcclusionImage;
 	ImageTools::loadColor(defaultOcclusion, &defaultOcclusionImage.image, VK_FORMAT_R8G8B8A8_UNORM, &defaultOcclusionImage.mipmapLevels, &defaultOcclusionImage.allocationId);
 	ImageTools::createImageView(&defaultOcclusionImage.imageView, defaultOcclusionImage.image, 0, 1, 0, defaultOcclusionImage.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&defaultOcclusionImage.imageSampler, defaultOcclusionImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK);
+	ImageTools::createImageSampler(&defaultOcclusionImage.imageSampler, defaultOcclusionImage.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 	textures.emplace("defaultOcclusion", defaultOcclusionImage);
 
 	Material defaultMaterial = { "defaultDiffuse", "defaultNormal", "defaultMetallicRoughness", "defaultOcclusion" };
@@ -215,108 +215,7 @@ void Renderer::init() {
 
 	// Object resources
 	for (Entity object : entities) {
-		auto const& objectRenderable = ecs.getComponent<Renderable>(object);
-
-		std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
-
-		// Graphics pipelines
-		if (graphicsPipelines.find(mapKey) == graphicsPipelines.end()) {
-			GraphicsPipeline graphicsPipeline;
-			graphicsPipeline.vertexShaderPath = objectRenderable.vertexShaderPath;
-			graphicsPipeline.fragmentShaderPath = objectRenderable.fragmentShaderPath;
-			graphicsPipeline.tesselationControlShaderPath = objectRenderable.tesselationControlShaderPath;
-			graphicsPipeline.tesselationEvaluationShaderPath = objectRenderable.tesselationEvaluationShaderPath;
-			graphicsPipeline.geometryShaderPath = objectRenderable.geometryShaderPath;
-			graphicsPipeline.renderPass = &renderPasses.at("scene");
-			graphicsPipeline.viewport = &fullscreenViewport;
-			graphicsPipeline.topology = objectRenderable.topology;
-			graphicsPipeline.colorBlend = false;
-			graphicsPipeline.init();
-			graphicsPipelines.emplace(mapKey, graphicsPipeline);
-		}
-
-		if (graphicsPipelines.at(mapKey).sets.size() != 0) {
-			std::vector<Buffer> buffers;
-			buffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-			std::vector<DescriptorSet> descriptorSets;
-			descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
-			std::vector<DescriptorSet> shadowDescriptorSets;
-			shadowDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
-			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-				// Buffers
-				BufferTools::createUniformBuffer(buffers.at(i).buffer, buffers.at(i).deviceMemory, sizeof(ObjectUniformBufferObject));
-			}
-
-			entityBuffers.emplace(object, buffers);
-
-			for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-				// Descriptor sets
-				{
-					descriptorSets[i].init(&graphicsPipelines.at(mapKey), 0);
-					descriptorSets[i].createEntityDescriptorSet(object, i);
-				}
-
-				// Shadow
-				{
-					shadowDescriptorSets[i].init(&shadow.graphicsPipeline, 0);
-
-					VkDescriptorBufferInfo objectInfo = {};
-					objectInfo.buffer = buffers.at(i).buffer;
-					objectInfo.offset = 0;
-					objectInfo.range = sizeof(ObjectUniformBufferObject);
-
-					VkDescriptorBufferInfo shadowInfo = {};
-					shadowInfo.buffer = shadow.buffers.at(i).buffer;
-					shadowInfo.offset = 0;
-					shadowInfo.range = sizeof(ShadowUniformBufferObject);
-
-					std::vector<VkWriteDescriptorSet> writesDescriptorSet;
-
-					VkWriteDescriptorSet objectWriteDescriptorSet = {};
-					objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-					objectWriteDescriptorSet.pNext = nullptr;
-					objectWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
-					objectWriteDescriptorSet.dstBinding = 0;
-					objectWriteDescriptorSet.dstArrayElement = 0;
-					objectWriteDescriptorSet.descriptorCount = 1;
-					objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-					objectWriteDescriptorSet.pImageInfo = nullptr;
-					objectWriteDescriptorSet.pBufferInfo = &objectInfo;
-					objectWriteDescriptorSet.pTexelBufferView = nullptr;
-					writesDescriptorSet.push_back(objectWriteDescriptorSet);
-
-					VkWriteDescriptorSet shadowWriteDescriptorSet = {};
-					shadowWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-					shadowWriteDescriptorSet.pNext = nullptr;
-					shadowWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
-					shadowWriteDescriptorSet.dstBinding = 1;
-					shadowWriteDescriptorSet.dstArrayElement = 0;
-					shadowWriteDescriptorSet.descriptorCount = 1;
-					shadowWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-					shadowWriteDescriptorSet.pImageInfo = nullptr;
-					shadowWriteDescriptorSet.pBufferInfo = &shadowInfo;
-					shadowWriteDescriptorSet.pTexelBufferView = nullptr;
-					writesDescriptorSet.push_back(shadowWriteDescriptorSet);
-
-					shadowDescriptorSets[i].update(writesDescriptorSet);
-				}
-			}
-
-			entityBuffers.emplace(object, buffers);
-			entityDescriptorSets.emplace(object, descriptorSets);
-			entityShadowDescriptorSets.emplace(object, shadowDescriptorSets);
-		}
-
-		// Model
-		if (models.find(objectRenderable.modelPath) == models.end()) {
-			Model model;
-			model.init(objectRenderable.modelPath);
-			model.createDescriptorSets(&graphicsPipelines.at(mapKey));
-			models.emplace(objectRenderable.modelPath, model);
-		}
+		loadObject(object);
 	}
 
 	// Command pools and buffers
@@ -506,6 +405,111 @@ void Renderer::destroy() {
 	window->surface.destroy();
 	logicalDevice.destroy();
 	instance.destroy();
+}
+
+void Renderer::loadObject(Entity object) {
+	auto const& objectRenderable = ecs.getComponent<Renderable>(object);
+
+	std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
+
+	// Graphics pipelines
+	if (graphicsPipelines.find(mapKey) == graphicsPipelines.end()) {
+		GraphicsPipeline graphicsPipeline;
+		graphicsPipeline.vertexShaderPath = objectRenderable.vertexShaderPath;
+		graphicsPipeline.fragmentShaderPath = objectRenderable.fragmentShaderPath;
+		graphicsPipeline.tesselationControlShaderPath = objectRenderable.tesselationControlShaderPath;
+		graphicsPipeline.tesselationEvaluationShaderPath = objectRenderable.tesselationEvaluationShaderPath;
+		graphicsPipeline.geometryShaderPath = objectRenderable.geometryShaderPath;
+		graphicsPipeline.renderPass = &renderPasses.at("scene");
+		graphicsPipeline.viewport = &fullscreenViewport;
+		graphicsPipeline.topology = objectRenderable.topology;
+		graphicsPipeline.colorBlend = false;
+		graphicsPipeline.init();
+		graphicsPipelines.emplace(mapKey, graphicsPipeline);
+	}
+
+	if (graphicsPipelines.at(mapKey).sets.size() != 0) {
+		std::vector<Buffer> buffers;
+		buffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+		std::vector<DescriptorSet> descriptorSets;
+		descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+		std::vector<DescriptorSet> shadowDescriptorSets;
+		shadowDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			// Buffers
+			BufferTools::createUniformBuffer(buffers.at(i).buffer, buffers.at(i).deviceMemory, sizeof(ObjectUniformBufferObject));
+		}
+
+		entityBuffers.emplace(object, buffers);
+
+		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			// Descriptor sets
+			{
+				descriptorSets[i].init(&graphicsPipelines.at(mapKey), 0);
+				descriptorSets[i].createEntityDescriptorSet(object, i);
+			}
+
+			// Shadow
+			{
+				shadowDescriptorSets[i].init(&shadow.graphicsPipeline, 0);
+
+				VkDescriptorBufferInfo objectInfo = {};
+				objectInfo.buffer = buffers.at(i).buffer;
+				objectInfo.offset = 0;
+				objectInfo.range = sizeof(ObjectUniformBufferObject);
+
+				VkDescriptorBufferInfo shadowInfo = {};
+				shadowInfo.buffer = shadow.buffers.at(i).buffer;
+				shadowInfo.offset = 0;
+				shadowInfo.range = sizeof(ShadowUniformBufferObject);
+
+				std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+
+				VkWriteDescriptorSet objectWriteDescriptorSet = {};
+				objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				objectWriteDescriptorSet.pNext = nullptr;
+				objectWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
+				objectWriteDescriptorSet.dstBinding = 0;
+				objectWriteDescriptorSet.dstArrayElement = 0;
+				objectWriteDescriptorSet.descriptorCount = 1;
+				objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				objectWriteDescriptorSet.pImageInfo = nullptr;
+				objectWriteDescriptorSet.pBufferInfo = &objectInfo;
+				objectWriteDescriptorSet.pTexelBufferView = nullptr;
+				writesDescriptorSet.push_back(objectWriteDescriptorSet);
+
+				VkWriteDescriptorSet shadowWriteDescriptorSet = {};
+				shadowWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				shadowWriteDescriptorSet.pNext = nullptr;
+				shadowWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
+				shadowWriteDescriptorSet.dstBinding = 1;
+				shadowWriteDescriptorSet.dstArrayElement = 0;
+				shadowWriteDescriptorSet.descriptorCount = 1;
+				shadowWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				shadowWriteDescriptorSet.pImageInfo = nullptr;
+				shadowWriteDescriptorSet.pBufferInfo = &shadowInfo;
+				shadowWriteDescriptorSet.pTexelBufferView = nullptr;
+				writesDescriptorSet.push_back(shadowWriteDescriptorSet);
+
+				shadowDescriptorSets[i].update(writesDescriptorSet);
+			}
+		}
+
+		entityBuffers.emplace(object, buffers);
+		entityDescriptorSets.emplace(object, descriptorSets);
+		entityShadowDescriptorSets.emplace(object, shadowDescriptorSets);
+	}
+
+	// Model
+	if (models.find(objectRenderable.modelPath) == models.end()) {
+		Model model;
+		model.init(objectRenderable.modelPath);
+		model.createDescriptorSets(&graphicsPipelines.at(mapKey));
+		models.emplace(objectRenderable.modelPath, model);
+	}
 }
 
 void Renderer::updateData(uint32_t frameInFlightIndex) {

@@ -88,10 +88,3 @@ struct SubpassDependency {
 	VkAccessFlags dstAccessMask;
 	VkDependencyFlags dependencyFlags;
 };
-
-// Set
-struct Set {
-	uint32_t set;
-	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	std::vector<std::string> names;
-};
