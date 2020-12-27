@@ -402,12 +402,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 
 				Bone bone = {};
 				bone.inverseBindMatrix = inverseBindMatrix;
-				if (i == 0) {
-					bone.transformation = glm::inverse(inverseBindMatrix) * inverseBindMatrix;
-				}
-				else {
-					bone.transformation = glm::inverse(inverseBindMatrix) * glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * inverseBindMatrix;
-				}
+				bone.transformation = glm::inverse(inverseBindMatrix) * modelMatrix * inverseBindMatrix;
 
 				modelMesh.bones.push_back(bone);
 			}
