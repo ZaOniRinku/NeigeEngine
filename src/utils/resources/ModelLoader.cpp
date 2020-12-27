@@ -112,7 +112,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 			float* uv;
 			float* color;
 			float* tangent;
-			float* joints;
+			unsigned short* joints;
 			float* weights;
 
 			size_t positionCount = 0;
@@ -126,52 +126,35 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 			for (size_t k = 0; k < primitive->attributes_count; k++) {
 				cgltf_attribute* attribute = &primitive->attributes[k];
 				std::string attributeName = attribute->name;
+
+				cgltf_accessor* accessor = attribute->data;
+				cgltf_buffer_view* buffer_view = accessor->buffer_view;
+				char* buffer = static_cast<char*>(buffer_view->buffer->data);
 				if (attributeName == "POSITION") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					position = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					positionCount = attribute->data->count;
 				}
 				else if (attributeName == "NORMAL") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					normal = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					normalCount = attribute->data->count;
 				}
 				else if (attributeName == "TEXCOORD_0") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					uv = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					uvCount = attribute->data->count;
 				}
 				else if (attributeName == "COLOR_0") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					color = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					colorCount = attribute->data->count;
 				}
 				else if (attributeName == "TANGENT") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					tangent = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					tangentCount = attribute->data->count;
 				}
 				else if (attributeName == "JOINTS_0") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
-					joints = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					joints = reinterpret_cast<unsigned short*>(buffer + accessor->offset + buffer_view->offset);
 					jointsCount = attribute->data->count;
 				}
 				else if (attributeName == "WEIGHTS_0") {
-					cgltf_accessor* accessor = attribute->data;
-					cgltf_buffer_view* buffer_view = accessor->buffer_view;
-					char* buffer = static_cast<char*>(buffer_view->buffer->data);
 					weights = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 					weightsCount = attribute->data->count;
 				}
@@ -179,6 +162,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 
 			// Vertices
 			int uvPos = 0;
+			int jointWeightPos = 0;
 			for (size_t l = 0; l < positionCount * 3; l += 3) {
 				Vertex vertex = {};
 				vertex.position = glm::vec3(position[l + 0], position[l + 1], position[l + 2]);
@@ -188,10 +172,11 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 				vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
 				vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
 				vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
-				vertex.joints = jointsCount != 0 ? glm::vec4(joints[l + 0], joints[l + 1], joints[l + 2], joints[l + 3]) : glm::vec4(0.0f);
-				vertex.weights = weightsCount != 0 ? glm::vec4(weights[l + 0], weights[l + 1], weights[l + 2], weights[l + 3]) : glm::vec4(0.0f);
+				vertex.joints = jointsCount != 0 ? glm::vec4(static_cast<float>(joints[jointWeightPos + 0]), static_cast<float>(joints[jointWeightPos + 1]), static_cast<float>(joints[jointWeightPos + 2]), static_cast<float>(joints[jointWeightPos + 3])) : glm::vec4(0.0f);
+				vertex.weights = weightsCount != 0 ? glm::vec4(weights[jointWeightPos + 0], weights[jointWeightPos + 1], weights[jointWeightPos + 2], weights[jointWeightPos + 3]) : glm::vec4(0.0f);
 				primitiveVertices.push_back(vertex);
 				uvPos += 2;
+				jointWeightPos += 4;
 			}
 			vertexCount += static_cast<int32_t>(primitiveVertices.size());
 
@@ -404,20 +389,31 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 
 		modelMesh.primitives = primitives;
 
-		meshes->push_back(modelMesh);
-	}
+		if (node->skin != NULL) {
+			cgltf_skin* skin = node->skin;
 
-	if (node->skin != NULL) {
-		cgltf_skin* skin = node->skin;
-		
-		cgltf_accessor* accessor = skin->inverse_bind_matrices;
-		cgltf_buffer_view* buffer_view = accessor->buffer_view;
-		char* buffer = static_cast<char*>(buffer_view->buffer->data);
-		float* inverseBindMatrices = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+			cgltf_accessor* accessor = skin->inverse_bind_matrices;
+			cgltf_buffer_view* buffer_view = accessor->buffer_view;
+			char* buffer = static_cast<char*>(buffer_view->buffer->data);
+			float* inverseBindMatrices = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 
-		for (size_t i = 0; i < skin->joints_count; i++) {
-			glm::mat4 inverseBindMatrix = glm::make_mat4(inverseBindMatrices + (i * 16));
+			for (size_t i = 0; i < skin->joints_count; i++) {
+				glm::mat4 inverseBindMatrix = glm::make_mat4(inverseBindMatrices + (i * 16));
+
+				Bone bone = {};
+				bone.inverseBindMatrix = inverseBindMatrix;
+				if (i == 0) {
+					bone.transformation = glm::inverse(inverseBindMatrix) * inverseBindMatrix;
+				}
+				else {
+					bone.transformation = glm::inverse(inverseBindMatrix) * glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * inverseBindMatrix;
+				}
+
+				modelMesh.bones.push_back(bone);
+			}
 		}
+
+		meshes->push_back(modelMesh);
 	}
 
 	for (size_t i = 0; i < node->children_count; i++) {

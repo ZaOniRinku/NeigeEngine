@@ -25,22 +25,22 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
-		"../modelfiles/sunset_forest_8k.hdr"
+		"../modelfiles/whitepixel.hdr"
 		});
 
 	Entity skinningTest = ecs.createEntity();
 	ecs.addComponent(skinningTest, Renderable{
 		"../modelfiles/skinning/SimpleSkin.gltf",
-		"../shaders/pbr.vert",
-		"../shaders/pbr.frag",
+		"../shaders/animated_pbr.vert",
+		"../shaders/animated_pbr.frag",
 		"",
 		"",
 		"",
-		Topology::WIREFRAME
+		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(skinningTest, Transform{
 		glm::vec3(3.0f, -1.0f, 0.0f),
-		glm::vec3(0.0f, 270.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
 
@@ -120,7 +120,7 @@ int main(void) {
 	Entity light2 = ecs.createEntity();
 	ecs.addComponent(light2, Light{
 		LightType::SPOT,
-		glm::vec3(5.0f, 2.0f, 0.0f),
+		glm::vec3(5.0f, 4.0f, 0.0f),
 		glm::vec3(0.0f, -1.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		glm::vec2(40.0f, 50.0f)

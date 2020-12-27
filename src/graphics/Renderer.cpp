@@ -642,7 +642,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 
 				entityShadowDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 
-				models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], false);
+				models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], frameInFlightIndex, false);
 			}
 
 			shadow.renderPass.end(&renderingCommandBuffers[frameInFlightIndex]);
@@ -669,7 +669,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 			entityDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 		}
 
-		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], true);
+		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], frameInFlightIndex, true);
 	}
 
 	skyboxGraphicsPipeline.bind(&renderingCommandBuffers[frameInFlightIndex]);

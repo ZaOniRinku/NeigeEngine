@@ -1,6 +1,8 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
+#include "../../external/glm/glm/glm.hpp"
 #include "../../graphics/pipelines/DescriptorSet.h"
+#include "../../graphics/resources/Buffer.h"
 #include <vector>
 
 // Model primitive
@@ -11,10 +13,18 @@ struct Primitive {
 	uint64_t materialIndex;
 };
 
+// Mesh bone
+struct Bone {
+	glm::mat4 transformation;
+	glm::mat4 inverseBindMatrix;
+};
+
 // Model mesh
 struct Mesh {
 	uint32_t indexOffset;
 	int32_t vertexOffset;
 	std::vector<Primitive> primitives;
-	std::vector<DescriptorSet> descriptorSets;
+	std::vector<Bone> bones;
+	std::vector<Buffer> boneBuffers;
+	std::vector<std::vector<DescriptorSet>> descriptorSets;
 };

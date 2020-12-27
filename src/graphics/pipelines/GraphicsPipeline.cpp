@@ -49,7 +49,6 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
-					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -88,7 +87,6 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
-					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -127,7 +125,6 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
-					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -166,7 +163,6 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
-					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -205,7 +201,6 @@ void GraphicsPipeline::init() {
 			for (size_t j = 0; j < sets.size(); j++) {
 				if (sets[j].set == shader.sets[i].set) {
 					sets[j].bindings.insert(sets[j].bindings.end(), shader.sets[i].bindings.begin(), shader.sets[i].bindings.end());
-					sets[j].names.insert(sets[j].names.end(), shader.sets[i].names.begin(), shader.sets[i].names.end());
 					found = true;
 				}
 			}
@@ -226,7 +221,15 @@ void GraphicsPipeline::init() {
 	std::sort(sets.begin(), sets.end(), [](Set a, Set b) { return a.set < b.set; });
 	for (size_t i = 0; i < sets.size(); i++) {
 		// Sort bindings
-		std::sort(sets[i].bindings.begin(), sets[i].bindings.end(), [](VkDescriptorSetLayoutBinding a, VkDescriptorSetLayoutBinding b) { return a.binding < b.binding; });
+		std::sort(sets[i].bindings.begin(), sets[i].bindings.end(), [](Binding a, Binding b) { return a.binding.binding < b.binding.binding; });
+	}
+
+	std::vector<std::vector<VkDescriptorSetLayoutBinding>> setBindings;
+	setBindings.resize(sets.size());
+	for (size_t i = 0; i < sets.size(); i++) {
+		for (size_t j = 0; j < sets[i].bindings.size(); j++) {
+			setBindings[i].push_back(sets[i].bindings[j].binding);
+		}
 	}
 
 	// Descriptor set layouts
@@ -237,8 +240,8 @@ void GraphicsPipeline::init() {
 			descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 			descriptorSetLayoutCreateInfo.pNext = nullptr;
 			descriptorSetLayoutCreateInfo.flags = 0;
-			descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(sets[i].bindings.size());
-			descriptorSetLayoutCreateInfo.pBindings = sets[i].bindings.data();
+			descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(setBindings[i].size());
+			descriptorSetLayoutCreateInfo.pBindings = setBindings[i].data();
 			NEIGE_VK_CHECK(vkCreateDescriptorSetLayout(logicalDevice.device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[i]));
 		}
 	}

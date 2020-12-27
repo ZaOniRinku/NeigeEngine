@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#include <bitset>
 
 enum struct KeyState {
 	PRESSED,

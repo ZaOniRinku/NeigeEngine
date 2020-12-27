@@ -30,9 +30,8 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 	std::vector<VkWriteDescriptorSet> writesDescriptorSet;
 	std::vector<VkDescriptorImageInfo> shadowMapsInfos;
 
-	std::vector<std::string> bindingNames = graphicsPipeline->sets[0].names;
-	int index = 0;
-	for (std::string bindingName : bindingNames) {
+	for (size_t i = 0; i < graphicsPipeline->sets[0].bindings.size(); i++) {
+		std::string bindingName = graphicsPipeline->sets[0].bindings[i].name;
 		if (bindingName == "object") {
 			VkDescriptorBufferInfo objectInfo = {};
 			objectInfo.buffer = entityBuffers.at(entity).at(frameInFlightIndex).buffer;
@@ -43,7 +42,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			objectWriteDescriptorSet.pNext = nullptr;
 			objectWriteDescriptorSet.dstSet = descriptorSet;
-			objectWriteDescriptorSet.dstBinding = index++;
+			objectWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			objectWriteDescriptorSet.dstArrayElement = 0;
 			objectWriteDescriptorSet.descriptorCount = 1;
 			objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -63,7 +62,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			cameraWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			cameraWriteDescriptorSet.pNext = nullptr;
 			cameraWriteDescriptorSet.dstSet = descriptorSet;
-			cameraWriteDescriptorSet.dstBinding = index++;
+			cameraWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			cameraWriteDescriptorSet.dstArrayElement = 0;
 			cameraWriteDescriptorSet.descriptorCount = 1;
 			cameraWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -83,7 +82,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			shadowWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			shadowWriteDescriptorSet.pNext = nullptr;
 			shadowWriteDescriptorSet.dstSet = descriptorSet;
-			shadowWriteDescriptorSet.dstBinding = index++;
+			shadowWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			shadowWriteDescriptorSet.dstArrayElement = 0;
 			shadowWriteDescriptorSet.descriptorCount = 1;
 			shadowWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -103,7 +102,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			lightingWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			lightingWriteDescriptorSet.pNext = nullptr;
 			lightingWriteDescriptorSet.dstSet = descriptorSet;
-			lightingWriteDescriptorSet.dstBinding = index++;
+			lightingWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			lightingWriteDescriptorSet.dstArrayElement = 0;
 			lightingWriteDescriptorSet.descriptorCount = 1;
 			lightingWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -123,7 +122,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			irradianceWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			irradianceWriteDescriptorSet.pNext = nullptr;
 			irradianceWriteDescriptorSet.dstSet = descriptorSet;
-			irradianceWriteDescriptorSet.dstBinding = index++;
+			irradianceWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			irradianceWriteDescriptorSet.dstArrayElement = 0;
 			irradianceWriteDescriptorSet.descriptorCount = 1;
 			irradianceWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -143,7 +142,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			prefilterWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			prefilterWriteDescriptorSet.pNext = nullptr;
 			prefilterWriteDescriptorSet.dstSet = descriptorSet;
-			prefilterWriteDescriptorSet.dstBinding = index++;
+			prefilterWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			prefilterWriteDescriptorSet.dstArrayElement = 0;
 			prefilterWriteDescriptorSet.descriptorCount = 1;
 			prefilterWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -163,7 +162,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			brdfLUTWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			brdfLUTWriteDescriptorSet.pNext = nullptr;
 			brdfLUTWriteDescriptorSet.dstSet = descriptorSet;
-			brdfLUTWriteDescriptorSet.dstBinding = index++;
+			brdfLUTWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			brdfLUTWriteDescriptorSet.dstArrayElement = 0;
 			brdfLUTWriteDescriptorSet.descriptorCount = 1;
 			brdfLUTWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -186,7 +185,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			shadowMapsWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			shadowMapsWriteDescriptorSet.pNext = nullptr;
 			shadowMapsWriteDescriptorSet.dstSet = descriptorSet;
-			shadowMapsWriteDescriptorSet.dstBinding = index++;
+			shadowMapsWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			shadowMapsWriteDescriptorSet.dstArrayElement = 0;
 			shadowMapsWriteDescriptorSet.descriptorCount = static_cast<uint32_t>(shadowMapsInfos.size());
 			shadowMapsWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -206,7 +205,7 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 			timeWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			timeWriteDescriptorSet.pNext = nullptr;
 			timeWriteDescriptorSet.dstSet = descriptorSet;
-			timeWriteDescriptorSet.dstBinding = index++;
+			timeWriteDescriptorSet.dstBinding = graphicsPipeline->sets[0].bindings[i].binding.binding;
 			timeWriteDescriptorSet.dstArrayElement = 0;
 			timeWriteDescriptorSet.descriptorCount = 1;
 			timeWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

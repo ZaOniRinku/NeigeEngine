@@ -8,6 +8,7 @@
 #define MAX_DIR_LIGHTS 10
 #define MAX_POINT_LIGHTS 10
 #define MAX_SPOT_LIGHTS 10
+#define MAX_BONES 256
 
 enum struct ShaderType {
 	VERTEX,
@@ -46,11 +47,16 @@ struct InputVariable {
 	std::string name;
 };
 
+// Binding
+struct Binding {
+	VkDescriptorSetLayoutBinding binding;
+	std::string name;
+};
+
 // Set
 struct Set {
 	uint32_t set;
-	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	std::vector<std::string> names;
+	std::vector<Binding> bindings;
 };
 
 // Vertex
@@ -171,4 +177,10 @@ struct ShadowUniformBufferObject {
 	glm::vec4 numLights;
 	glm::mat4 dirLightSpaces[MAX_DIR_LIGHTS];
 	glm::mat4 spotLightSpaces[MAX_SPOT_LIGHTS];
+};
+
+// Bone Uniform Buffer Object
+struct BoneUniformBufferObject {
+	glm::mat4 transformations[MAX_BONES];
+	glm::mat4 inverseBindMatrices[MAX_BONES];
 };

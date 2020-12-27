@@ -134,8 +134,8 @@ float shadowValue(vec4 lightSpace, int shadowMapIndex) {
 }
 
 void main() {
-	vec4 colorSample = texture(colorMap, uv);
-	vec3 normalSample = texture(normalMap, uv + vec2(time.time / 4.0, sin(time.time) / 32.0)).xyz;
+	vec4 colorSample = vec4(0.75);
+	vec3 normalSample = texture(normalMap, uv + vec2(time.time / 2.0, sin(time.time) / 32.0)).xyz;
 	float metallicSample = 1.0;
 	float roughnessSample = 0.0;
 	float occlusionSample = 1.0;
