@@ -17,6 +17,7 @@ struct Primitive {
 struct Bone {
 	glm::mat4 transformation;
 	glm::mat4 inverseBindMatrix;
+	std::vector<Bone> children;
 };
 
 // Model mesh
@@ -24,7 +25,8 @@ struct Mesh {
 	uint32_t indexOffset;
 	int32_t vertexOffset;
 	std::vector<Primitive> primitives;
-	std::vector<Bone> bones;
+	Bone skeleton;
+	std::vector<Bone> boneList;
 	std::vector<Buffer> boneBuffers;
 	std::vector<std::vector<DescriptorSet>> descriptorSets;
 };

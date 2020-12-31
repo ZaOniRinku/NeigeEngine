@@ -16,4 +16,5 @@ struct ModelLoader {
 	static void load(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes);
 	static void loadglTF(const std::string& filePath, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes);
 	static void loadglTFNode(const std::string& filePath, cgltf_node* node, uint32_t* indexOffset, int32_t* modelVertexOffset, glm::mat4 modelMatrix, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::vector<Mesh>* meshes);
+	static void loadglTFJoint(const std::string& filePath, cgltf_node* node, glm::mat4 globalTransform, glm::mat4 localTransform, Bone* hierarchy, std::vector<Bone>* boneList, std::vector<cgltf_node*> nodeList, std::vector<glm::mat4> inverseBindMatrixList);
 };

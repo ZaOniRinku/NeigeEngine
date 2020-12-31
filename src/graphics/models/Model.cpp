@@ -34,14 +34,14 @@ void Model::init(std::string filePath) {
 		mesh.boneBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 		for (Buffer& buffer : mesh.boneBuffers) {
-			NEIGE_ASSERT(mesh.bones.size() <= MAX_BONES, "A mesh has more than " + std::to_string(MAX_BONES) + " bones.");
+			NEIGE_ASSERT(mesh.boneList.size() <= MAX_BONES, "A mesh has more than " + std::to_string(MAX_BONES) + " bones.");
 
 			BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(BoneUniformBufferObject));
 
 			BoneUniformBufferObject bubo = {};
-			for (size_t i = 0; i < mesh.bones.size(); i++) {
-				bubo.transformations[i] = mesh.bones[i].transformation;
-				bubo.inverseBindMatrices[i] = mesh.bones[i].inverseBindMatrix;
+			for (size_t i = 0; i < mesh.boneList.size(); i++) {
+				bubo.transformations[i] = mesh.boneList[i].transformation;
+				bubo.inverseBindMatrices[i] = mesh.boneList[i].inverseBindMatrix;
 			}
 
 			void* data;

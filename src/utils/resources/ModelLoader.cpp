@@ -58,9 +58,9 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 		if (node->has_translation) {
 			cgltf_float* translation = node->translation;
 			glm::mat4 meshTranslation = glm::mat4(1.0f);
-			meshTranslation[3][1] = translation[0];
-			meshTranslation[3][2] = translation[1];
-			meshTranslation[3][3] = translation[2];
+			meshTranslation[3][0] = translation[0];
+			meshTranslation[3][1] = translation[1];
+			meshTranslation[3][2] = translation[2];
 			modelMatrix = modelMatrix * meshTranslation;
 		}
 
@@ -172,7 +172,7 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 				vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
 				vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
 				vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
-				vertex.joints = jointsCount != 0 ? glm::vec4(static_cast<float>(joints[jointWeightPos + 0]), static_cast<float>(joints[jointWeightPos + 1]), static_cast<float>(joints[jointWeightPos + 2]), static_cast<float>(joints[jointWeightPos + 3])) : glm::vec4(0.0f);
+				vertex.joints = jointsCount != 0 ? glm::vec4(joints[jointWeightPos + 0], joints[jointWeightPos + 1], joints[jointWeightPos + 2], joints[jointWeightPos + 3]) : glm::vec4(0.0f);
 				vertex.weights = weightsCount != 0 ? glm::vec4(weights[jointWeightPos + 0], weights[jointWeightPos + 1], weights[jointWeightPos + 2], weights[jointWeightPos + 3]) : glm::vec4(0.0f);
 				primitiveVertices.push_back(vertex);
 				uvPos += 2;
@@ -397,15 +397,21 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 			char* buffer = static_cast<char*>(buffer_view->buffer->data);
 			float* inverseBindMatrices = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
 
+			std::vector<Bone> boneList;
+			std::vector<cgltf_node*> nodeList;
+			std::vector<glm::mat4> inverseBindMatrixList;
 			for (size_t i = 0; i < skin->joints_count; i++) {
+				cgltf_node* joint = skin->joints[i];
 				glm::mat4 inverseBindMatrix = glm::make_mat4(inverseBindMatrices + (i * 16));
 
-				Bone bone = {};
-				bone.inverseBindMatrix = inverseBindMatrix;
-				bone.transformation = glm::inverse(inverseBindMatrix) * modelMatrix * inverseBindMatrix;
-
-				modelMesh.bones.push_back(bone);
+				nodeList.push_back(joint);
+				inverseBindMatrixList.push_back(inverseBindMatrix);
 			}
+
+			loadglTFJoint(filePath, skin->joints[0], modelMatrix, glm::mat4(1.0f), nullptr, &boneList, nodeList, inverseBindMatrixList);
+
+			modelMesh.skeleton = boneList[0];
+			modelMesh.boneList = boneList;
 		}
 
 		meshes->push_back(modelMesh);
@@ -413,5 +419,56 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 
 	for (size_t i = 0; i < node->children_count; i++) {
 		loadglTFNode(filePath, node->children[i], indexOffset, modelVertexOffset, modelMatrix, vertices, indices, meshes);
+	}
+}
+
+void ModelLoader::loadglTFJoint(const std::string& filePath, cgltf_node* node, glm::mat4 globalTransform, glm::mat4 localTransform, Bone* hierarchy, std::vector<Bone>* boneList, std::vector<cgltf_node*> nodeList, std::vector<glm::mat4> inverseBindMatrixList) {
+	if (node->has_matrix) {
+		cgltf_float* matrix = node->matrix;
+		localTransform = localTransform * glm::make_mat4(matrix);
+	}
+	else {
+		if (node->has_translation) {
+			cgltf_float* translation = node->translation;
+			glm::mat4 meshTranslation = glm::mat4(1.0f);
+			meshTranslation[3][0] = translation[0];
+			meshTranslation[3][1] = translation[1];
+			meshTranslation[3][2] = translation[2];
+			localTransform = localTransform * meshTranslation;
+		}
+
+		if (node->has_rotation) {
+			cgltf_float* rotation = node->rotation;
+			glm::quat rotationQuaternion = glm::quat(rotation[0], rotation[1], rotation[2], rotation[3]);
+			glm::mat4 meshRotation = glm::toMat4(rotationQuaternion);
+			localTransform = localTransform * meshRotation;
+		}
+
+		if (node->has_scale) {
+			cgltf_float* scale = node->scale;
+			glm::mat4 meshScale = glm::mat4(1.0f);
+			meshScale[0][0] = scale[0];
+			meshScale[1][1] = scale[1];
+			meshScale[2][2] = scale[2];
+			localTransform = localTransform * meshScale;
+		}
+	}
+
+	Bone bone = {};
+	for (size_t i = 0; i < nodeList.size(); i++) {
+		if (node == nodeList[i]) {
+			bone.inverseBindMatrix = inverseBindMatrixList[i];
+		}
+	}
+
+	bone.transformation = glm::inverse(globalTransform) * localTransform * bone.inverseBindMatrix;
+	
+	boneList->push_back(bone);
+	for (size_t i = 0; i < node->children_count; i++) {
+		loadglTFJoint(filePath, node->children[i], globalTransform, localTransform, &bone, boneList, nodeList, inverseBindMatrixList);
+	}
+
+	if (hierarchy != nullptr) {
+		hierarchy->children.push_back(bone);
 	}
 }
