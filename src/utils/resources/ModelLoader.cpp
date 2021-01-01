@@ -123,6 +123,14 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 			size_t jointsCount = 0;
 			size_t weightsCount = 0;
 
+			size_t positionStride = 0;
+			size_t normalStride = 0;
+			size_t uvStride = 0;
+			size_t colorStride = 0;
+			size_t tangentStride = 0;
+			size_t jointsStride = 0;
+			size_t weightsStride = 0;
+
 			for (size_t k = 0; k < primitive->attributes_count; k++) {
 				cgltf_attribute* attribute = &primitive->attributes[k];
 				std::string attributeName = attribute->name;
@@ -130,53 +138,73 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 				cgltf_accessor* accessor = attribute->data;
 				cgltf_buffer_view* buffer_view = accessor->buffer_view;
 				char* buffer = static_cast<char*>(buffer_view->buffer->data);
+				char* offsetBuffer = buffer + accessor->offset + buffer_view->offset;
+				unsigned long long minCompare = 0;
 				if (attributeName == "POSITION") {
-					position = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					position = reinterpret_cast<float*>(offsetBuffer);
 					positionCount = attribute->data->count;
+					positionStride = std::max(buffer_view->stride, sizeof(float) * 3);
 				}
 				else if (attributeName == "NORMAL") {
-					normal = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					normal = reinterpret_cast<float*>(offsetBuffer);
 					normalCount = attribute->data->count;
+					normalStride = std::max(buffer_view->stride, sizeof(float) * 3);
 				}
 				else if (attributeName == "TEXCOORD_0") {
-					uv = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					uv = reinterpret_cast<float*>(offsetBuffer);
 					uvCount = attribute->data->count;
+					uvStride = std::max(buffer_view->stride, sizeof(float) * 2);
 				}
 				else if (attributeName == "COLOR_0") {
-					color = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					color = reinterpret_cast<float*>(offsetBuffer);
 					colorCount = attribute->data->count;
+					colorStride = std::max(buffer_view->stride, sizeof(float) * 3);
 				}
 				else if (attributeName == "TANGENT") {
-					tangent = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					tangent = reinterpret_cast<float*>(offsetBuffer);
 					tangentCount = attribute->data->count;
+					tangentStride = std::max(buffer_view->stride, sizeof(float) * 3);
 				}
 				else if (attributeName == "JOINTS_0") {
-					joints = reinterpret_cast<unsigned short*>(buffer + accessor->offset + buffer_view->offset);
+					joints = reinterpret_cast<unsigned short*>(offsetBuffer);
 					jointsCount = attribute->data->count;
+					jointsStride = std::max(buffer_view->stride, sizeof(unsigned short) * 4);
 				}
 				else if (attributeName == "WEIGHTS_0") {
-					weights = reinterpret_cast<float*>(buffer + accessor->offset + buffer_view->offset);
+					weights = reinterpret_cast<float*>(offsetBuffer);
 					weightsCount = attribute->data->count;
+					weightsStride = std::max(buffer_view->stride, sizeof(float) * 4);
 				}
 			}
 
 			// Vertices
-			int uvPos = 0;
-			int jointWeightPos = 0;
-			for (size_t l = 0; l < positionCount * 3; l += 3) {
+			size_t positionPos = 0;
+			size_t normalPos = 0;
+			size_t uvPos = 0;
+			size_t colorPos = 0;
+			size_t tangentPos = 0;
+			size_t jointsPos = 0;
+			size_t weightsPos = 0;
+			for (size_t l = 0; l < positionCount; l++) {
 				Vertex vertex = {};
-				vertex.position = glm::vec3(position[l + 0], position[l + 1], position[l + 2]);
+				vertex.position = glm::vec3(position[positionPos + 0], position[positionPos + 1], position[positionPos + 2]);
 				vertex.position = glm::vec3(modelMatrix * glm::vec4(vertex.position, 1.0f));
-				vertex.normal = normalCount != 0 ? glm::vec3(normal[l + 0], normal[l + 1], normal[l + 2]) : glm::vec3(0.0f);
+				vertex.normal = normalCount != 0 ? glm::vec3(normal[normalPos + 0], normal[normalPos + 1], normal[normalPos + 2]) : glm::vec3(0.0f);
 				vertex.normal = glm::normalize(glm::transpose(glm::inverse(glm::mat3(modelMatrix))) * vertex.normal);
 				vertex.uv = uvCount != 0 ? glm::vec2(uv[uvPos + 0], uv[uvPos + 1]) : glm::vec2(0.5f);
-				vertex.color = colorCount != 0 ? glm::vec3(color[l + 0], color[l + 1], color[l + 2]) : glm::vec3(0.5f);
-				vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[l + 0], tangent[l + 1], tangent[l + 2]) : glm::vec3(0.0f);
-				vertex.joints = jointsCount != 0 ? glm::vec4(joints[jointWeightPos + 0], joints[jointWeightPos + 1], joints[jointWeightPos + 2], joints[jointWeightPos + 3]) : glm::vec4(0.0f);
-				vertex.weights = weightsCount != 0 ? glm::vec4(weights[jointWeightPos + 0], weights[jointWeightPos + 1], weights[jointWeightPos + 2], weights[jointWeightPos + 3]) : glm::vec4(0.0f);
+				vertex.color = colorCount != 0 ? glm::vec3(color[colorPos + 0], color[colorPos + 1], color[colorPos + 2]) : glm::vec3(0.5f);
+				vertex.tangent = tangentCount != 0 ? glm::vec3(tangent[tangentPos + 0], tangent[tangentPos + 1], tangent[tangentPos + 2]) : glm::vec3(0.0f);
+				vertex.joints = jointsCount != 0 ? glm::vec4(joints[jointsPos + 0], joints[jointsPos + 1], joints[jointsPos + 2], joints[jointsPos + 3]) : glm::vec4(0.0f);
+				vertex.weights = weightsCount != 0 ? glm::vec4(weights[weightsPos + 0], weights[weightsPos + 1], weights[weightsPos + 2], weights[weightsPos + 3]) : glm::vec4(0.0f);
 				primitiveVertices.push_back(vertex);
-				uvPos += 2;
-				jointWeightPos += 4;
+
+				positionPos += positionStride / sizeof(float);
+				normalPos += normalStride / sizeof(float);
+				uvPos += uvStride / sizeof(float);
+				colorPos += colorStride / sizeof(float);
+				tangentPos += tangentStride / sizeof(float);
+				jointsPos += jointsStride / sizeof(unsigned short);
+				weightsPos += weightsStride / sizeof(float);
 			}
 			vertexCount += static_cast<int32_t>(primitiveVertices.size());
 

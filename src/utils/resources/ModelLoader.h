@@ -6,6 +6,7 @@
 #include "../structs/ShaderStructs.h"
 #include "../../../external/glm/glm/gtc/type_ptr.hpp"
 #include "../../../external/glm/glm/gtx/quaternion.hpp"
+#include "../../../external/glm/glm/gtx/string_cast.hpp"
 #include "../../external/cgltf/cgltf.h"
 #include "FileTools.h"
 #include "ImageTools.h"
