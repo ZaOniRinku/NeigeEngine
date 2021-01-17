@@ -164,16 +164,16 @@ void Envmap::equilateralRectangleToCubemap() {
 		Camera::createLookAtView(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0)),
 	};
 
-	VkDeviceSize offset = 0;
-
-	CommandPool commandPool;
-	commandPool.init();
-	CommandBuffer commandBuffer;
-	commandBuffer.init(&commandPool);
-
-	commandBuffer.begin();
-
 	for (int face = 0; face < 6; face++) {
+		VkDeviceSize offset = 0;
+
+		CommandPool commandPool;
+		commandPool.init();
+		CommandBuffer commandBuffer;
+		commandBuffer.init(&commandPool);
+
+		commandBuffer.begin();
+
 		glm::mat4 viewProj = projection * views[face];
 
 		equiRecToCubemapRenderPass.begin(&commandBuffer, equiRecToCubemapFramebuffers[face].framebuffer, { ENVMAP_WIDTH, ENVMAP_HEIGHT });
@@ -188,10 +188,10 @@ void Envmap::equilateralRectangleToCubemap() {
 		vkCmdDrawIndexed(commandBuffer.commandBuffer, 36, 1, 0, 0, 0);
 
 		equiRecToCubemapRenderPass.end(&commandBuffer);
+
+		commandBuffer.endAndSubmit();
+		commandPool.destroy();
 	}
-	
-	commandBuffer.endAndSubmit();
-	commandPool.destroy();
 
 	equiRecToCubemapRenderPass.destroy();
 	equiRecToCubemapGraphicsPipeline.destroy();
@@ -270,16 +270,16 @@ void Envmap::createDiffuseIradiance() {
 		Camera::createLookAtView(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0)),
 	};
 
-	VkDeviceSize offset = 0;
-
-	CommandPool commandPool;
-	commandPool.init();
-	CommandBuffer commandBuffer;
-	commandBuffer.init(&commandPool);
-
-	commandBuffer.begin();
-
 	for (int face = 0; face < 6; face++) {
+		VkDeviceSize offset = 0;
+
+		CommandPool commandPool;
+		commandPool.init();
+		CommandBuffer commandBuffer;
+		commandBuffer.init(&commandPool);
+
+		commandBuffer.begin();
+
 		glm::mat4 viewProj = projection * views[face];
 
 		convolveRenderPass.begin(&commandBuffer, diffuseIradianceFramebuffers[face].framebuffer, { CONVOLVE_WIDTH, CONVOLVE_HEIGHT });
@@ -294,10 +294,10 @@ void Envmap::createDiffuseIradiance() {
 		vkCmdDrawIndexed(commandBuffer.commandBuffer, 36, 1, 0, 0, 0);
 
 		convolveRenderPass.end(&commandBuffer);
-	}
 
-	commandBuffer.endAndSubmit();
-	commandPool.destroy();
+		commandBuffer.endAndSubmit();
+		commandPool.destroy();
+	}
 
 	convolveRenderPass.destroy();
 	convolveGraphicsPipeline.destroy();
@@ -411,16 +411,16 @@ void Envmap::createPrefilter() {
 			Camera::createLookAtView(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0)),
 		};
 
-		VkDeviceSize offset = 0;
-
-		CommandPool commandPool;
-		commandPool.init();
-		CommandBuffer commandBuffer;
-		commandBuffer.init(&commandPool);
-
-		commandBuffer.begin();
-
 		for (int face = 0; face < 6; face++) {
+			VkDeviceSize offset = 0;
+
+			CommandPool commandPool;
+			commandPool.init();
+			CommandBuffer commandBuffer;
+			commandBuffer.init(&commandPool);
+
+			commandBuffer.begin();
+
 			glm::mat4 viewProj = projection * views[face];
 
 			prefilterRenderPass.begin(&commandBuffer, prefilterFramebuffers[mipLevel * 6 + face].framebuffer, { mipWidth, mipHeight });
@@ -435,10 +435,10 @@ void Envmap::createPrefilter() {
 			vkCmdDrawIndexed(commandBuffer.commandBuffer, 36, 1, 0, 0, 0);
 
 			prefilterRenderPass.end(&commandBuffer);
-		}
 
-		commandBuffer.endAndSubmit();
-		commandPool.destroy();
+			commandBuffer.endAndSubmit();
+			commandPool.destroy();
+		}
 
 		prefilterGraphicsPipeline.destroyPipeline();
 	}

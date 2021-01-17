@@ -139,7 +139,6 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 				cgltf_buffer_view* buffer_view = accessor->buffer_view;
 				char* buffer = static_cast<char*>(buffer_view->buffer->data);
 				char* offsetBuffer = buffer + accessor->offset + buffer_view->offset;
-				unsigned long long minCompare = 0;
 				if (attributeName == "POSITION") {
 					position = reinterpret_cast<float*>(offsetBuffer);
 					positionCount = attribute->data->count;
