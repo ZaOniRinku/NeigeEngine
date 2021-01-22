@@ -25,7 +25,7 @@ int main(void) {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
-		"../modelfiles/sunset_forest_8k.hdr"
+		"../modelfiles/wide_street_01_4k.hdr"
 		});
 
 	Entity skinningTest = ecs.createEntity();

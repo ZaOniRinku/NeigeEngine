@@ -247,7 +247,7 @@ void Envmap::createDiffuseIradiance() {
 	convolveDescriptorSet.init(&convolveGraphicsPipeline, 0);
 
 	VkDescriptorImageInfo skyboxInfo = {};
-	skyboxInfo.sampler = defaultSkybox.imageSampler;
+	skyboxInfo.sampler = skyboxImage.imageSampler;
 	skyboxInfo.imageView = skyboxImage.image != VK_NULL_HANDLE ? skyboxImage.imageView : defaultSkybox.imageView;
 	skyboxInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 

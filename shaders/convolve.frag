@@ -9,6 +9,9 @@ layout(location = 0) out vec4 outColor;
 #define M_PI 3.1415926535897932384626433832795
 
 void main() {
+	const float cubemapResolution = 2048.0;
+	float mipLevel = cubemapResolution / float(2^4) > 1 ? 4.0 : 0.0;
+
 	vec3 normal = normalize(position);
 	
 	vec3 irradiance = vec3(0.0);
@@ -25,7 +28,7 @@ void main() {
 			vec3 tangent = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
 			vec3 vec = tangent.x * right + tangent.y * up + tangent.z * normal;
 		
-			irradiance += vec3(texture(skybox, vec)) * cos(theta) * sin(theta);
+			irradiance += vec3(textureLod(skybox, vec, mipLevel)) * cos(theta) * sin(theta);
 			samples += 1.0;
 		}
 	}
