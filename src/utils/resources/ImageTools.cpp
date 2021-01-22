@@ -84,7 +84,7 @@ void ImageTools::createImageSampler(VkSampler* sampler,
 	samplerCreateInfo.compareEnable = compareOp == VK_COMPARE_OP_ALWAYS ? VK_FALSE : VK_TRUE;
 	samplerCreateInfo.compareOp = compareOp;
 	samplerCreateInfo.minLod = 0.0f;
-	samplerCreateInfo.maxLod = static_cast<float>(mipLevels);
+	samplerCreateInfo.maxLod = static_cast<float>(mipLevels) - 1.0f;
 	samplerCreateInfo.borderColor = borderColor;
 	samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
 	NEIGE_VK_CHECK(vkCreateSampler(logicalDevice.device, &samplerCreateInfo, nullptr, sampler));
@@ -263,6 +263,12 @@ void ImageTools::transitionLayout(VkImage image,
 		srcPipelineStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		dstPipelineStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+		imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		srcPipelineStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		dstPipelineStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
 	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL) {
 		imageMemoryBarrier.srcAccessMask = 0;
 		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -295,7 +301,7 @@ void ImageTools::generateMipmaps(VkImage image,
 	int32_t texelWidth,
 	int32_t texelHeight,
 	uint32_t mipLevels,
-	uint32_t layers) {
+	uint32_t arrayLayers) {
 	VkFormatProperties formatProperties;
 	vkGetPhysicalDeviceFormatProperties(physicalDevice.device, format, &formatProperties);
 	if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
@@ -316,7 +322,7 @@ void ImageTools::generateMipmaps(VkImage image,
 	imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	imageMemoryBarrier.subresourceRange.levelCount = 1;
 	imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-	imageMemoryBarrier.subresourceRange.layerCount = layers;
+	imageMemoryBarrier.subresourceRange.layerCount = arrayLayers;
 	int mipWidth = texelWidth;
 	int mipHeight = texelHeight;
 	for (uint32_t i = 1; i < mipLevels; i++) {
@@ -330,13 +336,13 @@ void ImageTools::generateMipmaps(VkImage image,
 		imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageBlit.srcSubresource.mipLevel = i - 1;
 		imageBlit.srcSubresource.baseArrayLayer = 0;
-		imageBlit.srcSubresource.layerCount = 1;
+		imageBlit.srcSubresource.layerCount = arrayLayers;
 		imageBlit.srcOffsets[0] = { 0, 0, 0 };
 		imageBlit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
 		imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		imageBlit.dstSubresource.mipLevel = i;
 		imageBlit.dstSubresource.baseArrayLayer = 0;
-		imageBlit.dstSubresource.layerCount = 1;
+		imageBlit.dstSubresource.layerCount = arrayLayers;
 		imageBlit.dstOffsets[0] = { 0, 0, 0 };
 		imageBlit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 		vkCmdBlitImage(commandBuffer.commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageBlit, VK_FILTER_LINEAR);

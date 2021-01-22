@@ -58,11 +58,11 @@ struct ImageTools {
 		VkImageLayout oldLayout,
 		VkImageLayout newLayout,
 		uint32_t mipLevels,
-		uint32_t layers);
+		uint32_t arrayLayers);
 	static void generateMipmaps(VkImage image,
 		VkFormat format,
 		int32_t texelWidth,
 		int32_t texelHeight,
 		uint32_t mipLevels,
-		uint32_t layers);
+		uint32_t arrayLayers);
 };

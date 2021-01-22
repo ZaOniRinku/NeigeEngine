@@ -49,7 +49,18 @@ vec2 hammersley(uint i, uint N) {
 	return vec2(float(i) / float(N), radicalInverseVanDerCorpus(i));
 }
 
+float distribution(float NdotH, float roughness) {
+	float a = roughness * roughness;
+	float asquare = a * a;
+	float NdotHsquare = NdotH * NdotH;
+	float denom = NdotHsquare * (asquare - 1.0) + 1.0;
+
+	return asquare / (M_PI * denom * denom);
+}
+
 void main() {
+	const float cubemapResolution = 2048.0;
+
 	vec3 normal = normalize(position);
 	vec3 r = normal;
 	vec3 v = r;
@@ -62,9 +73,19 @@ void main() {
 		vec3 h = importanceSamplingGGX(xi, normal, roughness.roughness);
 		vec3 l = normalize(2.0 * dot(v, h) * h - v);
 		
+		float NdotH = dot(normal, h);
+		float VdotH = dot(v, h);
+		float D = distribution(NdotH, roughness.roughness);
+		float pdf = (D * NdotH / (4.0 * VdotH)) + 0.0001;
+		
+		float saT = 4.0 * M_PI / (6.0 * cubemapResolution * cubemapResolution);
+		float saS = 1.0 / (float(SAMPLES) * pdf + 0.0001);
+		
+		float mipLevel = roughness.roughness == 0.0 ? 0.0 : 0.5 * log2(saS / saT);
+		
 		float NdotL = max(dot(normal, l), 0.0);
 		if (NdotL > 0.0) {
-			prefiltered += vec3(texture(skybox, l)) * NdotL;
+			prefiltered += vec3(textureLod(skybox, l, mipLevel)) * NdotL;
 			totalweight += NdotL;
 		}
 	}

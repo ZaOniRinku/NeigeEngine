@@ -10,9 +10,11 @@ void Envmap::init(std::string filePath) {
 		ImageTools::createImageView(&envmapImage.imageView, envmapImage.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
-	ImageTools::createImage(&skyboxImage.image, 6, ENVMAP_WIDTH, ENVMAP_HEIGHT, 1, VK_SAMPLE_COUNT_1_BIT, physicalDevice.colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &skyboxImage.allocationId);
-	ImageTools::createImageView(&skyboxImage.imageView, skyboxImage.image, 0, 6, 0, 1, VK_IMAGE_VIEW_TYPE_CUBE, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-	ImageTools::createImageSampler(&skyboxImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
+	uint32_t skyboxMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(ENVMAP_WIDTH, ENVMAP_HEIGHT)))) + 1;
+	ImageTools::createImage(&skyboxImage.image, 6, ENVMAP_WIDTH, ENVMAP_HEIGHT, skyboxMipLevels, VK_SAMPLE_COUNT_1_BIT, physicalDevice.colorFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &skyboxImage.allocationId);
+	ImageTools::createImageView(&skyboxImage.imageView, skyboxImage.image, 0, 6, 0, skyboxMipLevels, VK_IMAGE_VIEW_TYPE_CUBE, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+	ImageTools::createImageSampler(&skyboxImage.imageSampler, skyboxMipLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
+	ImageTools::transitionLayout(skyboxImage.image, physicalDevice.colorFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, skyboxMipLevels, 6);
 
 	float defaultSkyboxColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	ImageTools::loadColorForEnvmap(defaultSkyboxColor, &defaultSkybox.image, physicalDevice.colorFormat, &defaultSkybox.mipmapLevels, &defaultSkybox.allocationId);
@@ -114,6 +116,7 @@ void Envmap::equilateralRectangleToCubemap() {
 
 	std::array<Framebuffer, 6> equiRecToCubemapFramebuffers;
 	std::array<VkImageView, 6> equiRecToCubemapImageViews;
+
 	for (int face = 0; face < 6; face++) {
 		ImageTools::createImageView(&equiRecToCubemapImageViews[face], skyboxImage.image, face, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 		std::vector<VkImageView> framebufferAttachments;
@@ -192,6 +195,10 @@ void Envmap::equilateralRectangleToCubemap() {
 		commandBuffer.endAndSubmit();
 		commandPool.destroy();
 	}
+
+	uint32_t skyboxMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(ENVMAP_WIDTH, ENVMAP_HEIGHT)))) + 1;
+	ImageTools::transitionLayout(skyboxImage.image, physicalDevice.colorFormat, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, skyboxMipLevels, 6);
+	ImageTools::generateMipmaps(skyboxImage.image, physicalDevice.colorFormat, ENVMAP_WIDTH, ENVMAP_HEIGHT, skyboxMipLevels, 6);
 
 	equiRecToCubemapRenderPass.destroy();
 	equiRecToCubemapGraphicsPipeline.destroy();
@@ -363,7 +370,7 @@ void Envmap::createPrefilter() {
 		prefilterDescriptorSet.init(&prefilterGraphicsPipeline, 0);
 
 		VkDescriptorImageInfo skyboxInfo = {};
-		skyboxInfo.sampler = defaultSkybox.imageSampler;
+		skyboxInfo.sampler = skyboxImage.imageSampler;
 		skyboxInfo.imageView = skyboxImage.image != VK_NULL_HANDLE ? skyboxImage.imageView : defaultSkybox.imageView;
 		skyboxInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 

@@ -95,7 +95,7 @@ void Renderer::init() {
 		cameraInfo.range = sizeof(CameraUniformBufferObject);
 
 		VkDescriptorImageInfo skyboxInfo = {};
-		skyboxInfo.sampler = envmap.skyboxImage.imageSampler;
+		skyboxInfo.sampler = envmap.defaultSkybox.imageSampler;
 		skyboxInfo.imageView = envmap.skyboxImage.imageView;
 		skyboxInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
