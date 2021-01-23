@@ -11,6 +11,7 @@
 - [glm](https://github.com/g-truc/glm)
 - [glslang](https://github.com/KhronosGroup/glslang)
 - [SPIRV-Reflect](https://github.com/KhronosGroup/SPIRV-Reflect)
+- [stb](https://github.com/nothings/stb)
 ## Download
 ```txt
 $ git clone --recurse-submodules https://github.com/ZaOniRinku/NeigeEngine.git
