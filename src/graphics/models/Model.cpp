@@ -158,6 +158,29 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						metallicRoughnessWriteDescriptorSet.pTexelBufferView = nullptr;
 						writesDescriptorSet.push_back(metallicRoughnessWriteDescriptorSet);
 					}
+					else if (bindingName == "emissiveMap") {
+						std::string emissiveKey = materials[mesh.primitives[i].materialIndex].emissiveKey;
+						if (emissiveKey == "") {
+							emissiveKey = "defaultEmissive";
+						}
+						VkDescriptorImageInfo emissiveInfo = {};
+						emissiveInfo.sampler = textures.at(emissiveKey).imageSampler;
+						emissiveInfo.imageView = textures.at(emissiveKey).imageView;
+						emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+						VkWriteDescriptorSet emissiveWriteDescriptorSet = {};
+						emissiveWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						emissiveWriteDescriptorSet.pNext = nullptr;
+						emissiveWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						emissiveWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
+						emissiveWriteDescriptorSet.dstArrayElement = 0;
+						emissiveWriteDescriptorSet.descriptorCount = 1;
+						emissiveWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+						emissiveWriteDescriptorSet.pImageInfo = &emissiveInfo;
+						emissiveWriteDescriptorSet.pBufferInfo = nullptr;
+						emissiveWriteDescriptorSet.pTexelBufferView = nullptr;
+						writesDescriptorSet.push_back(emissiveWriteDescriptorSet);
+					}
 					else if (bindingName == "occlusionMap") {
 						std::string occlusionKey = materials[mesh.primitives[i].materialIndex].occlusionKey;
 						if (occlusionKey == "") {

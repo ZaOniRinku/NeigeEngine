@@ -38,6 +38,7 @@ struct Material {
 	std::string diffuseKey = "";
 	std::string normalKey = "";
 	std::string metallicRoughnessKey = "";
+	std::string emissiveKey = "";
 	std::string occlusionKey = "";
 };
 

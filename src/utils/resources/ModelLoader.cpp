@@ -378,6 +378,21 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 					primitiveMaterial.normalKey = normalImage->uri;
 				}
 
+				cgltf_texture_view emissiveTextureView = primitive->material->emissive_texture;
+				cgltf_texture* emissiveTexture = emissiveTextureView.texture;
+				if (emissiveTexture != NULL) {
+					cgltf_image* emissiveImage = emissiveTexture->image;
+
+					if (textures.find(emissiveImage->uri) == textures.end()) {
+						Image image;
+						ImageTools::loadImage(FileTools::fileGetDirectory(filePath) + emissiveImage->uri, &image.image, VK_FORMAT_R8G8B8A8_UNORM, &image.mipmapLevels, &image.allocationId);
+						ImageTools::createImageView(&image.imageView, image.image, 0, 1, 0, image.mipmapLevels, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+						ImageTools::createImageSampler(&image.imageSampler, image.mipmapLevels, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
+						textures.emplace(emissiveImage->uri, image);
+					}
+					primitiveMaterial.emissiveKey = emissiveImage->uri;
+				}
+
 				cgltf_texture_view occlusionTextureView = primitive->material->occlusion_texture;
 				cgltf_texture* occlusionTexture = occlusionTextureView.texture;
 				if (occlusionTexture != NULL) {

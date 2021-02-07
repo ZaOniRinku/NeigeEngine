@@ -27,7 +27,8 @@ layout(set = 0, binding = 7) uniform sampler2DShadow shadowMaps[MAX_DIR_LIGHTS +
 layout(set = 1, binding = 0) uniform sampler2D colorMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
 layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessMap;
-layout(set = 1, binding = 3) uniform sampler2D occlusionMap;
+layout(set = 1, binding = 3) uniform sampler2D emissiveMap;
+layout(set = 1, binding = 4) uniform sampler2D occlusionMap;
 
 layout(location = 0) in vec2 uv;
 layout(location = 1) in vec3 cameraPos;
@@ -134,6 +135,7 @@ void main() {
 	vec3 normalSample = texture(normalMap, uv).xyz;
 	float metallicSample = texture(metallicRoughnessMap, uv).b;
 	float roughnessSample = texture(metallicRoughnessMap, uv).g;
+	vec3 emissiveSample = texture(emissiveMap, uv).xyz;
 	float occlusionSample = texture(occlusionMap, uv).r;
 
 	vec3 d = vec3(colorSample);
@@ -198,6 +200,8 @@ void main() {
 	tmpColor += ambient;
 
 	tmpColor = tmpColor / (tmpColor + vec3(1.0));
+	
+	tmpColor += emissiveSample;
 
 	outColor = vec4(vec3(tmpColor), 1.0);
 }
