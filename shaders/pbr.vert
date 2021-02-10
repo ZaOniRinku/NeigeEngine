@@ -37,10 +37,10 @@ layout(location = MAX_DIR_LIGHTS + MAX_SPOT_LIGHTS + 3) out mat3 outTBN;
 
 void main() {
 	outUv = uv;
-	vec3 bitangent = normalize(cross(normal, tangent));
-	vec3 T = normalize(vec3(object.model * vec4(tangent, 0.0)));
-	vec3 B = normalize(vec3(object.model * vec4(bitangent, 0.0)));
-	vec3 N = normalize(vec3(object.model * vec4(normal, 0.0)));
+	vec3 bitangent = cross(normal, tangent);
+	vec3 T = vec3(object.model * vec4(tangent, 0.0));
+	vec3 B = vec3(object.model * vec4(bitangent, 0.0));
+	vec3 N = vec3(object.model * vec4(normal, 0.0));
 	outTBN = mat3(T, B, N);
 	outCameraPos = camera.pos;
 	outFragmentPos = vec3(object.model * vec4(position, 1.0));

@@ -30,9 +30,9 @@ int main(void) {
 
 	Entity skinningTest = ecs.createEntity();
 	ecs.addComponent(skinningTest, Renderable{
-		"../modelfiles/skinning/SimpleSkin.gltf",
-		"../shaders/animated_pbr.vert",
-		"../shaders/animated_pbr.frag",
+		"../modelfiles/BoomBox.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/pbr.frag",
 		"",
 		"",
 		"",
@@ -40,8 +40,8 @@ int main(void) {
 		});
 	ecs.addComponent(skinningTest, Transform{
 		glm::vec3(3.0f, -1.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 1.0f)
+		glm::vec3(180.0f, 0.0f, 0.0f),
+		glm::vec3(100.0f, 100.0f, 100.0f)
 		});
 
 	Entity entity2 = ecs.createEntity();
@@ -94,18 +94,18 @@ int main(void) {
 
 	Entity entity5 = ecs.createEntity();
 	ecs.addComponent(entity5, Renderable{
-		"../modelfiles/water.gltf",
+		"../../glTF-Sample-Models-master/2.0/Sponza/glTF/Sponza.gltf",
 		"../shaders/pbr.vert",
-		"../shaders/water.frag",
+		"../shaders/pbr.frag",
 		"",
 		"",
 		"",
 		Topology::TRIANGLE_LIST
 		});
 	ecs.addComponent(entity5, Transform{
-		glm::vec3(0.0f, -1.0f, 0.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(10.0f, 1.0f, 10.0f)
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
 
 	Entity light1 = ecs.createEntity();

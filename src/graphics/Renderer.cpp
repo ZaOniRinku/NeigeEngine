@@ -236,10 +236,13 @@ void Renderer::init() {
 	// Sync objects
 	fences.resize(MAX_FRAMES_IN_FLIGHT);
 	IAsemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	RFsemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		fences[i].init();
 		IAsemaphores[i].init();
+	}
+
+	RFsemaphores.resize(swapchainSize);
+	for (uint32_t i = 0; i < swapchainSize; i++) {
 		RFsemaphores[i].init();
 	}
 }
@@ -317,7 +320,7 @@ void Renderer::update() {
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &renderingCommandBuffers[currentFrame].commandBuffer;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &RFsemaphores[currentFrame].semaphore;
+	submitInfo.pSignalSemaphores = &RFsemaphores[swapchainImage].semaphore;
 
 	fences[currentFrame].reset();
 	NEIGE_VK_CHECK(vkQueueSubmit(logicalDevice.queues.graphicsQueue, 1, &submitInfo, fences[currentFrame].fence));
@@ -326,7 +329,7 @@ void Renderer::update() {
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &RFsemaphores[currentFrame].semaphore;
+	presentInfo.pWaitSemaphores = &RFsemaphores[swapchainImage].semaphore;
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain.swapchain;
 	presentInfo.pImageIndices = &swapchainImage;
