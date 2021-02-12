@@ -170,6 +170,16 @@ void MemoryAllocator::deallocate(VkDeviceSize allocationId) {
 			if (curr->inUse && curr->allocationId == allocationId) {
 				curr->inUse = false;
 				curr->allocationId = -1;
+
+				// Blocks fusion
+				if (curr->prev && !curr->prev->inUse) {
+					if (curr->next) {
+						curr->next->prev = curr->prev;
+					}
+					curr->prev->next = curr->next;
+					curr->prev->size += curr->size;
+					delete curr;
+				}
 				return;
 			}
 			curr = curr->next;
