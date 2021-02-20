@@ -37,4 +37,5 @@ struct MemoryAllocator {
 	VkDeviceSize allocate(VkImage* imageToAllocate, VkMemoryPropertyFlags flags);
 	void deallocate(VkDeviceSize allocationId);
 	int32_t findProperties(uint32_t memoryTypeBitsRequirement, VkMemoryPropertyFlags requiredProperties);
+	void memoryAnalyzer();
 };

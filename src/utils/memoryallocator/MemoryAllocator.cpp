@@ -61,6 +61,9 @@ VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements, VkDeviceSize*
 				// The size of the current block is now the size of the data
 				curr->size = memRequirements.size;
 				curr->inUse = true;
+				if (curr->next) {
+					curr->next->prev = newBlock;
+				}
 				curr->next = newBlock;
 				curr->allocationId = (*allocationNumber)++;
 
@@ -172,13 +175,33 @@ void MemoryAllocator::deallocate(VkDeviceSize allocationId) {
 				curr->allocationId = -1;
 
 				// Blocks fusion
+				// Fusion with previous block
 				if (curr->prev && !curr->prev->inUse) {
-					if (curr->next) {
-						curr->next->prev = curr->prev;
+					Block* prev = curr->prev;
+					if (prev->prev) {
+						prev->prev->next = curr;
+						curr->prev = prev->prev;
 					}
-					curr->prev->next = curr->next;
-					curr->prev->size += curr->size;
-					delete curr;
+					else {
+						curr->prev = nullptr;
+						chunk.head = curr;
+					}
+					curr->offset = prev->offset;
+					curr->size += prev->size;
+					delete prev;
+				}
+				// Fusion with next block
+				if (curr->next && !curr->next->inUse) {
+					Block* next = curr->next;
+					if (next->next) {
+						next->next->prev = curr;
+						curr->next = next->next;
+					}
+					else {
+						curr->next = nullptr;
+					}
+					curr->size += next->size;
+					delete next;
 				}
 				return;
 			}
@@ -202,4 +225,25 @@ int32_t MemoryAllocator::findProperties(uint32_t memoryTypeBitsRequirement, VkMe
 		}
 	}
 	NEIGE_ERROR("Unable to find suitable memory type.");
+}
+
+void MemoryAllocator::memoryAnalyzer() {
+	NEIGE_INFO("Showing all memory chunks:");
+	for (size_t i = 0; i < chunks.size(); i++) {
+		Chunk& chunk = chunks.at(i);
+		std::cout << "Chunk " << i << std::endl;
+		Block* curr = chunk.head;
+		std::cout << "[";
+		while (curr) {
+			std::string blockInfo = "";
+			blockInfo += curr->inUse ? " \033[32mO\033[39m " : " \033[31mX\033[39m ";
+			blockInfo += "\033[95m" + std::to_string(curr->offset) + "\033[39m:\033[96m" + std::to_string(curr->size) + "\033[39m";
+			blockInfo += curr->next ? " | " : " ";
+
+			std::cout << blockInfo;
+
+			curr = curr->next;
+		}
+		std::cout << "]" << std::endl << std::endl;
+	}
 }

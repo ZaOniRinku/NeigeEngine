@@ -262,6 +262,10 @@ void Renderer::update() {
 			skyboxGraphicsPipeline.destroyPipeline();
 			skyboxGraphicsPipeline.init();
 		}
+
+		if (keyboardInputs.cKey == KeyState::PRESSED) {
+			memoryAllocator.memoryAnalyzer();
+		}
 	}
 
 	if (window->gotResized) {
