@@ -4,6 +4,7 @@
 #include "../../graphics/pipelines/DescriptorSet.h"
 #include "../../graphics/resources/Buffer.h"
 #include <vector>
+#include <unordered_map>
 
 // Model primitive
 struct Primitive {
@@ -28,5 +29,5 @@ struct Mesh {
 	Bone skeleton;
 	std::vector<Bone> boneList;
 	std::vector<Buffer> boneBuffers;
-	std::vector<std::vector<DescriptorSet>> descriptorSets;
+	std::unordered_map<std::string, std::vector<std::vector<DescriptorSet>>> descriptorSets;
 };

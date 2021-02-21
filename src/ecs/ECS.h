@@ -83,7 +83,8 @@ public:
 		size_t tmp = entityToIndex[entity];
 		components[tmp] = components[validSize - 1];
 		Entity entityLast = indexToEntity[validSize - 1];
-		entityToIndex[static_cast<Entity>(validSize - 1)] = tmp;
+		entityToIndex[entityLast] = tmp;
+		indexToEntity[tmp] = entityLast;
 		entityToIndex.erase(entity);
 		indexToEntity.erase(validSize - 1);
 		validSize--;

@@ -60,6 +60,22 @@ int main(void) {
 		glm::vec3(1.0f, 1.0f, 1.0f)
 		});
 
+	Entity entity8 = ecs.createEntity();
+	ecs.addComponent(entity8, Renderable{
+		"../modelfiles/Duck2.gltf",
+		"../shaders/pbr.vert",
+		"../shaders/water.frag",
+		"",
+		"",
+		"",
+		Topology::TRIANGLE_LIST
+		});
+	ecs.addComponent(entity8, Transform{
+		glm::vec3(3.0f, 1.0f, 2.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f)
+		});
+
 	Entity entity3 = ecs.createEntity();
 	ecs.addComponent(entity3, Renderable{
 		"../modelfiles/DamagedHelmet.gltf",

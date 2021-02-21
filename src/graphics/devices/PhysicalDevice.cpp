@@ -44,7 +44,7 @@ bool PhysicalDevice::extensionSupport() {
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 	std::vector<VkExtensionProperties> extensionProperties(extensionCount);
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensionProperties.data());
-	std::set<std::string> requiredExtensions(extensions.begin(), extensions.end());
+	std::set<std::string> requiredExtensions(vulkanExtensions.begin(), vulkanExtensions.end());
 	for (const auto& extension : extensionProperties) {
 		requiredExtensions.erase(extension.extensionName);
 	}

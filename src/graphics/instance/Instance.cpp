@@ -1,5 +1,14 @@
 #include "Instance.h"
 
+// Debug messenger callback
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback([[maybe_unused]] VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	[[maybe_unused]] VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	[[maybe_unused]] void* pUserData) {
+	NEIGE_VK_VALIDATION_ERROR(pCallbackData->pMessage);
+
+	return VK_FALSE;
+}
+
 void Instance::init(uint32_t engineVersion, const std::vector<const char*> windowExtensions) {
 	// Application
 	VkApplicationInfo applicationInfo = {};
@@ -18,7 +27,7 @@ void Instance::init(uint32_t engineVersion, const std::vector<const char*> windo
 		NEIGE_VK_CHECK(vkEnumerateInstanceLayerProperties(&propertyCount, properties.data()));
 
 		bool validationLayerFound;
-		for (const auto& layer : layers) {
+		for (const auto& layer : explicitLayers) {
 			validationLayerFound = false;
 			for (const VkLayerProperties& availableLayer : properties) {
 				if (strcmp(availableLayer.layerName, layer) == 0) {
@@ -39,8 +48,8 @@ void Instance::init(uint32_t engineVersion, const std::vector<const char*> windo
 	instanceCreateInfo.flags = 0;
 	instanceCreateInfo.pApplicationInfo = &applicationInfo;
 	if (NEIGE_DEBUG) {
-		instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
-		instanceCreateInfo.ppEnabledLayerNames = layers.data();
+		instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(explicitLayers.size());
+		instanceCreateInfo.ppEnabledLayerNames = explicitLayers.data();
 	}
 	else {
 		instanceCreateInfo.enabledLayerCount = 0;

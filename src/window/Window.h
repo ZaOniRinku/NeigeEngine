@@ -8,13 +8,13 @@
 
 struct Window {
 	// Callback when window get resized
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	static void framebufferResizeCallback(GLFWwindow* window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
 		auto pointer = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
 		pointer->windowGotResized();
 	}
 
 	// Callback for keys
-	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	static void keyCallback(GLFWwindow* window, int key, [[maybe_unused]]  int scancode, int action, [[maybe_unused]]  int mods) {
 		auto pointer = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
 		pointer->keyAction(key, action);
 	}

@@ -12,13 +12,13 @@
 #define ENVMAP_HEIGHT 2048
 
 // Layers
-const std::vector<const char*> layers = {
+const std::vector<const char*> explicitLayers = {
 	"VK_LAYER_KHRONOS_validation",
 	"VK_LAYER_LUNARG_monitor"
 };
 
 // Extensions
-const std::vector<const char*> extensions = {
+const std::vector<const char*> vulkanExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -76,7 +76,7 @@ struct SwapchainSupport {
 				return presentMode;
 			}
 		}
-		return VK_PRESENT_MODE_FIFO_KHR;
+		return bestMode;
 	}
 };
 

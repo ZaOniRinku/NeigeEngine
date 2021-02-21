@@ -16,7 +16,7 @@ Chunk::Chunk(int32_t memoryType, VkDeviceSize size) {
 	block->inUse = false;
 	block->prev = nullptr;
 	block->next = nullptr;
-	block->allocationId = -1;
+	block->allocationId = 0;
 
 	head = block;
 }
@@ -56,7 +56,7 @@ VkDeviceSize Chunk::allocate(VkMemoryRequirements memRequirements, VkDeviceSize*
 				newBlock->size = curr->size - memRequirements.size;
 				newBlock->prev = curr;
 				newBlock->next = curr->next;
-				newBlock->allocationId = -1;
+				newBlock->allocationId = 0;
 
 				// The size of the current block is now the size of the data
 				curr->size = memRequirements.size;
@@ -172,7 +172,7 @@ void MemoryAllocator::deallocate(VkDeviceSize allocationId) {
 		while (curr) {
 			if (curr->inUse && curr->allocationId == allocationId) {
 				curr->inUse = false;
-				curr->allocationId = -1;
+				curr->allocationId = 0;
 
 				// Blocks fusion
 				// Fusion with previous block

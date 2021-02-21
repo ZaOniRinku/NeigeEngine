@@ -288,11 +288,11 @@ void ModelLoader::loadglTFNode(const std::string& filePath, cgltf_node* node, ui
 
 					float r = 1.0f / (dUV1.x * dUV2.y - dUV1.y * dUV2.x);
 
-					glm::vec3 tangent = (dPos1 * dUV2.y - dPos2 * dUV1.y) * r;
+					glm::vec3 localTangent = (dPos1 * dUV2.y - dPos2 * dUV1.y) * r;
 
-					vertex0->tangent += tangent;
-					vertex1->tangent += tangent;
-					vertex2->tangent += tangent;
+					vertex0->tangent += localTangent;
+					vertex1->tangent += localTangent;
+					vertex2->tangent += localTangent;
 				}
 			}
 

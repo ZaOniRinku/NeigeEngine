@@ -13,9 +13,9 @@ void PhysicalDevicePicker::pick(Window* window) {
 	vkEnumeratePhysicalDevices(instance.instance, &deviceCount, enumerateDevices.data());
 	std::vector<PhysicalDevice> devices;
 	for (const VkPhysicalDevice device : enumerateDevices) {
-		PhysicalDevice physicalDevice;
-		physicalDevice.device = device;
-		devices.push_back(physicalDevice);
+		PhysicalDevice tmpPhysicalDevice;
+		tmpPhysicalDevice.device = device;
+		devices.push_back(tmpPhysicalDevice);
 	}
 	for (PhysicalDevice device : devices) {
 		if (device.isSuitable(&window->surface)) {

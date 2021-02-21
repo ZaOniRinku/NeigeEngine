@@ -175,10 +175,10 @@ void DescriptorSet::createEntityDescriptorSet(uint32_t entity, uint32_t frameInF
 		else if (bindingName == "shadowMaps") {
 			shadowMapsInfos.resize(MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS);
 
-			for (int i = 0; i < MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS; i++) {
-				shadowMapsInfos[i].sampler = shadow.defaultShadow.imageSampler;
-				shadowMapsInfos[i].imageView = (i < shadow.mapCount) ? shadow.images[i].imageView : shadow.defaultShadow.imageView;
-				shadowMapsInfos[i].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			for (int j = 0; j < MAX_DIR_LIGHTS + MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS; j++) {
+				shadowMapsInfos[j].sampler = shadow.defaultShadow.imageSampler;
+				shadowMapsInfos[j].imageView = (j < shadow.mapCount) ? shadow.images[j].imageView : shadow.defaultShadow.imageView;
+				shadowMapsInfos[j].imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			}
 
 			VkWriteDescriptorSet shadowMapsWriteDescriptorSet = {};

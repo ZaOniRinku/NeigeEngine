@@ -521,8 +521,10 @@ void Renderer::loadObject(Entity object) {
 	if (models.find(objectRenderable.modelPath) == models.end()) {
 		Model model;
 		model.init(objectRenderable.modelPath);
-		model.createDescriptorSets(&graphicsPipelines.at(mapKey));
 		models.emplace(objectRenderable.modelPath, model);
+	}
+	if (models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.find(mapKey) == models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.end()) {
+		models.at(objectRenderable.modelPath).createDescriptorSets(&graphicsPipelines.at(mapKey));
 	}
 }
 
@@ -632,8 +634,6 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 }
 
 void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex) {
-	VkDeviceSize offset = 0;
-
 	currentPipeline = "";
 
 	RenderPass* sceneRenderPass = &renderPasses.at("scene");
@@ -656,7 +656,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 
 				entityShadowDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 
-				models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], frameInFlightIndex, false);
+				models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], &shadow.graphicsPipeline, frameInFlightIndex, false);
 			}
 
 			shadow.renderPass.end(&renderingCommandBuffers[frameInFlightIndex]);
@@ -683,7 +683,7 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 			entityDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 		}
 
-		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], frameInFlightIndex, true);
+		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], graphicsPipeline, frameInFlightIndex, true);
 	}
 
 	skyboxGraphicsPipeline.bind(&renderingCommandBuffers[frameInFlightIndex]);

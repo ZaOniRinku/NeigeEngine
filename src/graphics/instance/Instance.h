@@ -3,15 +3,6 @@
 #include "../../utils/NeigeDefines.h"
 #include "../../utils/structs/RendererStructs.h"
 
-// Debug messenger callback
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData) {
-	NEIGE_VK_VALIDATION_ERROR(pCallbackData->pMessage);
-
-	return VK_FALSE;
-}
-
 struct Instance {
 	VkInstance instance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;

@@ -62,7 +62,7 @@ void Model::destroy() {
 	}
 }
 
-void Model::draw(CommandBuffer* commandBuffer, uint32_t frameInFlightIndex, bool bindTextures) {
+void Model::draw(CommandBuffer* commandBuffer, GraphicsPipeline* graphicsPipeline, uint32_t frameInFlightIndex, bool bindTextures) {
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(commandBuffer->commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
 	vkCmdBindIndexBuffer(commandBuffer->commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -70,7 +70,8 @@ void Model::draw(CommandBuffer* commandBuffer, uint32_t frameInFlightIndex, bool
 	for (Mesh& mesh : meshes) {
 		for (size_t i = 0; i < mesh.primitives.size(); i++) {
 			if (bindTextures) {
-				mesh.descriptorSets.at(i).at(frameInFlightIndex).bind(commandBuffer, 1);
+				std::string mapKey = graphicsPipeline->vertexShaderPath + graphicsPipeline->fragmentShaderPath + graphicsPipeline->tesselationControlShaderPath + graphicsPipeline->tesselationEvaluationShaderPath + graphicsPipeline->geometryShaderPath + std::to_string(static_cast<int>(graphicsPipeline->topology));
+				mesh.descriptorSets.at(mapKey).at(i).at(frameInFlightIndex).bind(commandBuffer, 1);
 			}
 			vkCmdDrawIndexed(commandBuffer->commandBuffer, mesh.primitives[i].indexCount, 1, mesh.indexOffset + mesh.primitives[i].firstIndex, mesh.vertexOffset + mesh.primitives[i].vertexOffset, 0);
 		}
@@ -79,13 +80,19 @@ void Model::draw(CommandBuffer* commandBuffer, uint32_t frameInFlightIndex, bool
 
 void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 	for (Mesh& mesh : meshes) {
-		mesh.descriptorSets.resize(mesh.primitives.size());
+		std::vector<std::vector<DescriptorSet>> descriptorSets;
+		descriptorSets.resize(mesh.primitives.size());
 		for (size_t i = 0; i < mesh.primitives.size(); i++) {
-			mesh.descriptorSets.at(i).resize(MAX_FRAMES_IN_FLIGHT);
+			descriptorSets.at(i).resize(MAX_FRAMES_IN_FLIGHT);
 			for (int j = 0; j < MAX_FRAMES_IN_FLIGHT; j++) {
-				mesh.descriptorSets.at(i).at(j).init(graphicsPipeline, 1);
+				descriptorSets.at(i).at(j).init(graphicsPipeline, 1);
 
 				std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+				VkDescriptorImageInfo diffuseInfo = {};
+				VkDescriptorImageInfo normalInfo = {};
+				VkDescriptorImageInfo metallicRoughnessInfo = {};
+				VkDescriptorImageInfo emissiveInfo = {};
+				VkDescriptorImageInfo occlusionInfo = {};
 
 				for (size_t k = 0; k < graphicsPipeline->sets[1].bindings.size(); k++) {
 					std::string bindingName = graphicsPipeline->sets[1].bindings[k].name;
@@ -94,7 +101,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						if (diffuseKey == "") {
 							diffuseKey = "defaultDiffuse";
 						}
-						VkDescriptorImageInfo diffuseInfo = {};
+
 						diffuseInfo.sampler = textures.at(diffuseKey).imageSampler;
 						diffuseInfo.imageView = textures.at(diffuseKey).imageView;
 						diffuseInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -102,7 +109,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet diffuseWriteDescriptorSet = {};
 						diffuseWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						diffuseWriteDescriptorSet.pNext = nullptr;
-						diffuseWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						diffuseWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						diffuseWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						diffuseWriteDescriptorSet.dstArrayElement = 0;
 						diffuseWriteDescriptorSet.descriptorCount = 1;
@@ -117,7 +124,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						if (normalKey == "") {
 							normalKey = "defaultNormal";
 						}
-						VkDescriptorImageInfo normalInfo = {};
+
 						normalInfo.sampler = textures.at(normalKey).imageSampler;
 						normalInfo.imageView = textures.at(normalKey).imageView;
 						normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -125,7 +132,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet normalWriteDescriptorSet = {};
 						normalWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						normalWriteDescriptorSet.pNext = nullptr;
-						normalWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						normalWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						normalWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						normalWriteDescriptorSet.dstArrayElement = 0;
 						normalWriteDescriptorSet.descriptorCount = 1;
@@ -140,7 +147,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						if (metallicRoughnessKey == "") {
 							metallicRoughnessKey = "defaultMetallicRoughness";
 						}
-						VkDescriptorImageInfo metallicRoughnessInfo = {};
+						
 						metallicRoughnessInfo.sampler = textures.at(metallicRoughnessKey).imageSampler;
 						metallicRoughnessInfo.imageView = textures.at(metallicRoughnessKey).imageView;
 						metallicRoughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -148,7 +155,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet metallicRoughnessWriteDescriptorSet = {};
 						metallicRoughnessWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						metallicRoughnessWriteDescriptorSet.pNext = nullptr;
-						metallicRoughnessWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						metallicRoughnessWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						metallicRoughnessWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						metallicRoughnessWriteDescriptorSet.dstArrayElement = 0;
 						metallicRoughnessWriteDescriptorSet.descriptorCount = 1;
@@ -163,7 +170,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						if (emissiveKey == "") {
 							emissiveKey = "defaultEmissive";
 						}
-						VkDescriptorImageInfo emissiveInfo = {};
+						
 						emissiveInfo.sampler = textures.at(emissiveKey).imageSampler;
 						emissiveInfo.imageView = textures.at(emissiveKey).imageView;
 						emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -171,7 +178,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet emissiveWriteDescriptorSet = {};
 						emissiveWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						emissiveWriteDescriptorSet.pNext = nullptr;
-						emissiveWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						emissiveWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						emissiveWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						emissiveWriteDescriptorSet.dstArrayElement = 0;
 						emissiveWriteDescriptorSet.descriptorCount = 1;
@@ -186,7 +193,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						if (occlusionKey == "") {
 							occlusionKey = "defaultOcclusion";
 						}
-						VkDescriptorImageInfo occlusionInfo = {};
+
 						occlusionInfo.sampler = textures.at(occlusionKey).imageSampler;
 						occlusionInfo.imageView = textures.at(occlusionKey).imageView;
 						occlusionInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -194,7 +201,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet occlusionWriteDescriptorSet = {};
 						occlusionWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						occlusionWriteDescriptorSet.pNext = nullptr;
-						occlusionWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						occlusionWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						occlusionWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						occlusionWriteDescriptorSet.dstArrayElement = 0;
 						occlusionWriteDescriptorSet.descriptorCount = 1;
@@ -213,7 +220,7 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 						VkWriteDescriptorSet bonesWriteDescriptorSet = {};
 						bonesWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 						bonesWriteDescriptorSet.pNext = nullptr;
-						bonesWriteDescriptorSet.dstSet = mesh.descriptorSets.at(i).at(j).descriptorSet;
+						bonesWriteDescriptorSet.dstSet = descriptorSets.at(i).at(j).descriptorSet;
 						bonesWriteDescriptorSet.dstBinding = graphicsPipeline->sets[1].bindings[k].binding.binding;
 						bonesWriteDescriptorSet.dstArrayElement = 0;
 						bonesWriteDescriptorSet.descriptorCount = 1;
@@ -225,8 +232,10 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 					}
 				}
 
-				mesh.descriptorSets.at(i).at(j).update(writesDescriptorSet);
+				descriptorSets.at(i).at(j).update(writesDescriptorSet);
 			}
 		}
+		std::string mapKey = graphicsPipeline->vertexShaderPath + graphicsPipeline->fragmentShaderPath + graphicsPipeline->tesselationControlShaderPath + graphicsPipeline->tesselationEvaluationShaderPath + graphicsPipeline->geometryShaderPath + std::to_string(static_cast<int>(graphicsPipeline->topology));
+		mesh.descriptorSets.emplace(mapKey, descriptorSets);
 	}
 }
