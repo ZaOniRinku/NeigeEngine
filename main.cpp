@@ -128,7 +128,7 @@ int main(void) {
 	ecs.addComponent(light1, Light{
 		LightType::DIRECTIONAL,
 		glm::vec3(0.0f),
-		glm::vec3(0.0f, -1.0f, 0.0f),
+		glm::vec3(-1.0f, -1.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f),
 		glm::vec2(0.0f)
 		});

@@ -560,7 +560,7 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 			glm::vec3 eye = -lightLight.direction;
 			glm::vec3 up = glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), eye) == (glm::length(glm::vec3(0.0f, 1.0f, 0.0f)) * glm::length(eye)) ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0);
 			glm::mat4 shadowProjection = Camera::createOrthoProjection(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 20.0f);
-			glm::mat4 shadowView = Camera::createLookAtView(eye, glm::vec3(0.0f, 0.0f, 0.0f), up);
+			glm::mat4 shadowView = Camera::createLookAtView(eye + cameraCamera.position + (cameraCamera.to * 3.0f), glm::vec3(0.0f, 0.0f, 0.0f) + cameraCamera.position + (cameraCamera.to * 3.0f), up);
 			subo.dirLightSpaces[dirLightCount] = shadowProjection * shadowView;
 
 			dirLightCount++;
