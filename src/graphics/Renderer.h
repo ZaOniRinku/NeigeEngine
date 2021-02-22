@@ -26,7 +26,6 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <chrono>
 
 struct Renderer : public System {
 	Window* window;

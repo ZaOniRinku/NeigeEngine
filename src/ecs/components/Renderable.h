@@ -39,12 +39,20 @@ struct Renderable {
 		descriptorSets[frameInFlightIndex].init(graphicsPipeline, 0);
 
 		std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+
+		VkDescriptorBufferInfo objectInfo = {};
+		VkDescriptorBufferInfo cameraInfo = {};
+		VkDescriptorBufferInfo shadowInfo = {};
+		VkDescriptorBufferInfo lightingInfo = {};
+		VkDescriptorImageInfo irradianceInfo = {};
+		VkDescriptorImageInfo prefilterInfo = {};
+		VkDescriptorImageInfo brdfLUTInfo = {};
 		std::vector<VkDescriptorImageInfo> shadowMapsInfos;
+		VkDescriptorBufferInfo timeInfo = {};
 
 		for (size_t i = 0; i < graphicsPipeline->sets[0].bindings.size(); i++) {
 			std::string bindingName = graphicsPipeline->sets[0].bindings[i].name;
 			if (bindingName == "object") {
-				VkDescriptorBufferInfo objectInfo = {};
 				objectInfo.buffer = buffers.at(frameInFlightIndex).buffer;
 				objectInfo.offset = 0;
 				objectInfo.range = sizeof(ObjectUniformBufferObject);
@@ -64,7 +72,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(objectWriteDescriptorSet);
 			}
 			else if (bindingName == "camera") {
-				VkDescriptorBufferInfo cameraInfo = {};
 				cameraInfo.buffer = cameraBuffers.at(frameInFlightIndex).buffer;
 				cameraInfo.offset = 0;
 				cameraInfo.range = sizeof(CameraUniformBufferObject);
@@ -84,7 +91,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(cameraWriteDescriptorSet);
 			}
 			else if (bindingName == "shadow") {
-				VkDescriptorBufferInfo shadowInfo = {};
 				shadowInfo.buffer = shadow.buffers.at(frameInFlightIndex).buffer;
 				shadowInfo.offset = 0;
 				shadowInfo.range = sizeof(ShadowUniformBufferObject);
@@ -104,7 +110,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(shadowWriteDescriptorSet);
 			}
 			else if (bindingName == "lights") {
-				VkDescriptorBufferInfo lightingInfo = {};
 				lightingInfo.buffer = lightingBuffers.at(frameInFlightIndex).buffer;
 				lightingInfo.offset = 0;
 				lightingInfo.range = sizeof(LightingUniformBufferObject);
@@ -124,7 +129,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(lightingWriteDescriptorSet);
 			}
 			else if (bindingName == "irradianceMap") {
-				VkDescriptorImageInfo irradianceInfo = {};
 				irradianceInfo.sampler = envmap.diffuseIradianceImage.imageSampler;
 				irradianceInfo.imageView = envmap.diffuseIradianceImage.imageView;
 				irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -144,7 +148,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(irradianceWriteDescriptorSet);
 			}
 			else if (bindingName == "prefilterMap") {
-				VkDescriptorImageInfo prefilterInfo = {};
 				prefilterInfo.sampler = envmap.prefilterImage.imageSampler;
 				prefilterInfo.imageView = envmap.prefilterImage.imageView;
 				prefilterInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -164,7 +167,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(prefilterWriteDescriptorSet);
 			}
 			else if (bindingName == "brdfLUT") {
-				VkDescriptorImageInfo brdfLUTInfo = {};
 				brdfLUTInfo.sampler = envmap.brdfConvolutionImage.imageSampler;
 				brdfLUTInfo.imageView = envmap.brdfConvolutionImage.imageView;
 				brdfLUTInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -207,7 +209,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(shadowMapsWriteDescriptorSet);
 			}
 			else if (bindingName == "time") {
-				VkDescriptorBufferInfo timeInfo = {};
 				timeInfo.buffer = timeBuffers.at(frameInFlightIndex).buffer;
 				timeInfo.offset = 0;
 				timeInfo.range = sizeof(float);
@@ -227,7 +228,6 @@ struct Renderable {
 				writesDescriptorSet.push_back(timeWriteDescriptorSet);
 			}
 		}
-
 		descriptorSets.at(frameInFlightIndex).update(writesDescriptorSet);
 	}
 
