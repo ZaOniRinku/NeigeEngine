@@ -70,8 +70,7 @@ void Model::draw(CommandBuffer* commandBuffer, GraphicsPipeline* graphicsPipelin
 	for (Mesh& mesh : meshes) {
 		for (size_t i = 0; i < mesh.primitives.size(); i++) {
 			if (bindTextures) {
-				std::string mapKey = graphicsPipeline->vertexShaderPath + graphicsPipeline->fragmentShaderPath + graphicsPipeline->tesselationControlShaderPath + graphicsPipeline->tesselationEvaluationShaderPath + graphicsPipeline->geometryShaderPath + std::to_string(static_cast<int>(graphicsPipeline->topology));
-				mesh.descriptorSets.at(mapKey).at(i).at(frameInFlightIndex).bind(commandBuffer, 1);
+				mesh.descriptorSets.at(graphicsPipeline).at(i).at(frameInFlightIndex).bind(commandBuffer, 1);
 			}
 			vkCmdDrawIndexed(commandBuffer->commandBuffer, mesh.primitives[i].indexCount, 1, mesh.indexOffset + mesh.primitives[i].firstIndex, mesh.vertexOffset + mesh.primitives[i].vertexOffset, 0);
 		}
@@ -235,7 +234,6 @@ void Model::createDescriptorSets(GraphicsPipeline* graphicsPipeline) {
 				descriptorSets.at(i).at(j).update(writesDescriptorSet);
 			}
 		}
-		std::string mapKey = graphicsPipeline->vertexShaderPath + graphicsPipeline->fragmentShaderPath + graphicsPipeline->tesselationControlShaderPath + graphicsPipeline->tesselationEvaluationShaderPath + graphicsPipeline->geometryShaderPath + std::to_string(static_cast<int>(graphicsPipeline->topology));
-		mesh.descriptorSets.emplace(mapKey, descriptorSets);
+		mesh.descriptorSets.emplace(graphicsPipeline, descriptorSets);
 	}
 }

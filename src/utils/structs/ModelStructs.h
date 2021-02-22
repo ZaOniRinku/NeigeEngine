@@ -2,6 +2,7 @@
 #include "vulkan/vulkan.hpp"
 #include "../../external/glm/glm/glm.hpp"
 #include "../../graphics/pipelines/DescriptorSet.h"
+#include "../../graphics/pipelines/GraphicsPipeline.h"
 #include "../../graphics/resources/Buffer.h"
 #include <vector>
 #include <unordered_map>
@@ -29,5 +30,5 @@ struct Mesh {
 	Bone skeleton;
 	std::vector<Bone> boneList;
 	std::vector<Buffer> boneBuffers;
-	std::unordered_map<std::string, std::vector<std::vector<DescriptorSet>>> descriptorSets;
+	std::unordered_map<GraphicsPipeline*, std::vector<std::vector<DescriptorSet>>> descriptorSets;
 };

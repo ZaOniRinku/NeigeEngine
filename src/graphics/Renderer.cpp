@@ -384,8 +384,10 @@ void Renderer::destroy() {
 	for (Buffer& buffer : timeBuffers) {
 		buffer.destroy();
 	}
-	for (std::unordered_map<Entity, std::vector<Buffer>>::iterator it = entityBuffers.begin(); it != entityBuffers.end(); it++) {
-		for (Buffer& buffer : it->second) {
+	for (Entity entity : entities) {
+		auto& objectRenderable = ecs.getComponent<Renderable>(entity);
+
+		for (Buffer& buffer : objectRenderable.buffers) {
 			buffer.destroy();
 		}
 	}
@@ -422,12 +424,12 @@ void Renderer::destroy() {
 }
 
 void Renderer::loadObject(Entity object) {
-	auto const& objectRenderable = ecs.getComponent<Renderable>(object);
+	auto& objectRenderable = ecs.getComponent<Renderable>(object);
 
-	std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
+	objectRenderable.createLookupString();
 
 	// Graphics pipelines
-	if (graphicsPipelines.find(mapKey) == graphicsPipelines.end()) {
+	if (graphicsPipelines.find(objectRenderable.lookupString) == graphicsPipelines.end()) {
 		GraphicsPipeline graphicsPipeline;
 		graphicsPipeline.vertexShaderPath = objectRenderable.vertexShaderPath;
 		graphicsPipeline.fragmentShaderPath = objectRenderable.fragmentShaderPath;
@@ -439,82 +441,26 @@ void Renderer::loadObject(Entity object) {
 		graphicsPipeline.topology = objectRenderable.topology;
 		graphicsPipeline.colorBlend = false;
 		graphicsPipeline.init();
-		graphicsPipelines.emplace(mapKey, graphicsPipeline);
+		graphicsPipelines.emplace(objectRenderable.lookupString, graphicsPipeline);
 	}
 
-	if (graphicsPipelines.at(mapKey).sets.size() != 0) {
-		std::vector<Buffer> buffers;
-		buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	objectRenderable.graphicsPipeline = &graphicsPipelines.at(objectRenderable.lookupString);
 
-		std::vector<DescriptorSet> descriptorSets;
-		descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	objectRenderable.buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	objectRenderable.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	objectRenderable.shadowDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 
-		std::vector<DescriptorSet> shadowDescriptorSets;
-		shadowDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
+	if (objectRenderable.graphicsPipeline->sets.size() != 0) {
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			// Buffers
-			BufferTools::createUniformBuffer(buffers.at(i).buffer, buffers.at(i).deviceMemory, sizeof(ObjectUniformBufferObject));
-		}
+			BufferTools::createUniformBuffer(objectRenderable.buffers.at(i).buffer, objectRenderable.buffers.at(i).deviceMemory, sizeof(ObjectUniformBufferObject));
 
-		entityBuffers.emplace(object, buffers);
-
-		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			// Descriptor sets
-			{
-				descriptorSets[i].init(&graphicsPipelines.at(mapKey), 0);
-				descriptorSets[i].createEntityDescriptorSet(object, i);
-			}
+			objectRenderable.createEntityDescriptorSet(i);
 
 			// Shadow
-			{
-				shadowDescriptorSets[i].init(&shadow.graphicsPipeline, 0);
-
-				VkDescriptorBufferInfo objectInfo = {};
-				objectInfo.buffer = buffers.at(i).buffer;
-				objectInfo.offset = 0;
-				objectInfo.range = sizeof(ObjectUniformBufferObject);
-
-				VkDescriptorBufferInfo shadowInfo = {};
-				shadowInfo.buffer = shadow.buffers.at(i).buffer;
-				shadowInfo.offset = 0;
-				shadowInfo.range = sizeof(ShadowUniformBufferObject);
-
-				std::vector<VkWriteDescriptorSet> writesDescriptorSet;
-
-				VkWriteDescriptorSet objectWriteDescriptorSet = {};
-				objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				objectWriteDescriptorSet.pNext = nullptr;
-				objectWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
-				objectWriteDescriptorSet.dstBinding = 0;
-				objectWriteDescriptorSet.dstArrayElement = 0;
-				objectWriteDescriptorSet.descriptorCount = 1;
-				objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				objectWriteDescriptorSet.pImageInfo = nullptr;
-				objectWriteDescriptorSet.pBufferInfo = &objectInfo;
-				objectWriteDescriptorSet.pTexelBufferView = nullptr;
-				writesDescriptorSet.push_back(objectWriteDescriptorSet);
-
-				VkWriteDescriptorSet shadowWriteDescriptorSet = {};
-				shadowWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				shadowWriteDescriptorSet.pNext = nullptr;
-				shadowWriteDescriptorSet.dstSet = shadowDescriptorSets[i].descriptorSet;
-				shadowWriteDescriptorSet.dstBinding = 1;
-				shadowWriteDescriptorSet.dstArrayElement = 0;
-				shadowWriteDescriptorSet.descriptorCount = 1;
-				shadowWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				shadowWriteDescriptorSet.pImageInfo = nullptr;
-				shadowWriteDescriptorSet.pBufferInfo = &shadowInfo;
-				shadowWriteDescriptorSet.pTexelBufferView = nullptr;
-				writesDescriptorSet.push_back(shadowWriteDescriptorSet);
-
-				shadowDescriptorSets[i].update(writesDescriptorSet);
-			}
+			objectRenderable.createShadowEntityDescriptorSet(i);
 		}
-
-		entityBuffers.emplace(object, buffers);
-		entityDescriptorSets.emplace(object, descriptorSets);
-		entityShadowDescriptorSets.emplace(object, shadowDescriptorSets);
 	}
 
 	// Model
@@ -523,8 +469,8 @@ void Renderer::loadObject(Entity object) {
 		model.init(objectRenderable.modelPath);
 		models.emplace(objectRenderable.modelPath, model);
 	}
-	if (models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.find(mapKey) == models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.end()) {
-		models.at(objectRenderable.modelPath).createDescriptorSets(&graphicsPipelines.at(mapKey));
+	if (models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.find(objectRenderable.graphicsPipeline) == models.at(objectRenderable.modelPath).meshes.at(0).descriptorSets.end()) {
+		models.at(objectRenderable.modelPath).createDescriptorSets(&graphicsPipelines.at(objectRenderable.lookupString));
 	}
 }
 
@@ -613,11 +559,9 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 	// Renderables
 	for (Entity object : entities) {
 		auto const& objectTransform = ecs.getComponent<Transform>(object);
-		auto const& objectRenderable = ecs.getComponent<Renderable>(object);
+		auto& objectRenderable = ecs.getComponent<Renderable>(object);
 
-		std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
-
-		if (graphicsPipelines.at(mapKey).sets.size() != 0) {
+		if (graphicsPipelines.at(objectRenderable.lookupString).sets.size() != 0) {
 			ObjectUniformBufferObject oubo = {};
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), objectTransform.position);
 			glm::mat4 rotateX = glm::rotate(glm::mat4(1.0f), glm::radians(objectTransform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -626,15 +570,15 @@ void Renderer::updateData(uint32_t frameInFlightIndex) {
 			glm::mat4 scale = glm::scale(glm::mat4(1.0f), objectTransform.scale);
 			oubo.model = translate * rotateX * rotateY * rotateZ * scale;
 
-			entityBuffers.at(object).at(frameInFlightIndex).map(0, sizeof(ObjectUniformBufferObject), &data);
+			objectRenderable.buffers.at(frameInFlightIndex).map(0, sizeof(ObjectUniformBufferObject), &data);
 			memcpy(data, &oubo, sizeof(ObjectUniformBufferObject));
-			entityBuffers.at(object).at(frameInFlightIndex).unmap();
+			objectRenderable.buffers.at(frameInFlightIndex).unmap();
 		}
 	}
 }
 
 void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex) {
-	currentPipeline = "";
+	currentPipeline = nullptr;
 
 	RenderPass* sceneRenderPass = &renderPasses.at("scene");
 
@@ -652,9 +596,9 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 			shadow.graphicsPipeline.pushConstant(&renderingCommandBuffers[frameInFlightIndex], VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &lightIndex);
 
 			for (Entity object : entities) {
-				auto const& objectRenderable = ecs.getComponent<Renderable>(object);
+				auto& objectRenderable = ecs.getComponent<Renderable>(object);
 
-				entityShadowDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
+				objectRenderable.shadowDescriptorSets.at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 
 				models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], &shadow.graphicsPipeline, frameInFlightIndex, false);
 			}
@@ -666,26 +610,21 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	}
 
 	sceneRenderPass->begin(&renderingCommandBuffers[frameInFlightIndex], framebuffers[framebufferIndex].framebuffer, window->extent);
-
 	for (Entity object : entities) {
-		auto const& objectRenderable = ecs.getComponent<Renderable>(object);
+		auto& objectRenderable = ecs.getComponent<Renderable>(object);
 
-		std::string mapKey = objectRenderable.vertexShaderPath + objectRenderable.fragmentShaderPath + objectRenderable.tesselationControlShaderPath + objectRenderable.tesselationEvaluationShaderPath + objectRenderable.geometryShaderPath + std::to_string(static_cast<int>(objectRenderable.topology));
-		GraphicsPipeline* graphicsPipeline = &graphicsPipelines.at(mapKey);
+		if (currentPipeline != objectRenderable.graphicsPipeline) {
+			objectRenderable.graphicsPipeline->bind(&renderingCommandBuffers[frameInFlightIndex]);
 
-		if (currentPipeline != mapKey) {
-			graphicsPipeline->bind(&renderingCommandBuffers[frameInFlightIndex]);
-
-			currentPipeline = mapKey;
+			currentPipeline = objectRenderable.graphicsPipeline;
 		}
 
-		if (graphicsPipeline->sets.size() != 0) {
-			entityDescriptorSets.at(object).at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
+		if (objectRenderable.graphicsPipeline->sets.size() != 0) {
+			objectRenderable.descriptorSets.at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 		}
 
-		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], graphicsPipeline, frameInFlightIndex, true);
+		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], objectRenderable.graphicsPipeline, frameInFlightIndex, true);
 	}
-
 	skyboxGraphicsPipeline.bind(&renderingCommandBuffers[frameInFlightIndex]);
 	skyboxDescriptorSets.at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
 

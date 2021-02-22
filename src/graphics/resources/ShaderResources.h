@@ -19,7 +19,4 @@ inline std::set<Entity> lights;
 inline std::vector<Buffer> lightingBuffers;
 inline Shadow shadow;
 inline std::vector<Buffer> timeBuffers;
-inline std::unordered_map<Entity, std::vector<Buffer>> entityBuffers;
-inline std::unordered_map<Entity, std::vector<DescriptorSet>> entityDescriptorSets;
-inline std::unordered_map<Entity, std::vector<DescriptorSet>> entityShadowDescriptorSets;
 inline Envmap envmap;

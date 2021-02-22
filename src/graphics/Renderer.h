@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <chrono>
 
 struct Renderer : public System {
 	Window* window;
@@ -40,7 +41,7 @@ struct Renderer : public System {
 	std::vector<Semaphore> RFsemaphores;
 
 	// Pipelines
-	std::string currentPipeline;
+	GraphicsPipeline* currentPipeline;
 
 	Viewport fullscreenViewport;
 

@@ -11,5 +11,4 @@ struct DescriptorSet {
 	void update(const std::vector<VkWriteDescriptorSet> writeDescriptorSets);
 	void destroy();
 	void bind(CommandBuffer* commandBuffer, uint32_t set);
-	void createEntityDescriptorSet(uint32_t entity, uint32_t frameInFlightIndex);
 };

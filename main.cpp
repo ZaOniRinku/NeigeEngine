@@ -20,8 +20,8 @@ int main(void) {
 	g.window = &w;
 	g.init();
 
-	Entity camera = ecs.createEntity();
-	ecs.addComponent(camera, Camera{
+	Entity sceneCamera = ecs.createEntity();
+	ecs.addComponent(sceneCamera, Camera{
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
