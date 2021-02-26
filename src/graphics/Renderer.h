@@ -18,6 +18,7 @@
 #include "renderpasses/Framebuffer.h"
 #include "renderpasses/RenderPass.h"
 #include "shadowmapping/Shadow.h"
+#include "ssao/SSAO.h"
 #include "sync/Fence.h"
 #include "sync/Semaphore.h"
 #include "../window/Window.h"
@@ -46,14 +47,12 @@ struct Renderer : public System {
 
 	std::unordered_map<std::string, GraphicsPipeline> graphicsPipelines;
 
-	// Render passes
-	std::vector<Image> colorImages;
-	std::vector<Image> depthImages;
-
 	std::unordered_map<std::string, RenderPass> renderPasses;
 
-	std::vector<Framebuffer> framebuffers;
+	std::vector<Framebuffer> sceneFramebuffers;
+	std::vector<Framebuffer> postFramebuffers;
 
+	DescriptorSet postDescriptorSet;
 	// Command buffers
 	std::vector<CommandPool> renderingCommandPools;
 	std::vector<CommandBuffer> renderingCommandBuffers;
@@ -71,4 +70,6 @@ struct Renderer : public System {
 	void recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t framebufferIndex);
 	void createResources();
 	void destroyResources();
+	void createPostProcessDescriptorSet();
+	void reloadOnResize();
 };

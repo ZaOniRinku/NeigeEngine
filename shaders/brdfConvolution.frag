@@ -96,7 +96,7 @@ vec2 integrate(float NdotV, float roughness) {
 }
 
 void main() {
-	vec2 integrated = integrate(uv.x, uv.y);
+	vec2 integrated = integrate(uv.x, 1.0 - uv.y);
 	
 	outColor = integrated;
 }

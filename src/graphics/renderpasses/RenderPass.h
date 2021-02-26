@@ -12,8 +12,8 @@ struct RenderPass {
 	std::vector<VkAttachmentReference> colorAttachmentReferences;
 	VkAttachmentReference depthAttachmentReference;
 	bool gotADepthAttachment = false;
-	VkAttachmentReference swapchainAttachmentReference;
-	bool gotASwapchainAttachment = false;
+	VkAttachmentReference resolveAttachmentReference;
+	bool gotAResolveAttachment = false;
 	std::vector<VkClearValue> clearValues;
 	uint32_t attachmentCount = 0;
 

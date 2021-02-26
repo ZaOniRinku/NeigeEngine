@@ -133,7 +133,7 @@ int main(void) {
 		glm::vec2(0.0f)
 		});
 
-	/*Entity light2 = ecs.createEntity();
+	Entity light2 = ecs.createEntity();
 	ecs.addComponent(light2, Light{
 		LightType::SPOT,
 		glm::vec3(5.0f, 4.0f, 0.0f),
@@ -149,7 +149,7 @@ int main(void) {
 		glm::vec3(0.0f),
 		glm::vec3(1.0f, 0.0f, 1.0f),
 		glm::vec2(0.0f)
-		});*/
+		});
 
 	g.launch();
 }

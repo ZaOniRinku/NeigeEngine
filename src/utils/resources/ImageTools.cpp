@@ -188,6 +188,32 @@ void ImageTools::loadColor(float* color,
 	stagingBuffer.destroy();
 }
 
+void ImageTools::loadColorArray(float* colors,
+	VkImage* imageDestination,
+	uint32_t width,
+	uint32_t height,
+	VkFormat format,
+	uint32_t* mipLevels,
+	VkDeviceSize* allocationId) {
+	VkDeviceSize size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4 * sizeof(float);
+
+	*mipLevels = 1;
+
+	Buffer stagingBuffer;
+	BufferTools::createStagingBuffer(stagingBuffer.buffer, stagingBuffer.deviceMemory, size);
+	void* pixelData;
+	stagingBuffer.map(0, size, &pixelData);
+	memcpy(pixelData, colors, size);
+	stagingBuffer.unmap();
+
+	createImage(imageDestination, 1, width, height, 1, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, allocationId);
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, 1);
+	BufferTools::copyToImage(stagingBuffer.buffer, *imageDestination, width, height, 1, sizeof(float));
+	transitionLayout(*imageDestination, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, *mipLevels, 1);
+
+	stagingBuffer.destroy();
+}
+
 void ImageTools::loadColorForEnvmap(float* color,
 	VkImage* imageDestination,
 	VkFormat format,

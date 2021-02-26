@@ -21,10 +21,10 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments, std::vector
 			clearValues.push_back(clearValue);
 			gotADepthAttachment = true;
 			break;
-		case AttachmentType::SWAPCHAIN:
+		case AttachmentType::RESOLVE:
 			reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			swapchainAttachmentReference = reference;
-			gotASwapchainAttachment = true;
+			resolveAttachmentReference = reference;
+			gotAResolveAttachment = true;
 			break;
 		}
 	}
@@ -34,7 +34,7 @@ void RenderPass::init(std::vector<RenderPassAttachment> attachments, std::vector
 	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpassDescription.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentReferences.size());
 	subpassDescription.pColorAttachments = colorAttachmentReferences.data();
-	subpassDescription.pResolveAttachments = gotASwapchainAttachment ? &swapchainAttachmentReference: nullptr;
+	subpassDescription.pResolveAttachments = gotAResolveAttachment ? &resolveAttachmentReference : nullptr;
 	subpassDescription.pDepthStencilAttachment = gotADepthAttachment ? &depthAttachmentReference : nullptr;
 
 	std::vector<VkSubpassDependency> dependencies;

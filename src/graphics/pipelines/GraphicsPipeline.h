@@ -24,6 +24,7 @@ struct GraphicsPipeline {
 	bool colorBlend = true;
 	bool multiSample = true;
 	bool depthFail = false;
+	bool disableCulling = false;
 	std::vector<Set> sets;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 

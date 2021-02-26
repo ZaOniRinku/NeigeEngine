@@ -25,10 +25,6 @@ void Envmap::init(std::string filePath) {
 	cubeIndices.resize(cubeVertices.size());
 	std::iota(cubeIndices.begin(), cubeIndices.end(), 0);
 
-	std::vector<uint32_t> quadIndices;
-	quadIndices.resize(quadVertices.size());
-	std::iota(quadIndices.begin(), quadIndices.end(), 0);
-
 	Buffer stagingVertexBuffer;
 	VkDeviceSize size = cubeVertices.size() * sizeof(Vertex);
 	BufferTools::createStagingBuffer(stagingVertexBuffer.buffer, stagingVertexBuffer.deviceMemory, size);
@@ -50,42 +46,20 @@ void Envmap::init(std::string filePath) {
 	BufferTools::createBuffer(cubeIndexBuffer.buffer, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &cubeIndexBuffer.allocationId);
 	BufferTools::copyBuffer(stagingIndexBuffer.buffer, cubeIndexBuffer.buffer, size);
 	stagingIndexBuffer.destroy();
-	
-	size = quadVertices.size() * sizeof(Vertex);
-	BufferTools::createStagingBuffer(stagingVertexBuffer.buffer, stagingVertexBuffer.deviceMemory, size);
-	void* quadVertexData;
-	stagingVertexBuffer.map(0, size, &quadVertexData);
-	memcpy(quadVertexData, quadVertices.data(), static_cast<size_t>(size));
-	stagingVertexBuffer.unmap();
-	BufferTools::createBuffer(quadVertexBuffer.buffer, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &quadVertexBuffer.allocationId);
-	BufferTools::copyBuffer(stagingVertexBuffer.buffer, quadVertexBuffer.buffer, size);
-	stagingVertexBuffer.destroy();
-
-	size = quadIndices.size() * sizeof(uint32_t);
-	BufferTools::createStagingBuffer(stagingIndexBuffer.buffer, stagingIndexBuffer.deviceMemory, size);
-	void* quadIndexData;
-	stagingIndexBuffer.map(0, size, &quadIndexData);
-	memcpy(quadIndexData, quadIndices.data(), static_cast<size_t>(size));
-	stagingIndexBuffer.unmap();
-	BufferTools::createBuffer(quadIndexBuffer.buffer, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &quadIndexBuffer.allocationId);
-	BufferTools::copyBuffer(stagingIndexBuffer.buffer, quadIndexBuffer.buffer, size);
-	stagingIndexBuffer.destroy();
 
 	equilateralRectangleToCubemap();
 	createDiffuseIradiance();
 	createPrefilter();
 	createBRDFConvolution();
 
-	logicalDevice.wait();
+	// Cleanup
+	envmapImage.destroy();
 }
 
 void Envmap::destroy() {
 	cubeVertexBuffer.destroy();
 	cubeIndexBuffer.destroy();
-	quadVertexBuffer.destroy();
-	quadIndexBuffer.destroy();
 	defaultSkybox.destroy();
-	envmapImage.destroy();
 	skyboxImage.destroy();
 	diffuseIradianceImage.destroy();
 	prefilterImage.destroy();
@@ -482,12 +456,13 @@ void Envmap::createBRDFConvolution() {
 	brdfConvolutionFramebuffer.init(&brdfConvolutionRenderPass, framebufferAttachments, BRDFCONVOLUTION_WIDTH, BRDFCONVOLUTION_HEIGHT, 1);
 
 	GraphicsPipeline brdfConvolutionGraphicsPipeline;
-	brdfConvolutionGraphicsPipeline.vertexShaderPath = "../shaders/brdfConvolution.vert";
+	brdfConvolutionGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
 	brdfConvolutionGraphicsPipeline.fragmentShaderPath = "../shaders/brdfConvolution.frag";
 	brdfConvolutionGraphicsPipeline.renderPass = &brdfConvolutionRenderPass;
 	brdfConvolutionGraphicsPipeline.viewport = &brdfConvolutionViewport;
 	brdfConvolutionGraphicsPipeline.colorBlend = false;
 	brdfConvolutionGraphicsPipeline.multiSample = false;
+	brdfConvolutionGraphicsPipeline.disableCulling = true;
 	brdfConvolutionGraphicsPipeline.init();
 
 	VkDeviceSize offset = 0;
@@ -503,10 +478,7 @@ void Envmap::createBRDFConvolution() {
 
 	brdfConvolutionGraphicsPipeline.bind(&commandBuffer);
 
-	vkCmdBindVertexBuffers(commandBuffer.commandBuffer, 0, 1, &quadVertexBuffer.buffer, &offset);
-	vkCmdBindIndexBuffer(commandBuffer.commandBuffer, quadIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(commandBuffer.commandBuffer, 6, 1, 0, 0, 0);
+	vkCmdDraw(commandBuffer.commandBuffer, 3, 1, 0, 0);
 
 	brdfConvolutionRenderPass.end(&commandBuffer);
 

@@ -48,6 +48,13 @@ struct ImageTools {
 		VkFormat format,
 		uint32_t* mipLevels,
 		VkDeviceSize* allocationId);
+	static void loadColorArray(float* colors,
+		VkImage* imageDestination,
+		uint32_t width,
+		uint32_t height,
+		VkFormat format,
+		uint32_t* mipLevels,
+		VkDeviceSize* allocationId);
 	static void loadColorForEnvmap(float* color,
 		VkImage* imageDestination,
 		VkFormat format,

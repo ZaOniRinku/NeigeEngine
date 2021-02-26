@@ -10,6 +10,8 @@ struct Camera {
 	glm::mat4 projection;
 	std::string envmapPath = "";
 
+	glm::mat4 view;
+
 	static glm::mat4 createLookAtView(glm::vec3 eye, glm::vec3 center, glm::vec3 up) {
 		return glm::lookAt(eye, center, up);
 	}

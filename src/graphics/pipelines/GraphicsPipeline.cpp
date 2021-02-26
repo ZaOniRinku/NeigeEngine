@@ -287,8 +287,14 @@ void GraphicsPipeline::init() {
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputCreateInfo.pNext = nullptr;
 	vertexInputCreateInfo.flags = 0;
-	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
-	vertexInputCreateInfo.pVertexBindingDescriptions = &inputBindingDescription;
+	if (inputAttributeDescriptions.size() == 0) {
+		vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
+		vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;
+	}
+	else {
+		vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+		vertexInputCreateInfo.pVertexBindingDescriptions = &inputBindingDescription;
+	}
 	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(inputAttributeDescriptions.size());
 	vertexInputCreateInfo.pVertexAttributeDescriptions = inputAttributeDescriptions.data();
 
@@ -308,7 +314,7 @@ void GraphicsPipeline::init() {
 	rasterizationCreateInfo.depthClampEnable = VK_FALSE;
 	rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationCreateInfo.polygonMode = topology != Topology::WIREFRAME ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
-	rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizationCreateInfo.cullMode = disableCulling ? VK_CULL_MODE_NONE : VK_CULL_MODE_BACK_BIT;
 	rasterizationCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationCreateInfo.depthBiasClamp = VK_FALSE;
 	rasterizationCreateInfo.depthBiasConstantFactor = 0.0f;
@@ -344,18 +350,22 @@ void GraphicsPipeline::init() {
 	depthStencilCreateInfo.maxDepthBounds = 1.0f;
 
 	// Color blend
-	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-	colorBlendAttachment.blendEnable = colorBlend ? VK_TRUE : VK_FALSE;
-	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-	colorBlendAttachment.colorWriteMask = { VK_COLOR_COMPONENT_R_BIT |
-		VK_COLOR_COMPONENT_G_BIT |
-		VK_COLOR_COMPONENT_B_BIT |
-		VK_COLOR_COMPONENT_A_BIT };
+	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+	for (size_t i = 0; i < renderPass->colorAttachmentReferences.size(); i++) {
+		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+		colorBlendAttachment.blendEnable = colorBlend ? VK_TRUE : VK_FALSE;
+		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachment.colorWriteMask = { VK_COLOR_COMPONENT_R_BIT |
+			VK_COLOR_COMPONENT_G_BIT |
+			VK_COLOR_COMPONENT_B_BIT |
+			VK_COLOR_COMPONENT_A_BIT };
+		colorBlendAttachments.push_back(colorBlendAttachment);
+	}
 
 	VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo = {};
 	colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -363,8 +373,8 @@ void GraphicsPipeline::init() {
 	colorBlendCreateInfo.flags = 0;
 	colorBlendCreateInfo.logicOpEnable = VK_FALSE;
 	colorBlendCreateInfo.logicOp = VK_LOGIC_OP_COPY;
-	colorBlendCreateInfo.attachmentCount = 1;
-	colorBlendCreateInfo.pAttachments = &colorBlendAttachment;
+	colorBlendCreateInfo.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+	colorBlendCreateInfo.pAttachments = colorBlendAttachments.data();
 	colorBlendCreateInfo.blendConstants[0] = 0.0f;
 	colorBlendCreateInfo.blendConstants[1] = 0.0f;
 	colorBlendCreateInfo.blendConstants[2] = 0.0f;

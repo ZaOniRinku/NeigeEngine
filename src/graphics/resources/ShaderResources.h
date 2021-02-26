@@ -3,6 +3,7 @@
 #include "../models/Model.h"
 #include "../pipelines/Shader.h"
 #include "../shadowmapping/Shadow.h"
+#include "../ssao/SSAO.h"
 #include "../envmap/Envmap.h"
 #include "../../ecs/ECS.h"
 #include "Image.h"
@@ -17,6 +18,9 @@ inline Entity camera;
 inline std::vector<Buffer> cameraBuffers;
 inline std::set<Entity> lights;
 inline std::vector<Buffer> lightingBuffers;
-inline Shadow shadow;
 inline std::vector<Buffer> timeBuffers;
 inline Envmap envmap;
+inline Shadow shadow;
+inline SSAO ssao;
+inline Image colorImage;
+inline Image depthImage;

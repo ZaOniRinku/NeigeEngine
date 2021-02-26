@@ -4,7 +4,7 @@
 enum struct AttachmentType {
 	COLOR,
 	DEPTH,
-	SWAPCHAIN
+	RESOLVE
 };
 
 struct RenderPassAttachment {
