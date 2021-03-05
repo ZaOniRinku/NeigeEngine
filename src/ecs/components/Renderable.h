@@ -33,6 +33,7 @@ struct Renderable {
 	// Descriptor sets and buffers
 	std::vector<Buffer> buffers;
 	std::vector<DescriptorSet> descriptorSets;
+	std::vector<DescriptorSet> depthPrepassDescriptorSets;
 	std::vector<DescriptorSet> shadowDescriptorSets;
 
 	void createEntityDescriptorSet(uint32_t frameInFlightIndex) {
@@ -229,6 +230,50 @@ struct Renderable {
 			}
 		}
 		descriptorSets.at(frameInFlightIndex).update(writesDescriptorSet);
+	}
+
+	void createDepthPrepassEntityDescriptorSet(uint32_t frameInFlightIndex) {
+		depthPrepassDescriptorSets[frameInFlightIndex].init(&depthPrepass.graphicsPipeline, 0);
+
+		VkDescriptorBufferInfo objectInfo = {};
+		objectInfo.buffer = buffers.at(frameInFlightIndex).buffer;
+		objectInfo.offset = 0;
+		objectInfo.range = sizeof(ObjectUniformBufferObject);
+
+		VkDescriptorBufferInfo cameraInfo = {};
+		cameraInfo.buffer = cameraBuffers.at(frameInFlightIndex).buffer;
+		cameraInfo.offset = 0;
+		cameraInfo.range = sizeof(CameraUniformBufferObject);
+
+		std::vector<VkWriteDescriptorSet> writesDescriptorSet;
+
+		VkWriteDescriptorSet objectWriteDescriptorSet = {};
+		objectWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		objectWriteDescriptorSet.pNext = nullptr;
+		objectWriteDescriptorSet.dstSet = depthPrepassDescriptorSets[frameInFlightIndex].descriptorSet;
+		objectWriteDescriptorSet.dstBinding = 0;
+		objectWriteDescriptorSet.dstArrayElement = 0;
+		objectWriteDescriptorSet.descriptorCount = 1;
+		objectWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		objectWriteDescriptorSet.pImageInfo = nullptr;
+		objectWriteDescriptorSet.pBufferInfo = &objectInfo;
+		objectWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(objectWriteDescriptorSet);
+
+		VkWriteDescriptorSet cameraWriteDescriptorSet = {};
+		cameraWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		cameraWriteDescriptorSet.pNext = nullptr;
+		cameraWriteDescriptorSet.dstSet = depthPrepassDescriptorSets[frameInFlightIndex].descriptorSet;
+		cameraWriteDescriptorSet.dstBinding = 1;
+		cameraWriteDescriptorSet.dstArrayElement = 0;
+		cameraWriteDescriptorSet.descriptorCount = 1;
+		cameraWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		cameraWriteDescriptorSet.pImageInfo = nullptr;
+		cameraWriteDescriptorSet.pBufferInfo = &cameraInfo;
+		cameraWriteDescriptorSet.pTexelBufferView = nullptr;
+		writesDescriptorSet.push_back(cameraWriteDescriptorSet);
+
+		depthPrepassDescriptorSets[frameInFlightIndex].update(writesDescriptorSet);
 	}
 
 	void createShadowEntityDescriptorSet(uint32_t frameInFlightIndex) {

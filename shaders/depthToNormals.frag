@@ -13,8 +13,6 @@ layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 outColor;
 
 vec3 depthToPosition(float depth) {
-	float x = uv.x * 2.0 - 1.0;
-	float y = uv.y * 2.0 - 1.0;
 	vec4 clipSpace = vec4(uv * 2.0 - 1.0, depth, 1.0);
 	vec4 viewSpace = inverse(camera.projection) * clipSpace;
 	

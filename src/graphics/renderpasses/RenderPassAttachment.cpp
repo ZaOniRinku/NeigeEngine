@@ -7,6 +7,7 @@ RenderPassAttachment::RenderPassAttachment(AttachmentType attachmentType,
 	VkAttachmentStoreOp storeOp,
 	VkAttachmentLoadOp stencilLoadOp,
 	VkAttachmentStoreOp stencilStoreOp,
+	VkImageLayout initialLayout,
 	VkImageLayout finalLayout) {
 	type = attachmentType;
 	description.format = format;
@@ -15,6 +16,6 @@ RenderPassAttachment::RenderPassAttachment(AttachmentType attachmentType,
 	description.storeOp = storeOp;
 	description.stencilLoadOp = stencilLoadOp;
 	description.stencilStoreOp = stencilStoreOp;
-	description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	description.initialLayout = initialLayout;
 	description.finalLayout = finalLayout;
 }

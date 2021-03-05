@@ -8,6 +8,12 @@
 #include "Viewport.h"
 #include <vector>
 
+enum Compare {
+	LESS_OR_EQUAL,
+	LESS,
+	EQUAL
+};
+
 struct GraphicsPipeline {
 	VkPipeline pipeline = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
@@ -23,8 +29,9 @@ struct GraphicsPipeline {
 	Topology topology = Topology::TRIANGLE_LIST;
 	bool colorBlend = true;
 	bool multiSample = true;
-	bool depthFail = false;
-	bool disableCulling = false;
+	bool depthWrite = true;
+	Compare depthCompare = LESS_OR_EQUAL;
+	bool backfaceCulling = false;
 	std::vector<Set> sets;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 
@@ -34,4 +41,5 @@ struct GraphicsPipeline {
 	void pushConstant(CommandBuffer* commandBuffer, VkShaderStageFlags stages, uint32_t offset, uint32_t size, const void* data);
 	void destroyPipeline();
 	VkPrimitiveTopology topologyToVkTopology();
+	VkCompareOp compareToVkCompare();
 };

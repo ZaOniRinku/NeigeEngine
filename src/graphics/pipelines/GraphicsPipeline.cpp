@@ -314,7 +314,7 @@ void GraphicsPipeline::init() {
 	rasterizationCreateInfo.depthClampEnable = VK_FALSE;
 	rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationCreateInfo.polygonMode = topology != Topology::WIREFRAME ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
-	rasterizationCreateInfo.cullMode = disableCulling ? VK_CULL_MODE_NONE : VK_CULL_MODE_BACK_BIT;
+	rasterizationCreateInfo.cullMode = backfaceCulling ? VK_CULL_MODE_NONE : VK_CULL_MODE_BACK_BIT;
 	rasterizationCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationCreateInfo.depthBiasClamp = VK_FALSE;
 	rasterizationCreateInfo.depthBiasConstantFactor = 0.0f;
@@ -340,8 +340,8 @@ void GraphicsPipeline::init() {
 	depthStencilCreateInfo.pNext = nullptr;
 	depthStencilCreateInfo.flags = 0;
 	depthStencilCreateInfo.depthTestEnable = VK_TRUE;
-	depthStencilCreateInfo.depthWriteEnable = VK_TRUE;
-	depthStencilCreateInfo.depthCompareOp = !depthFail ? VK_COMPARE_OP_LESS : VK_COMPARE_OP_LESS_OR_EQUAL;
+	depthStencilCreateInfo.depthWriteEnable = depthWrite ? VK_TRUE : VK_FALSE;
+	depthStencilCreateInfo.depthCompareOp = compareToVkCompare();
 	depthStencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	depthStencilCreateInfo.stencilTestEnable = VK_FALSE;
 	depthStencilCreateInfo.front = {};
@@ -462,5 +462,18 @@ VkPrimitiveTopology GraphicsPipeline::topologyToVkTopology() {
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	default:
 		NEIGE_ERROR("Unsupported primitive topology");
+	}
+}
+
+VkCompareOp GraphicsPipeline::compareToVkCompare() {
+	switch (depthCompare) {
+	case Compare::LESS_OR_EQUAL:
+		return VK_COMPARE_OP_LESS_OR_EQUAL;
+	case Compare::LESS:
+		return VK_COMPARE_OP_LESS;
+	case Compare::EQUAL:
+		return VK_COMPARE_OP_EQUAL;
+	default:
+		NEIGE_ERROR("Unsupported depth compare operator");
 	}
 }

@@ -39,8 +39,8 @@ void Renderer::init() {
 	// Render passes
 	{
 		std::vector<RenderPassAttachment> attachments;
-		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, physicalDevice.colorFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
-		attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL));
+		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, physicalDevice.colorFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
+		attachments.push_back(RenderPassAttachment(AttachmentType::DEPTH, physicalDevice.depthFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL));
 		
 		std::vector<SubpassDependency> dependencies;
 		dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
@@ -54,7 +54,7 @@ void Renderer::init() {
 
 	{
 		std::vector<RenderPassAttachment> attachments;
-		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR));
+		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, swapchain.surfaceFormat.format, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR));
 
 		std::vector<SubpassDependency> dependencies;
 		dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0 });
@@ -82,6 +82,12 @@ void Renderer::init() {
 		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(double));
 	}
 
+	// Depth prepass
+	depthPrepass.init(fullscreenViewport);
+
+	// SSAO
+	ssao.init(fullscreenViewport);
+
 	// Shadow
 	shadow.init();
 
@@ -96,7 +102,7 @@ void Renderer::init() {
 	skyboxGraphicsPipeline.multiSample = false;
 	skyboxGraphicsPipeline.viewport = &fullscreenViewport;
 	skyboxGraphicsPipeline.colorBlend = false;
-	skyboxGraphicsPipeline.depthFail = true;
+	skyboxGraphicsPipeline.depthCompare = Compare::LESS_OR_EQUAL;
 	skyboxGraphicsPipeline.init();
 
 	skyboxDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
@@ -173,9 +179,6 @@ void Renderer::init() {
 		}
 	}
 
-	// SSAO
-	ssao.init(fullscreenViewport);
-
 	// Post-process
 	GraphicsPipeline postGraphicsPipeline;
 	postGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -184,8 +187,8 @@ void Renderer::init() {
 	postGraphicsPipeline.viewport = &fullscreenViewport;
 	postGraphicsPipeline.multiSample = false;
 	postGraphicsPipeline.colorBlend = false;
-	postGraphicsPipeline.depthFail = true;
-	postGraphicsPipeline.disableCulling = true;
+	postGraphicsPipeline.depthCompare = Compare::LESS;
+	postGraphicsPipeline.backfaceCulling = true;
 	postGraphicsPipeline.init();
 	graphicsPipelines.emplace("post", postGraphicsPipeline);
 
@@ -337,8 +340,9 @@ void Renderer::update() {
 void Renderer::destroy() {
 	logicalDevice.wait();
 	destroyResources();
-	shadow.destroy();
+	depthPrepass.destroy();
 	envmap.destroy();
+	shadow.destroy();
 	ssao.destroy();
 	for (CommandPool& renderingCommandPool : renderingCommandPools) {
 		renderingCommandPool.destroy();
@@ -413,6 +417,8 @@ void Renderer::loadObject(Entity object) {
 		graphicsPipeline.viewport = &fullscreenViewport;
 		graphicsPipeline.topology = objectRenderable.topology;
 		graphicsPipeline.colorBlend = false;
+		graphicsPipeline.depthCompare = Compare::EQUAL;
+		graphicsPipeline.depthWrite = false;
 		graphicsPipeline.init();
 		graphicsPipelines.emplace(objectRenderable.lookupString, graphicsPipeline);
 	}
@@ -421,6 +427,7 @@ void Renderer::loadObject(Entity object) {
 
 	objectRenderable.buffers.resize(MAX_FRAMES_IN_FLIGHT);
 	objectRenderable.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	objectRenderable.depthPrepassDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	objectRenderable.shadowDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 
 	if (objectRenderable.graphicsPipeline->sets.size() != 0) {
@@ -430,6 +437,9 @@ void Renderer::loadObject(Entity object) {
 
 			// Descriptor sets
 			objectRenderable.createEntityDescriptorSet(i);
+
+			// Depth prepass
+			objectRenderable.createDepthPrepassEntityDescriptorSet(i);
 
 			// Shadow
 			objectRenderable.createShadowEntityDescriptorSet(i);
@@ -559,6 +569,20 @@ void Renderer::recordRenderingCommands(uint32_t frameInFlightIndex, uint32_t fra
 	renderingCommandPools[frameInFlightIndex].reset();
 	renderingCommandBuffers[frameInFlightIndex].begin();
 
+	// Depth prepass
+	depthPrepass.renderPass.begin(&renderingCommandBuffers[frameInFlightIndex], depthPrepass.framebuffers[frameInFlightIndex].framebuffer, window->extent);
+	depthPrepass.graphicsPipeline.bind(&renderingCommandBuffers[frameInFlightIndex]);
+
+	for (Entity object : entities) {
+		auto& objectRenderable = ecs.getComponent<Renderable>(object);
+
+		objectRenderable.depthPrepassDescriptorSets.at(frameInFlightIndex).bind(&renderingCommandBuffers[frameInFlightIndex], 0);
+
+		models.at(objectRenderable.modelPath).draw(&renderingCommandBuffers[frameInFlightIndex], &depthPrepass.graphicsPipeline, frameInFlightIndex, false);
+	}
+
+	depthPrepass.renderPass.end(&renderingCommandBuffers[frameInFlightIndex]);
+
 	// Shadow
 	int lightIndex = 0;
 	for (Entity light : lights) {
@@ -630,18 +654,13 @@ void Renderer::createResources() {
 		ImageTools::createImageView(&colorImage.imageView, colorImage.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 		ImageTools::createImageSampler(&colorImage.imageSampler, 2, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
 		ImageTools::transitionLayout(colorImage.image, physicalDevice.colorFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, 1);
-
-		ImageTools::createImage(&depthImage.image, 1, window->extent.width, window->extent.height, 1, VK_SAMPLE_COUNT_1_BIT, physicalDevice.depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depthImage.allocationId);
-		ImageTools::createImageView(&depthImage.imageView, depthImage.image, 0, 1, 0, 1, VK_IMAGE_VIEW_TYPE_2D, physicalDevice.depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-		ImageTools::createImageSampler(&depthImage.imageSampler, 1, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK, VK_COMPARE_OP_ALWAYS);
-		ImageTools::transitionLayout(depthImage.image, physicalDevice.depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
-
+	
 		std::vector<std::vector<VkImageView>> framebufferAttachments;
 		framebufferAttachments.resize(swapchainSize);
 		sceneFramebuffers.resize(swapchainSize);
 		for (uint32_t i = 0; i < swapchainSize; i++) {
 			framebufferAttachments[i].push_back(colorImage.imageView);
-			framebufferAttachments[i].push_back(depthImage.imageView);
+			framebufferAttachments[i].push_back(depthPrepass.image.imageView);
 			sceneFramebuffers[i].init(&renderPasses.at("scene"), framebufferAttachments[i], window->extent.width, window->extent.height, 1);
 		}
 	}
@@ -660,7 +679,6 @@ void Renderer::createResources() {
 void Renderer::destroyResources() {
 	swapchain.destroy();
 	colorImage.destroy();
-	depthImage.destroy();
 	for (Framebuffer& framebuffer : sceneFramebuffers) {
 		framebuffer.destroy();
 	}
@@ -669,6 +687,7 @@ void Renderer::destroyResources() {
 	}
 	sceneFramebuffers.clear();
 	sceneFramebuffers.shrink_to_fit();
+	depthPrepass.destroyResources();
 	ssao.destroyResources();
 }
 
@@ -732,10 +751,13 @@ void Renderer::reloadOnResize() {
 	fullscreenViewport.scissor.extent.width = window->extent.width;
 	fullscreenViewport.scissor.extent.height = window->extent.height;
 
-	createResources();
+	// Depth prepass
+	depthPrepass.createResources(fullscreenViewport);
 
 	// SSAO
 	ssao.createResources(fullscreenViewport);
+
+	createResources();
 
 	createPostProcessDescriptorSet();
 

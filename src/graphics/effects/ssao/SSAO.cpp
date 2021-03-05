@@ -1,15 +1,15 @@
 #include "SSAO.h"
-#include "../../utils/resources/BufferTools.h"
-#include "../../utils/resources/ImageTools.h"
-#include "../../graphics/resources/RendererResources.h"
-#include "../../graphics/resources/ShaderResources.h"
+#include "../../../utils/resources/BufferTools.h"
+#include "../../../utils/resources/ImageTools.h"
+#include "../../../graphics/resources/RendererResources.h"
+#include "../../../graphics/resources/ShaderResources.h"
 
 void SSAO::init(Viewport fullscreenViewport) {
 	viewport.init(static_cast<uint32_t>(fullscreenViewport.viewport.width) / DOWNSCALE, static_cast<uint32_t>(fullscreenViewport.viewport.height) / DOWNSCALE);
 
 	{
 		std::vector<RenderPassAttachment> attachments;
-		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, physicalDevice.colorFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
+		attachments.push_back(RenderPassAttachment(AttachmentType::COLOR, physicalDevice.colorFormat, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
 
 		std::vector<SubpassDependency> dependencies;
 		dependencies.push_back({ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, VK_ACCESS_SHADER_READ_BIT, VK_DEPENDENCY_BY_REGION_BIT });
@@ -23,7 +23,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	depthToNormalsGraphicsPipeline.viewport = &viewport;
 	depthToNormalsGraphicsPipeline.colorBlend = false;
 	depthToNormalsGraphicsPipeline.multiSample = false;
-	depthToNormalsGraphicsPipeline.disableCulling = true;
+	depthToNormalsGraphicsPipeline.backfaceCulling = true;
 	depthToNormalsGraphicsPipeline.init();
 
 	depthToPositionsGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -32,7 +32,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	depthToPositionsGraphicsPipeline.viewport = &viewport;
 	depthToPositionsGraphicsPipeline.colorBlend = false;
 	depthToPositionsGraphicsPipeline.multiSample = false;
-	depthToPositionsGraphicsPipeline.disableCulling = true;
+	depthToPositionsGraphicsPipeline.backfaceCulling = true;
 	depthToPositionsGraphicsPipeline.init();
 
 	ssaoGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -41,7 +41,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	ssaoGraphicsPipeline.viewport = &viewport;
 	ssaoGraphicsPipeline.colorBlend = false;
 	ssaoGraphicsPipeline.multiSample = false;
-	ssaoGraphicsPipeline.disableCulling = true;
+	ssaoGraphicsPipeline.backfaceCulling = true;
 	ssaoGraphicsPipeline.init();
 
 	ssaoBlurredGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -50,7 +50,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	ssaoBlurredGraphicsPipeline.viewport = &viewport;
 	ssaoBlurredGraphicsPipeline.colorBlend = false;
 	ssaoBlurredGraphicsPipeline.multiSample = false;
-	ssaoBlurredGraphicsPipeline.disableCulling = true;
+	ssaoBlurredGraphicsPipeline.backfaceCulling = true;
 	ssaoBlurredGraphicsPipeline.init();
 
 	BufferTools::createUniformBuffer(sampleKernel.buffer, sampleKernel.deviceMemory, SSAOSAMPLES * 4 * sizeof(float));
@@ -145,8 +145,8 @@ void SSAO::createResources(Viewport fullscreenViewport) {
 			depthToPositionsAndNormalsDescriptorSets[i].init(&depthToNormalsGraphicsPipeline, 0);
 
 			VkDescriptorImageInfo depthPrepassInfo = {};
-			depthPrepassInfo.sampler = depthImage.imageSampler;
-			depthPrepassInfo.imageView = depthImage.imageView;
+			depthPrepassInfo.sampler = depthPrepass.image.imageSampler;
+			depthPrepassInfo.imageView = depthPrepass.image.imageView;
 			depthPrepassInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
 			VkDescriptorBufferInfo cameraInfo = {};
