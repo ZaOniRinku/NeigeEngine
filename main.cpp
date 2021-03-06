@@ -5,6 +5,7 @@
 #include "src/ecs/components/Renderable.h"
 #include "src/ecs/components/Light.h"
 #include "src/ecs/components/Rigidbody.h"
+#include <random>
 
 ECS ecs;
 
@@ -29,6 +30,28 @@ int main(void) {
 		1000.0f,
 		"../modelfiles/sunset_forest_8k.hdr"
 		});
+
+	/*std::default_random_engine generator;
+	std::uniform_real_distribution<float> randomPosition(-10.0f, 10.0f);
+
+	std::vector<Entity> createdEntities(2000);
+	for (float i = -1000.0f; i < 1000.0f; i++) {
+			Entity e = ecs.createEntity();
+			ecs.addComponent(e, Renderable{
+			"../modelfiles/Sphere.gltf",
+			"../shaders/pbr.vert",
+			"../shaders/pbr.frag",
+			"",
+			"",
+			"",
+			Topology::TRIANGLE_LIST
+				});
+			ecs.addComponent(e, Transform{
+				glm::vec3(randomPosition(generator), -2.0f, randomPosition(generator)),
+				glm::vec3(0.0f, 0.0f, 0.0f),
+				glm::vec3(1.0f)
+				});
+	}*/
 
 	Entity skinningTest = ecs.createEntity();
 	ecs.addComponent(skinningTest, Renderable{

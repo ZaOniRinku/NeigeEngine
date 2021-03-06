@@ -8,7 +8,7 @@
 #include <memory>
 #include <set>
 
-#define MAX_ENTITIES 100
+#define MAX_ENTITIES 4096
 #define MAX_COMPONENTS 32
 
 using Entity = uint32_t;

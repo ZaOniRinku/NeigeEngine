@@ -28,7 +28,7 @@ struct GraphicsPipeline {
 	Viewport* viewport;
 	Topology topology = Topology::TRIANGLE_LIST;
 	bool colorBlend = true;
-	bool multiSample = true;
+	bool multiSample = false;
 	bool depthWrite = true;
 	Compare depthCompare = LESS_OR_EQUAL;
 	bool backfaceCulling = true;

@@ -13,7 +13,7 @@
 #include <vector>
 #include <random>
 
-#define DOWNSCALE 2
+#define DOWNSCALE 4
 #define SSAOSAMPLES 64
 
 struct SSAO {
