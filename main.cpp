@@ -24,7 +24,9 @@ int main(void) {
 	ecs.addComponent(sceneCamera, Camera{
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 0.0f, 0.0f),
-		Camera::createPerspectiveProjection(45.0f, w.extent.width / static_cast<float>(w.extent.height), 0.1f, 1000.0f, true),
+		45.0f,
+		0.3f,
+		1000.0f,
 		"../modelfiles/sunset_forest_8k.hdr"
 		});
 

@@ -23,7 +23,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	depthToNormalsGraphicsPipeline.viewport = &viewport;
 	depthToNormalsGraphicsPipeline.colorBlend = false;
 	depthToNormalsGraphicsPipeline.multiSample = false;
-	depthToNormalsGraphicsPipeline.backfaceCulling = true;
+	depthToNormalsGraphicsPipeline.backfaceCulling = false;
 	depthToNormalsGraphicsPipeline.init();
 
 	depthToPositionsGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -32,7 +32,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	depthToPositionsGraphicsPipeline.viewport = &viewport;
 	depthToPositionsGraphicsPipeline.colorBlend = false;
 	depthToPositionsGraphicsPipeline.multiSample = false;
-	depthToPositionsGraphicsPipeline.backfaceCulling = true;
+	depthToPositionsGraphicsPipeline.backfaceCulling = false;
 	depthToPositionsGraphicsPipeline.init();
 
 	ssaoGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -41,7 +41,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	ssaoGraphicsPipeline.viewport = &viewport;
 	ssaoGraphicsPipeline.colorBlend = false;
 	ssaoGraphicsPipeline.multiSample = false;
-	ssaoGraphicsPipeline.backfaceCulling = true;
+	ssaoGraphicsPipeline.backfaceCulling = false;
 	ssaoGraphicsPipeline.init();
 
 	ssaoBlurredGraphicsPipeline.vertexShaderPath = "../shaders/fullscreenTriangle.vert";
@@ -50,7 +50,7 @@ void SSAO::init(Viewport fullscreenViewport) {
 	ssaoBlurredGraphicsPipeline.viewport = &viewport;
 	ssaoBlurredGraphicsPipeline.colorBlend = false;
 	ssaoBlurredGraphicsPipeline.multiSample = false;
-	ssaoBlurredGraphicsPipeline.backfaceCulling = true;
+	ssaoBlurredGraphicsPipeline.backfaceCulling = false;
 	ssaoBlurredGraphicsPipeline.init();
 
 	BufferTools::createUniformBuffer(sampleKernel.buffer, sampleKernel.deviceMemory, SSAOSAMPLES * 4 * sizeof(float));

@@ -3,7 +3,7 @@
 #include "../NeigeDefines.h"
 #include <optional>
 
-#define MAX_FRAMES_IN_FLIGHT 3
+#define MAX_FRAMES_IN_FLIGHT 2
 
 #define SHADOWMAP_WIDTH 2048
 #define SHADOWMAP_HEIGHT 2048

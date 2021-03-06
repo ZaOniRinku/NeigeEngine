@@ -65,6 +65,9 @@ void Renderer::init() {
 	}
 
 	// Camera
+	auto& cameraCamera = ecs.getComponent<Camera>(camera);
+	cameraCamera.projection = Camera::createPerspectiveProjection(cameraCamera.FOV, window->extent.width / static_cast<float>(window->extent.height), cameraCamera.nearPlane, cameraCamera.farPlane, true);
+
 	cameraBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	for (Buffer& buffer : cameraBuffers) {
 		BufferTools::createUniformBuffer(buffer.buffer, buffer.deviceMemory, sizeof(CameraUniformBufferObject));
@@ -92,8 +95,6 @@ void Renderer::init() {
 	shadow.init();
 
 	// Envmap
-	auto const& cameraCamera = ecs.getComponent<Camera>(camera);
-
 	envmap.init(cameraCamera.envmapPath);
 
 	skyboxGraphicsPipeline.vertexShaderPath = "../shaders/skybox.vert";
@@ -188,7 +189,7 @@ void Renderer::init() {
 	postGraphicsPipeline.multiSample = false;
 	postGraphicsPipeline.colorBlend = false;
 	postGraphicsPipeline.depthCompare = Compare::LESS;
-	postGraphicsPipeline.backfaceCulling = true;
+	postGraphicsPipeline.backfaceCulling = false;
 	postGraphicsPipeline.init();
 	graphicsPipelines.emplace("post", postGraphicsPipeline);
 
@@ -762,7 +763,7 @@ void Renderer::reloadOnResize() {
 	createPostProcessDescriptorSet();
 
 	auto& cameraCamera = ecs.getComponent<Camera>(camera);
-	cameraCamera.projection = Camera::createPerspectiveProjection(45.0f, window->extent.width / static_cast<float>(window->extent.height), 0.1f, 1000.0f, true);
+	cameraCamera.projection = Camera::createPerspectiveProjection(cameraCamera.FOV, window->extent.width / static_cast<float>(window->extent.height), cameraCamera.nearPlane, cameraCamera.farPlane, true);
 
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		for (Entity entity : entities) {

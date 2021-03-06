@@ -31,7 +31,7 @@ struct GraphicsPipeline {
 	bool multiSample = true;
 	bool depthWrite = true;
 	Compare depthCompare = LESS_OR_EQUAL;
-	bool backfaceCulling = false;
+	bool backfaceCulling = true;
 	std::vector<Set> sets;
 	std::vector<VkPushConstantRange> pushConstantRanges;
 
